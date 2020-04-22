@@ -1,0 +1,40 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/shaderax/Documents/Project/Soon_Graphic_Engine/Modules/SPIRV-Reflect/./include/spirv/unified1/spirv.h
+
+/home/shaderax/Documents/Project/Soon_Graphic_Engine/Modules/SPIRV-Reflect/spirv_reflect.c
+spirv_reflect.h
+/home/shaderax/Documents/Project/Soon_Graphic_Engine/Modules/SPIRV-Reflect/spirv_reflect.h
+assert.h
+-
+stdbool.h
+-
+string.h
+-
+stdlib.h
+-
+crtdbg.h
+-
+stdlib.h
+-
+
+/home/shaderax/Documents/Project/Soon_Graphic_Engine/Modules/SPIRV-Reflect/spirv_reflect.h
+./include/spirv/unified1/spirv.h
+/home/shaderax/Documents/Project/Soon_Graphic_Engine/Modules/SPIRV-Reflect/./include/spirv/unified1/spirv.h
+stdint.h
+-
+string.h
+-
+cstdlib
+-
+string
+-
+vector
+-
+

@@ -1,0 +1,40 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/shaderax/Documents/Project/Soon_Graphic_Engine/Modules/SPIRV-Reflect/util/stripper/io.h
+cstdint
+-
+cstdio
+-
+cstring
+-
+vector
+-
+
+/home/shaderax/Documents/Project/Soon_Graphic_Engine/Modules/SPIRV-Reflect/util/stripper/main.cpp
+io.h
+/home/shaderax/Documents/Project/Soon_Graphic_Engine/Modules/SPIRV-Reflect/util/stripper/io.h
+stripper.h
+/home/shaderax/Documents/Project/Soon_Graphic_Engine/Modules/SPIRV-Reflect/util/stripper/stripper.h
+
+/home/shaderax/Documents/Project/Soon_Graphic_Engine/Modules/SPIRV-Reflect/util/stripper/stripper.cpp
+stripper.h
+/home/shaderax/Documents/Project/Soon_Graphic_Engine/Modules/SPIRV-Reflect/util/stripper/stripper.h
+cstdio
+-
+cstring
+-
+vector
+-
+
+/home/shaderax/Documents/Project/Soon_Graphic_Engine/Modules/SPIRV-Reflect/util/stripper/stripper.h
+cstddef
+-
+cstdint
+-
+

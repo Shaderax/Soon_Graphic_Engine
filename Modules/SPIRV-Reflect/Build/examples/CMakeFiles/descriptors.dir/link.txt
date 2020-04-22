@@ -1,0 +1,1 @@
+/usr/bin/c++    -rdynamic CMakeFiles/descriptors.dir/main_descriptors.cpp.o CMakeFiles/descriptors.dir/common.cpp.o CMakeFiles/descriptors.dir/__/common/output_stream.cpp.o CMakeFiles/descriptors.dir/__/spirv_reflect.c.o  -o ../../bin/descriptors  -L/usr/lib/gcc/x86_64-linux-gnu/7 
