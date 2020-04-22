@@ -1,0 +1,36 @@
+#version 450
+
+struct Particle
+{
+	vec3 position;
+	vec3 velocity;
+};
+
+layout(binding = 0, set = 0) buffer Particles
+{
+	Particle particles[ ];
+};
+
+layout (local_size_x = 128) in;
+
+void main() 
+{
+	float strength = 0.01f;
+	uint index = gl_GlobalInvocationID.x;
+	vec3 center = vec3(0.0f, 0.0f, 0.0f);
+	float dist = distance(center, particles[index].position);
+
+
+	if (dist < 10)
+	{
+		particles[index].position += particles[index].velocity * strength;
+		return ;
+	}
+
+	particles[index].position += particles[index].velocity * strength;
+//	float x = particles[index].position.x * cos(1) - particles[index].position.y * sin(1);
+//      float y = particles[index].position.x * sin(1) + particles[index].position.y * cos(1);
+//	particles[index].velocity.x += x * 0.00001f;
+//	particles[index].velocity.y += y * 0.00001f;
+	particles[index].velocity += (center - particles[index].position) * (strength / pow(dist, 2));
+}
