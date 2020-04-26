@@ -1,7 +1,9 @@
 cmake_minimum_required (VERSION 3.10)
 
+add_compile_options(-Wall -Wextra -g3)
+
 set(SRC 
-	#Materials/ShaderMaterial.cpp
+	Materials/ShaderMaterial.cpp
 
 	Renderer/Vulkan/GraphicsInstance.cpp
 	Renderer/Vulkan/GraphicsRenderer.cpp

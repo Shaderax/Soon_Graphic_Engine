@@ -6,7 +6,7 @@
 
 namespace Soon
 {
-enum class VertexElementSementic : uint16_t
+enum class EnumVertexElementSementic : uint16_t
 {
 	POSITION = 0, /**< Position */
 	//VES_BLEND_WEIGHTS = 2, /**< Blend weights */
@@ -23,7 +23,7 @@ enum class VertexElementSementic : uint16_t
 struct VertexInput
 {
 	std::string inputName;
-	VertexElementSementic type;
+	EnumVertexElementSementic type;
 };
 
 enum class EnumVertexElementType : uint8_t
@@ -84,21 +84,34 @@ bool operator!=(const VertexElementType &lhs, const VertexElementType &rhs);
 
 struct VertexElement
 {
-	VertexElementSementic sementic;
+	VertexElement( void )
+	{
+
+	}
+
+	VertexElement(EnumVertexElementSementic _sem, VertexElementType _type)
+	{
+		sementic = _sem;
+		type = _type;
+	}
+
+	EnumVertexElementSementic sementic;
 	VertexElementType type;
 };
 
 struct VertexDescription
 {
 	std::vector<VertexElement> data;
-	uint32_t strideSize;
+	uint32_t strideSize = 0;
 
-	bool HasElement(VertexElementSementic sem);
+	bool HasElement(EnumVertexElementSementic sem);
 	void AddVertexElement(VertexElement element);
-	void AddVertexElement(VertexElementSementic sem, EnumVertexElementType type, uint32_t column, uint32_t row);
-	void RemoveVertexElement(VertexElementSementic sem);
+	void AddVertexElement(EnumVertexElementSementic sem, EnumVertexElementType type, uint32_t column, uint32_t row);
+	void RemoveVertexElement(EnumVertexElementSementic sem);
 	uint32_t GetVertexStrideSize(void);
-	uint32_t GetElementOffset(VertexElementSementic sem);
+	uint32_t GetElementOffset(EnumVertexElementSementic sem);
+	uint32_t GetElementOffset( uint32_t id );
+	uint32_t GetNumElement( void );
 };
 
 extern std::vector<VertexInput> DefaultVertexInput;

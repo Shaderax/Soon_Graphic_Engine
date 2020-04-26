@@ -16,7 +16,6 @@
 
 #include "Renderer/Vulkan/GraphicsInstance.hpp"
 //#include "Renderer/Mesh.hpp"
-class Mesh;
 
 namespace Soon
 {
@@ -156,6 +155,8 @@ private:
 	std::vector<Uniform> _uniforms;				  // uniformModel, uniformLight
 	VertexDescription _inputs;
 
+	GraphicsPipelineConf		_conf;
+
 	//std::vector<Material *> _materials;
 
 public:
@@ -163,19 +164,21 @@ public:
 
 	virtual void Init() = 0;
 	virtual ~BasePipeline() {}
-	virtual std::vector<VkDescriptorSetLayoutBinding> GetLayoutBinding(void) = 0;
+	virtual std::vector<VkDescriptorSetLayoutBinding> GetLayoutBinding(void) {};
 	//void UpdateData(int currentImg);
-	virtual void BindCaller(VkCommandBuffer commandBuffer, uint32_t index) = 0;
-	//		virtual std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions( void ) = 0;
-	//		virtual VkVertexInputBindingDescription GetBindingDescription( void ) = 0;
-	virtual void RecreateUniforms(void) = 0;
-	virtual void RecreatePipeline(void) = 0;
+	virtual void BindCaller(VkCommandBuffer commandBuffer, uint32_t index) {};
+	std::vector<VkVertexInputAttributeDescription> _attributeDescriptions;
+	void GetAttributeDescriptions( void );
+	VkVertexInputBindingDescription bindingDescription = {};
+	void GetBindingDescription( void );
+	virtual void RecreateUniforms(void) {};
+	virtual void RecreatePipeline(void) {};
 
-	virtual void Render(uint32_t id) = 0;
-	virtual void UnRender(uint32_t id) = 0;
+	virtual void Render(uint32_t id) {};
+	virtual void UnRender(uint32_t id) {};
 
-	virtual uint32_t AddToPipeline(Mesh *mesh) = 0;
-	virtual void RemoveFromPipeline(uint32_t id) = 0;
+	virtual uint32_t AddToPipeline(std::uint32_t matId, std::uint32_t meshId) {};
+	virtual void RemoveFromPipeline(uint32_t id) {};
 
 	std::vector<DefaultUniformStruct> _defaultUniform{
 		/*
@@ -217,9 +220,8 @@ public:
 					{
 						if (varName == _uniforms[index]._members[member]._name)
 						{
-							if (type != _uniforms[index]._members[member]._type)
-								;
-							return; // error
+							if (type != _uniforms[index]._members[member]._type) {}
+							//return; // error
 							// Memcpy
 							vkMapMemory(device, _uniforms[index]._us[id]._uniformRender._BufferMemory[currentImage], 0, _uniforms[index]._members[member]._size, 0, &data);
 							memcpy(data, &value, _uniforms[index]._members[member]._size);
@@ -240,4 +242,6 @@ public:
 	bool SetDefaultUniform(DefaultUniformStruct structure);
 	void GetShaderData(std::string _path);
 };
+
+VkFormat VertexTypeToVkFormat( VertexElementType vt );
 } // namespace Soon

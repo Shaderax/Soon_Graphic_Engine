@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Core/Renderer/Pipelines/ShaderPipeline.hpp"
-#include "Core/Scene/Materials/Material.hpp"
+#include "Renderer/Pipelines/ShaderPipeline.hpp"
+#include "Materials/Material.hpp"
 
-#include "Core/Renderer/Vulkan/GraphicsRenderer.hpp"
+#include "Renderer/Vulkan/GraphicsRenderer.hpp"
 
 namespace Soon
 {
@@ -16,15 +16,30 @@ namespace Soon
 			ShaderMaterial( void );
 			~ShaderMaterial( void );
 
-			void Render( Transform3D& tr, Mesh* mesh );
-			void Unrender( uint32_t id );
-
 			template<class T>
 				void SetPipeline( void )
 				{
 					if (_shaderPipeline)
 						_shaderPipeline->RemoveFromPipeline(_id);
 					_shaderPipeline = GraphicsRenderer::GetInstance()->AddPipeline<T>();
+				}
+
+				void SetMesh(std::uint32_t meshId)
+				{
+					//if (_shaderPipeline)
+					//	_id = _shaderPipeline->SetMesh(_id, meshId);
+				}
+
+				void AddToPipeline(std::uint32_t meshId)
+				{
+					//if (_shaderPipeline)
+					//	_id = _shaderPipeline->AddToPipeline(meshId);
+				}
+
+				void RemoveFromPipeline(std::uint32_t meshId)
+				{
+					//if (_shaderPipeline)
+					//	_id = _shaderPipeline->RemoveFromPipeline();
 				}
 	};
 }

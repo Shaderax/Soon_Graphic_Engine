@@ -1,4 +1,4 @@
-#include "GraphicsRenderer.hpp"
+#include "Renderer/Vulkan/GraphicsRenderer.hpp"
 #include "GraphicsInstance.hpp"
 #include <typeinfo>
 #include "Modules/ClassTypeId.hpp"
@@ -150,5 +150,26 @@ namespace Soon
 	void GraphicsRenderer::ResetChange( void )
 	{
 		_changes = false;
+	}
+
+	uint32_t GraphicsRenderer::AddMesh(Mesh* mesh)
+	{
+		uint32_t id;
+		// Alloc Mesh
+		if (!_freeId.empty())
+		{
+			id = _freeId.back();
+			_freeId.pop_back();
+		}
+		else
+		{
+			id = _meshCounter;
+			_meshCounter++;
+		}
+		return (id);
+	}
+
+	void GraphicsRenderer::RemoveMesh(uint32_t idMesh)
+	{
 	}
 };

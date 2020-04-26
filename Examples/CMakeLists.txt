@@ -4,6 +4,7 @@ set (CMAKE_CXX_STANDARD 17)
 
 project(ex)
 
+add_compile_options(-Wall -Wextra)
 
 add_executable(GraphicEngineTest main.cpp)
 

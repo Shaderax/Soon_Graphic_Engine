@@ -1,14 +1,18 @@
+#pragma once
+
 #include "Renderer/Pipelines/ShaderPipeline.hpp"
 
-class NewDefaultPipeline : ShaderPipeline
+namespace Soon
+{
+class NewDefaultPipeline : public ShaderPipeline
 {
     public:
         NewDefaultPipeline( void )
         {
-            _pathVert = "../Ressources/Shaders/DefaultShader.vert.spv";
-            _pathFrag = "../Ressources/Shaders/DefaultShader.frag.spv";
+            _pathVert = "Ressources/Shaders/DefaultShader.vert.spv";
+            _pathFrag = "Ressources/Shaders/DefaultShader.frag.spv";
 
-            SetDefaultUniform("unitruc");
+            //SetDefaultUniform("unitruc");
         }
 
         ~NewDefaultPipeline( void )
@@ -16,3 +20,4 @@ class NewDefaultPipeline : ShaderPipeline
 
         }
 };
+}

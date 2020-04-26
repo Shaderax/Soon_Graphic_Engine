@@ -1,6 +1,5 @@
 #include "Renderer/Pipelines/BasePipeline.hpp"
 //#include "Renderer/Mesh.hpp"
-class Mesh;
 
 namespace Soon
 {
@@ -148,28 +147,34 @@ void BasePipeline::GetShaderData(std::string _path)
     std::vector<SpvReflectInterfaceVariable *> inputs;
 
     /// INPUT ///
-    result = reflection.EnumerateInputVariables(&count, nullptr);
-
-    assert(result == SPV_REFLECT_RESULT_SUCCESS);
-
-    inputs.resize(count);
-    reflection.EnumerateInputVariables(&count, inputs.data());
-
-    for (uint32_t index = 0; index < count; index++)
+    if (reflection.GetShaderStage() == SpvReflectShaderStageFlagBits::SPV_REFLECT_SHADER_STAGE_VERTEX_BIT)
     {
-        VertexElement input;
-        int indexDefault;
+        result = reflection.EnumerateInputVariables(&count, nullptr);
 
-        indexDefault = IsDefaultVertexInput(inputs[index]->name);
-        assert(indexDefault != -1 && "Is Not default Vertex");
+        assert(result == SPV_REFLECT_RESULT_SUCCESS);
 
-        input.sementic = DefaultVertexInput[indexDefault].type;
-        input.type = SpvTypeToVertexType(inputs[index]->type_description);
+        inputs.resize(count);
+        reflection.EnumerateInputVariables(&count, inputs.data());
 
-        _inputs.AddVertexElement(input);
+        for (uint32_t index = 0; index < count; index++)
+        {
+            VertexElement input;
+            int indexDefault;
+
+            indexDefault = IsDefaultVertexInput(inputs[index]->name);
+            std::cout << inputs[index]->name << std::endl;
+            assert(indexDefault != -1 && "Is Not default Vertex");
+
+            input.sementic = DefaultVertexInput[indexDefault].type;
+            input.type = SpvTypeToVertexType(inputs[index]->type_description);
+
+            _inputs.AddVertexElement(input);
+            /*
         std::cout << inputs[index]->name << std::endl;
         std::cout << inputs[index]->type_description->type_flags << std::endl;
         std::cout << inputs[index]->format << std::endl;
+        */
+        }
     }
 
     /// Descriptor Binding ///
@@ -222,11 +227,11 @@ void BasePipeline::GetShaderData(std::string _path)
 
                 uniform._members.push_back(uniVar);
             }
-            int32_t index = IsDefaultUniform(bindings[index]->name);
-            if (index >= 0 && IsValidDefaultUniform(bindings[index], index))
+            int32_t defaultIndex = IsDefaultUniform(bindings[index]->name);
+            if (defaultIndex >= 0 && IsValidDefaultUniform(bindings[index], defaultIndex))
             {
-                uniform.isUnique = _defaultUniform[index].isUnique;
-                uniform._updateFunct = _defaultUniform[index].updateFunc;
+                uniform.isUnique = _defaultUniform[defaultIndex].isUnique;
+                uniform._updateFunct = _defaultUniform[defaultIndex].updateFunc;
             }
             else
             {
@@ -236,5 +241,92 @@ void BasePipeline::GetShaderData(std::string _path)
             _uniforms.push_back(uniform);
         }
     }
+}
+
+void BasePipeline::GetBindingDescription()
+{
+    bindingDescription.binding = 0;
+    bindingDescription.stride = _inputs.GetVertexStrideSize(); // stride : size of one pointe
+    bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+}
+
+void BasePipeline::GetAttributeDescriptions(void)
+{
+    // Todo Location
+    _attributeDescriptions.resize(_inputs.GetNumElement());
+
+    for (uint32_t index = 0; index < _attributeDescriptions.size(); index++)
+    {
+        _attributeDescriptions[index].binding = 0;
+        _attributeDescriptions[index].location = 0; // TODO Location
+        _attributeDescriptions[index].format = VertexTypeToVkFormat(_inputs.data[index].type);
+        _attributeDescriptions[index].offset = _inputs.GetElementOffset(index); // TODO Opti
+    }
+}
+
+VkFormat VertexTypeToVkFormat(VertexElementType vt)
+{
+    switch (vt.baseType)
+    {
+    case EnumVertexElementType::INT:
+        switch (vt.column)
+        {
+        case 1:
+            return (VK_FORMAT_R32_SINT);
+        case 2:
+            return (VK_FORMAT_R32G32_SINT);
+        case 3:
+            return (VK_FORMAT_R32G32B32_SINT);
+        case 4:
+            return (VK_FORMAT_R32G32B32A32_SINT);
+        default:
+            return (VK_FORMAT_UNDEFINED);
+        }
+    case EnumVertexElementType::UINT:
+        switch (vt.column)
+        {
+        case 1:
+            return (VK_FORMAT_R32_UINT);
+        case 2:
+            return (VK_FORMAT_R32G32_UINT);
+        case 3:
+            return (VK_FORMAT_R32G32B32_UINT);
+        case 4:
+            return (VK_FORMAT_R32G32B32A32_UINT);
+        default:
+            return (VK_FORMAT_UNDEFINED);
+        }
+    case EnumVertexElementType::FLOAT:
+        switch (vt.column)
+        {
+        case 1:
+            return (VK_FORMAT_R32_SFLOAT);
+        case 2:
+            return (VK_FORMAT_R32G32_SFLOAT);
+        case 3:
+            return (VK_FORMAT_R32G32B32_SFLOAT);
+        case 4:
+            return (VK_FORMAT_R32G32B32A32_SFLOAT);
+        default:
+            return (VK_FORMAT_UNDEFINED);
+        }
+    case EnumVertexElementType::DOUBLE:
+        switch (vt.column)
+        {
+        case 1:
+            return (VK_FORMAT_R64_SFLOAT);
+        case 2:
+            return (VK_FORMAT_R64G64_SFLOAT);
+        case 3:
+            return (VK_FORMAT_R64G64B64_SFLOAT);
+        case 4:
+            return (VK_FORMAT_R64G64B64A64_SFLOAT);
+        default:
+            return (VK_FORMAT_UNDEFINED);
+        }
+    default:
+       return (VK_FORMAT_UNDEFINED);
+    }
+    return (VK_FORMAT_UNDEFINED);
 }
 } // namespace Soon

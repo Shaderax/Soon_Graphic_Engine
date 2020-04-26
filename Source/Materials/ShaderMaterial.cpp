@@ -1,5 +1,8 @@
-#include "Core/Pipelines/DefaultPipeline.hpp"
-#include "Core/Scene/Materials/ShaderMaterial.hpp"
+#include "Materials/ShaderMaterial.hpp"
+
+#include "Renderer/Pipelines/NewDefaultPipeline.hpp"
+
+#include "Utilities/Error.hpp"
 
 namespace Soon
 {
@@ -7,16 +10,17 @@ namespace Soon
 	{
 		_id = TypeIdError;
 		_shaderPipeline = nullptr;
-		SetPipeline<DefaultPipeline>();
+		SetPipeline<NewDefaultPipeline>();
 	}
 
 	ShaderMaterial::~ShaderMaterial( void )
 	{
-		if (_shaderPipeline && _id != TypeIdError)
+		if (_shaderPipeline && _id != IdError)
 			_shaderPipeline->RemoveFromPipeline(_id);
 		_shaderPipeline = nullptr;
 	}
 
+/*
 	void ShaderMaterial::Render( Transform3D& tr, Mesh* mesh )
 	{
 		if (_shaderPipeline && _id != TypeIdError)
@@ -31,4 +35,5 @@ namespace Soon
 			_shaderPipeline->UnRender(_id);
 		_id = TypeIdError;
 	}
+	*/
 }

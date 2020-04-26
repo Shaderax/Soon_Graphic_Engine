@@ -15,8 +15,8 @@
 
 namespace Soon
 {
-	class ShaderPipeline;
-	class ComputePipeline;
+	//class ShaderPipeline;
+	//class ComputePipeline;
 
 	class GraphicsRenderer
 	{
@@ -60,6 +60,7 @@ namespace Soon
 				else if (T::_type == PipelineType::GRAPHIC)
 					_graphicPipelines[ClassTypeId<BasePipeline>::GetId<T>()] = dynamic_cast<ShaderPipeline*>(pipeline);
 
+				pipeline->Init();
 				_createdPipeline[ClassTypeId<BasePipeline>::GetId<T>()] = true;
 				_changes = true;
 
@@ -70,10 +71,15 @@ namespace Soon
 		template<typename T>
 			void RemovePipeline( void );
 
+		uint32_t AddMesh(Mesh* mesh);
+		void RemoveMesh(uint32_t id);
+
 		private:
 		std::array<ShaderPipeline*, MAX_PIPELINES / 2>		_graphicPipelines{};
 		std::array<ComputePipeline*, MAX_PIPELINES / 2>		_computePipelines{};
 		bool _changes;
 		std::bitset<MAX_PIPELINES>					_createdPipeline;
+		std::vector<uint32_t>	_freeId;
+		std::uint32_t _meshCounter = 0;
 	};
 }

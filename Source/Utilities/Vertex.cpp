@@ -8,9 +8,9 @@ namespace Soon
 {
 
 std::vector<VertexInput> DefaultVertexInput{
-	{"inPosition", VertexElementSementic::POSITION},
-	{"inNormal", VertexElementSementic::NORMAL},
-	{"inTexCoord", VertexElementSementic::TEXCOORD}};
+	{"inPosition", EnumVertexElementSementic::POSITION},
+	{"inNormal", EnumVertexElementSementic::NORMAL},
+	{"inTexCoord", EnumVertexElementSementic::TEXCOORD}};
 
 VertexElementType::VertexElementType(void) : baseType(EnumVertexElementType::UNKNOW), column(1), row(1)
 {
@@ -53,7 +53,7 @@ bool operator!=(const VertexElementType &lhs, const VertexElementType &rhs)
 	return !(lhs == rhs);
 }
 
-bool VertexDescription::HasElement(VertexElementSementic sem)
+bool VertexDescription::HasElement(EnumVertexElementSementic sem)
 {
 	for (VertexElement &element : data)
 	{
@@ -67,12 +67,14 @@ bool VertexDescription::HasElement(VertexElementSementic sem)
 
 void VertexDescription::AddVertexElement(VertexElement element)
 {
-	assert((!HasElement(element.sementic) && "Has Element"));
+	// true for nothing
+	assert(!HasElement(element.sementic) && "Has Element");
 
+	strideSize += element.type.GetTypeSize();
 	data.push_back(element);
 }
 
-void VertexDescription::AddVertexElement(VertexElementSementic sem, EnumVertexElementType type, uint32_t column, uint32_t row)
+void VertexDescription::AddVertexElement(EnumVertexElementSementic sem, EnumVertexElementType type, uint32_t column, uint32_t row)
 {
 	assert((!HasElement(sem) && "Has Element"));
 
@@ -85,7 +87,7 @@ void VertexDescription::AddVertexElement(VertexElementSementic sem, EnumVertexEl
 	strideSize += ve.type.GetTypeSize();
 }
 
-void VertexDescription::RemoveVertexElement(VertexElementSementic sem)
+void VertexDescription::RemoveVertexElement(EnumVertexElementSementic sem)
 {
 	assert(!HasElement(sem) && "Has Element");
 
@@ -104,9 +106,9 @@ uint32_t VertexDescription::GetVertexStrideSize(void)
 	return (strideSize);
 }
 
-uint32_t VertexDescription::GetElementOffset(VertexElementSementic sem)
+uint32_t VertexDescription::GetElementOffset(EnumVertexElementSementic sem)
 {
-	assert(!HasElement(sem) && "Has Element");
+	assert(HasElement(sem) && "Has Element");
 
 	uint32_t offset = 0;
 
@@ -117,5 +119,25 @@ uint32_t VertexDescription::GetElementOffset(VertexElementSementic sem)
 		offset += element.type.GetTypeSize();
 	}
 	return (offset);
+}
+
+uint32_t VertexDescription::GetElementOffset( uint32_t id )
+{
+	assert( data.size() > id && "Has Element");
+
+	uint32_t offset = 0;
+
+	for ( uint32_t index = 0 ; index < data.size() ; index++)
+	{
+		if (index == id)
+			return offset;
+		offset += data[index].type.GetTypeSize();
+	}
+	return (offset);
+}
+
+uint32_t VertexDescription::GetNumElement( void )
+{
+	return (data.size());
 }
 } // namespace Soon

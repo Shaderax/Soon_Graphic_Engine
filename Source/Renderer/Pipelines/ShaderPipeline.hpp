@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Renderer/Pipelines/BasePipeline.hpp"
-//#include "Core/Scene/3D/Components/Transform3D.hpp"
 
 #include <vector>
 
@@ -15,7 +14,7 @@ class Mesh;
 
 class ShaderPipeline : public BasePipeline
 {
-	private:
+	//private:
 	//std::vector<VkVertexInputBindingDescription> bindingDescription = {};
 
 public:
@@ -27,16 +26,21 @@ public:
 	{
 	}
 
+	~ShaderPipeline()
+	{
+	}
+
 	void Init( void )
 	{
-		assert(_pathVert.empty() && _pathFrag.empty() && "Vertex Path or Frag Path not feed");
+		assert(!_pathVert.empty() && !_pathFrag.empty() && "Vertex Path or Frag Path not feed");
 
 		GetShaderData(_pathVert);
 		GetShaderData(_pathFrag);
 
-		GenerateBinding();
+		GetBindingDescription();
 	}
 
+/*
 	uint32_t AddToPipeline(Mesh *mesh)
 	{
 		// Check if mesh is equal to the pipeline stride
@@ -44,10 +48,7 @@ public:
 		//Alloc data
 		return (0);
 	}
-
-	void GenerateBinding( void )
-	{
-	}
+	*/
 
 	//virtual void Render( uint32_t id ) = 0;
 	//virtual void UnRender( uint32_t id ) = 0;
