@@ -1536,19 +1536,20 @@ namespace Soon
 		vkFreeCommandBuffers(_device, _commandPool, 1, &commandBuffer);
 	}
 
-	std::vector<VkDescriptorSetLayout> GraphicsInstance::CreateDescriptorSetLayout( std::vector<VkDescriptorSetLayoutBinding> uboLayoutBinding )
+	std::vector<VkDescriptorSetLayout> GraphicsInstance::CreateDescriptorSetLayout( std::vector<std::vector<VkDescriptorSetLayoutBinding>> uboLayoutBinding )
 	{
 		std::vector<VkDescriptorSetLayout>		descriptorSetLayout;
 
-		VkDescriptorSetLayoutCreateInfo layoutInfo = {};
-		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		layoutInfo.bindingCount = 1;
+		std::vector<VkDescriptorSetLayoutCreateInfo> layoutInfo(uboLayoutBinding.size());
+		for (uint32_t index = 0 ; index < uboLayoutBinding.size() ; index++);
 
 		descriptorSetLayout.resize(uboLayoutBinding.size());
-		for (int j = 0 ; j < descriptorSetLayout.size() ; j++)
+		for (int index = 0 ; index < descriptorSetLayout.size() ; index++)
 		{
-			layoutInfo.pBindings = &uboLayoutBinding[j];
-			if (vkCreateDescriptorSetLayout(_device, &layoutInfo, nullptr, &(descriptorSetLayout[j])) != VK_SUCCESS)
+			layoutInfo[index].sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+			layoutInfo[index].bindingCount = uboLayoutBinding[index].size();
+			layoutInfo[index].pBindings = uboLayoutBinding[index].data();
+			if (vkCreateDescriptorSetLayout(_device, &layoutInfo[index], nullptr, &(descriptorSetLayout[index])) != VK_SUCCESS)
 				throw std::runtime_error("failed to create descriptor set layout!");
 		}
 		return (descriptorSetLayout);

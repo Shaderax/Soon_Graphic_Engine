@@ -9,8 +9,8 @@ class NewDefaultPipeline : public ShaderPipeline
     public:
         NewDefaultPipeline( void )
         {
-            _pathVert = "Ressources/Shaders/DefaultShader.vert.spv";
-            _pathFrag = "Ressources/Shaders/DefaultShader.frag.spv";
+            _pathVert = "Ressources/Shaders/TestShaders/TestShader.vert.spv";
+            _pathFrag = "Ressources/Shaders/TestShaders/TestShader.frag.spv";
 
             //SetDefaultUniform("unitruc");
         }

@@ -14,9 +14,7 @@ class Mesh;
 
 class ShaderPipeline : public BasePipeline
 {
-	//private:
-	//std::vector<VkVertexInputBindingDescription> bindingDescription = {};
-
+	private:
 public:
 	std::string _pathVert;
 	std::string _pathFrag;
@@ -38,6 +36,22 @@ public:
 		GetShaderData(_pathFrag);
 
 		GetBindingDescription();
+		GetAttributeDescriptions();
+
+		_conf.vertexInputInfo.vertexBindingDescriptionCount = 1;
+		_conf.vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(_attributeDescriptions.size());
+		_conf.vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+		_conf.vertexInputInfo.pVertexAttributeDescriptions = _attributeDescriptions.data();
+
+		_descriptorSetLayout = GraphicsInstance::GetInstance()->CreateDescriptorSetLayout( uboLayoutBinding );
+		_pipelineLayout = GraphicsInstance::GetInstance()->CreatePipelineLayout(_descriptorSetLayout);
+		_conf.pipelineInfo.layout = _pipelineLayout;
+		_graphicPipeline = GraphicsInstance::GetInstance()->CreateGraphicsPipeline(
+				_conf,
+				_pathVert,
+				_pathFrag);
+
+		// Alloc Camera
 	}
 
 /*

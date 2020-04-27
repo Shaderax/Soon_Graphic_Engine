@@ -1,5 +1,5 @@
+#include <cstdint>
 #include <limits>
-#include <stdint.h>
 
 namespace Soon
 {

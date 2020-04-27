@@ -50,13 +50,11 @@ int main()
 	// Loop
 	while (!GraphicsInstance::GetInstance()->ShouldClose(GraphicsInstance::GetInstance()->GetWindow()))
 	{
-		/*
 		if (GraphicsRenderer::GetInstance()->IsChange())
 		{
 			GraphicsInstance::GetInstance()->FillCommandBuffer();
 			GraphicsRenderer::GetInstance()->ResetChange();
 		}
-		*/
 
 		GraphicsInstance::GetInstance()->PollEvent();
 		GraphicsInstance::GetInstance()->DrawFrame();

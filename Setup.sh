@@ -2,4 +2,4 @@
 mkdir Build
 cd Build
 cmake ..
-make -j 8
+make -j 5

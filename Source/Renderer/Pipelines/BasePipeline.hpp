@@ -144,10 +144,12 @@ void AutoUpdate(Uniform &uniform)
 */
 class BasePipeline
 {
-private:
+	protected:
 	std::vector<VkDescriptorSetLayout> _descriptorSetLayout;
 	VkPipelineLayout _pipelineLayout;
 	VkPipeline _graphicPipeline;
+	std::vector<std::vector<VkDescriptorSetLayoutBinding>> uboLayoutBinding;
+private:
 	std::vector<uint32_t> _toDraw;
 	VertexDescription _vertexDescription;
 
@@ -155,18 +157,18 @@ private:
 	std::vector<Uniform> _uniforms;				  // uniformModel, uniformLight
 	VertexDescription _inputs;
 
-	GraphicsPipelineConf		_conf;
-
 	//std::vector<Material *> _materials;
 
 public:
+	GraphicsPipelineConf		_conf;
+
 	BasePipeline(void);
 
 	virtual void Init() = 0;
-	virtual ~BasePipeline() {}
-	virtual std::vector<VkDescriptorSetLayoutBinding> GetLayoutBinding(void) {};
+	~BasePipeline();
+	//std::vector<VkDescriptorSetLayoutBinding> GetLayoutBinding(void);
 	//void UpdateData(int currentImg);
-	virtual void BindCaller(VkCommandBuffer commandBuffer, uint32_t index) {};
+	void BindCaller(VkCommandBuffer commandBuffer, uint32_t index) {};
 	std::vector<VkVertexInputAttributeDescription> _attributeDescriptions;
 	void GetAttributeDescriptions( void );
 	VkVertexInputBindingDescription bindingDescription = {};
@@ -244,4 +246,5 @@ public:
 };
 
 VkFormat VertexTypeToVkFormat( VertexElementType vt );
+VkDescriptorType DescriptorTypeSpvToVk( SpvReflectDescriptorType type );
 } // namespace Soon

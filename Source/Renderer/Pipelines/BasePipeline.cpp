@@ -196,11 +196,11 @@ void BasePipeline::GetShaderData(std::string _path)
             texture._data._name = bindings[index]->name;
             texture._data._type = SpvTypeToVertexType(bindings[index]->type_description);
 
-            int32_t index = IsDefaultUniform(bindings[index]->name);
-            if (index >= 0 && IsValidDefaultUniform(bindings[index], index))
+            int32_t indexDefault = IsDefaultUniform(bindings[index]->name);
+            if (indexDefault >= 0 && IsValidDefaultUniform(bindings[index], indexDefault))
             {
-                texture.isUnique = _defaultUniform[index].isUnique;
-                texture._updateFunct = _defaultUniform[index].updateFunc;
+                texture.isUnique = _defaultUniform[indexDefault].isUnique;
+                texture._updateFunct = _defaultUniform[indexDefault].updateFunc;
             }
             else
             {
@@ -240,7 +240,72 @@ void BasePipeline::GetShaderData(std::string _path)
             }
             _uniforms.push_back(uniform);
         }
+        // uboLayout ?
+        VkDescriptorSetLayoutBinding ubo;
+        ubo.binding = bindings[index]->binding;
+		ubo.descriptorCount = (bindings[index]->array.dims_count != 0) ? bindings[index]->array.dims[0] : 1;
+		ubo.descriptorType = DescriptorTypeSpvToVk(bindings[index]->descriptor_type);//VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		ubo.pImmutableSamplers = nullptr;
+		ubo.stageFlags = reflection.GetShaderModule().shader_stage;
+
+        if (uboLayoutBinding.size() <= bindings[index]->set)
+            uboLayoutBinding.resize(bindings[index]->set + 1);
+        uboLayoutBinding[bindings[index]->set].push_back(ubo);
     }
+}
+
+VkDescriptorType DescriptorTypeSpvToVk( SpvReflectDescriptorType type )
+{
+    switch (type)
+    {
+        case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER:
+            return (VK_DESCRIPTOR_TYPE_SAMPLER);
+        case SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
+            return (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+        case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+            return (VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
+        case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+            return (VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+        case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
+            return (VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER);
+        case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
+            return (VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER);
+        case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+            return (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+        case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+            return (VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+        case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
+            return (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC);
+        case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
+            return (VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC);
+        case SPV_REFLECT_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
+            return (VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT);
+        default:
+            return (VkDescriptorType::VK_DESCRIPTOR_TYPE_MAX_ENUM);
+    }
+    return (VkDescriptorType::VK_DESCRIPTOR_TYPE_MAX_ENUM);
+}
+
+VkShaderStageFlags SpvStageToVulkanStage( SpvReflectShaderStageFlagBits stage )
+{
+    switch (stage)
+    {
+        case SPV_REFLECT_SHADER_STAGE_VERTEX_BIT:
+            return (VK_SHADER_STAGE_VERTEX_BIT);
+        case SPV_REFLECT_SHADER_STAGE_TESSELLATION_CONTROL_BIT:
+            return (VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT);
+        case SPV_REFLECT_SHADER_STAGE_TESSELLATION_EVALUATION_BIT:
+            return (VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT);
+        case SPV_REFLECT_SHADER_STAGE_GEOMETRY_BIT:
+            return (VK_SHADER_STAGE_GEOMETRY_BIT);
+        case SPV_REFLECT_SHADER_STAGE_FRAGMENT_BIT:
+            return (VK_SHADER_STAGE_FRAGMENT_BIT);
+        case SPV_REFLECT_SHADER_STAGE_COMPUTE_BIT:
+            return (VK_SHADER_STAGE_COMPUTE_BIT);
+        default:
+            break;
+    }
+    return (0);
 }
 
 void BasePipeline::GetBindingDescription()
@@ -329,4 +394,18 @@ VkFormat VertexTypeToVkFormat(VertexElementType vt)
     }
     return (VK_FORMAT_UNDEFINED);
 }
+
+BasePipeline::~BasePipeline( void )
+{
+
+    VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
+
+	for (VkDescriptorSetLayout& dsl : _descriptorSetLayout)
+		vkDestroyDescriptorSetLayout(device, dsl, nullptr);
+
+	vkDestroyPipeline(device, _graphicPipeline, nullptr);
+	vkDestroyPipelineLayout(device, _pipelineLayout, nullptr);
+
+}
+
 } // namespace Soon

@@ -15,6 +15,8 @@ set(SRC
 
 	Renderer/Pipelines/BasePipeline.cpp
 
+	Renderer/Mesh.cpp
+
 	Utilities/Vertex.cpp
 	Utilities/ReadFile.cpp
 

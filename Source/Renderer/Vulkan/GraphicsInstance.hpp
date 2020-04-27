@@ -145,7 +145,7 @@ namespace Soon
 			void 	SetupDebugMessenger( void );
 			void 	CreateImageViews( void );
 			VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, VkImageViewType viewType );
-			std::vector<VkDescriptorSetLayout> CreateDescriptorSetLayout( std::vector<VkDescriptorSetLayoutBinding> uboLayoutBinding );
+			std::vector<VkDescriptorSetLayout> CreateDescriptorSetLayout( std::vector<std::vector<VkDescriptorSetLayoutBinding>> uboLayoutBinding );
 			VkPipeline CreateGraphicsPipeline(
 				GraphicsPipelineConf&						conf,
 				std::string 							FirstPath,
