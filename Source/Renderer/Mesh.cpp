@@ -1,6 +1,8 @@
 #include "Utilities/Error.hpp"
 #include "Renderer/Mesh.hpp"
 
+#include "Renderer/Vulkan/GraphicsRenderer.hpp"
+
 namespace Soon
 {
 Mesh::Mesh(VertexDescription v)
@@ -66,6 +68,8 @@ void Mesh::UnRender()
 
 std::uint32_t Mesh::AllocGpu()
 {
+	GraphicsRenderer::GetInstance()->AddMesh(this);
+
 	return 0;
 }
 
