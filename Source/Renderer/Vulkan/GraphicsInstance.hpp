@@ -8,6 +8,8 @@
 
 #include "PipelineConf.hpp"
 
+#include "VkMemoryAllocator/vk_mem_alloc.h"
+
 enum DescriptorTypeLayout
 {
 	CAMERA = 0,
@@ -28,8 +30,20 @@ struct SwapChainSupportDetails
 
 struct BufferRenderer
 {
-	std::vector<VkBuffer>		_Buffer;
-	std::vector<VkDeviceMemory>	_BufferMemory;
+	std::vector<VkBuffer>		buffer;
+	std::vector<VkDeviceMemory>	bufferMemory;
+};
+
+struct VertexBufferRenderer
+{
+	VkBuffer		buffer;
+	VkDeviceMemory	bufferMemory;
+};
+
+struct MeshBufferRenderer
+{
+	VertexBufferRenderer vertex;
+	VertexBufferRenderer indices;
 };
 
 struct ImageRenderer
@@ -116,6 +130,8 @@ namespace Soon
 			VkImage							_depthImage;
 			VkDeviceMemory					_depthImageMemory;
 			VkImageView						_depthImageView;
+
+			VmaAllocator					_allocator;
 		public:
 			enum class ShaderType
 			{
@@ -164,8 +180,8 @@ namespace Soon
 			void 	CleanupSwapChain( void );
 			VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 			static void FramebufferResizeCallback(GLFWwindow *window, int width, int height);
-			BufferRenderer CreateVertexBuffer( uint32_t size, void* ptrData );
-			BufferRenderer CreateStorageBuffer( uint32_t size, void* ptrData );
+			VertexBufferRenderer CreateVertexBuffer( uint8_t* ptrData, uint32_t size );
+			VertexBufferRenderer CreateStorageBuffer( void* ptrData, uint32_t size );
 			uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 			void	FillCommandBuffer( void );
 			void 	CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
@@ -181,7 +197,7 @@ namespace Soon
 			void 	CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, VkImageViewType vType);
 			VkSampler	CreateTextureSampler( void );
 //			void	CreateTextureImageView( void );
-			BufferRenderer CreateIndexBuffer( std::vector<uint32_t> indexData );
+			VertexBufferRenderer CreateIndexBuffer( uint32_t* indexData, uint32_t size);
 			void CopyBuffer( VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size );
 			VkFormat FindDepthFormat( void );
 			VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
@@ -199,5 +215,8 @@ namespace Soon
 			VkPipelineLayout CreatePipelineLayout( std::vector<VkDescriptorSetLayout> descriptorSetLayout );
 			UniformSets CreateUniform( size_t size, std::vector<VkDescriptorSetLayout> layoutArray, int dlayout );
 			std::vector<VkDescriptorSet> CreateDescriptorSets( size_t size, std::vector<VkDescriptorSetLayout> layoutArray, int dlayout, VkBuffer* gpuBuffers,  VkDescriptorType dType);
+
+	void CreateAllocator( void );
+	void DestroyAllocator( void );
 	};
 }

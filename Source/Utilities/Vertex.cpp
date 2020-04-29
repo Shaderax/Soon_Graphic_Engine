@@ -72,6 +72,7 @@ void VertexDescription::AddVertexElement(VertexElement element)
 
 	strideSize += element.type.GetTypeSize();
 	data.push_back(element);
+	std::cout << "ICICICICI : " << element.type.GetTypeSize() << std::endl;
 }
 
 void VertexDescription::AddVertexElement(EnumVertexElementSementic sem, EnumVertexElementType type, uint32_t column, uint32_t row)
@@ -139,5 +140,22 @@ uint32_t VertexDescription::GetElementOffset( uint32_t id )
 uint32_t VertexDescription::GetNumElement( void )
 {
 	return (data.size());
+}
+
+bool operator==(const VertexDescription &lhs, const VertexDescription &rhs)
+{
+	if ((lhs.strideSize != rhs.strideSize) || (lhs.data.size() != rhs.data.size()))
+		return (false);
+
+	for (uint32_t index = 0 ; index < rhs.data.size() ; index++)
+	{
+		if ((lhs.data[index].sementic != rhs.data[index].sementic) || (lhs.data[index].type != rhs.data[index].type))
+			return (false);
+	}
+	return (true);
+}
+bool operator!=(const VertexDescription &lhs, const VertexDescription &rhs)
+{
+	return !(lhs == rhs);
 }
 } // namespace Soon

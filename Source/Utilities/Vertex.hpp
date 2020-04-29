@@ -114,6 +114,9 @@ struct VertexDescription
 	uint32_t GetNumElement( void );
 };
 
+bool operator==(const VertexDescription &lhs, const VertexDescription &rhs);
+bool operator!=(const VertexDescription &lhs, const VertexDescription &rhs);
+
 extern std::vector<VertexInput> DefaultVertexInput;
 
 } // namespace Soon

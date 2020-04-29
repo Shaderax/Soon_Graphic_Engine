@@ -1,8 +1,6 @@
 #pragma once
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-#include "vulkan/vulkan.h"
+#include "Renderer/Vulkan/GraphicsInstance.hpp"
 
 #include "Utilities/ShadersUniform.hpp"
 #include "Utilities/Vertex.hpp"
@@ -13,9 +11,6 @@
 
 #include <vector>
 #include <functional>
-
-#include "Renderer/Vulkan/GraphicsInstance.hpp"
-//#include "Renderer/Mesh.hpp"
 
 namespace Soon
 {
@@ -142,6 +137,13 @@ void AutoUpdate(Uniform &uniform)
 	//	for (uint32_t index = 0; index < uniform._members)
 }
 */
+
+struct IdRender
+{
+	uint32_t matId;
+	uint32_t meshId;
+};
+
 class BasePipeline
 {
 	protected:
@@ -150,14 +152,12 @@ class BasePipeline
 	VkPipeline _graphicPipeline;
 	std::vector<std::vector<VkDescriptorSetLayoutBinding>> uboLayoutBinding;
 private:
-	std::vector<uint32_t> _toDraw;
+	std::vector<IdRender> _toDraw;
+	std::vector<uint32_t> _freeId;
 	VertexDescription _vertexDescription;
 
 	std::vector<UniformTexture> _uniformsTexture; // uniformSampler2D
 	std::vector<Uniform> _uniforms;				  // uniformModel, uniformLight
-	VertexDescription _inputs;
-
-	//std::vector<Material *> _materials;
 
 public:
 	GraphicsPipelineConf		_conf;
@@ -168,10 +168,10 @@ public:
 	~BasePipeline();
 	//std::vector<VkDescriptorSetLayoutBinding> GetLayoutBinding(void);
 	//void UpdateData(int currentImg);
-	void BindCaller(VkCommandBuffer commandBuffer, uint32_t index) {};
+	void BindCaller(VkCommandBuffer commandBuffer, uint32_t index);
 	std::vector<VkVertexInputAttributeDescription> _attributeDescriptions;
 	void GetAttributeDescriptions( void );
-	VkVertexInputBindingDescription bindingDescription = {};
+	VkVertexInputBindingDescription _bindingDescription;
 	void GetBindingDescription( void );
 	virtual void RecreateUniforms(void) {};
 	virtual void RecreatePipeline(void) {};
@@ -179,8 +179,10 @@ public:
 	virtual void Render(uint32_t id) {};
 	virtual void UnRender(uint32_t id) {};
 
-	virtual uint32_t AddToPipeline(std::uint32_t matId, std::uint32_t meshId) {};
+	uint32_t AddToPipeline(std::uint32_t meshId);
 	virtual void RemoveFromPipeline(uint32_t id) {};
+
+	VertexDescription GetVertexDescription( );
 
 	std::vector<DefaultUniformStruct> _defaultUniform{
 		/*
@@ -189,6 +191,7 @@ public:
 	*/
 	};
 
+/*
 	template <typename T>
 	void Set(std::string name, VertexElementType type, T value, uint32_t id)
 	{
@@ -234,7 +237,7 @@ public:
 				}
 			}
 		}
-	}
+	}*/
 
 	void UpdateData(int currentImg);
 

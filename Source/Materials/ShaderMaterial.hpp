@@ -32,14 +32,21 @@ namespace Soon
 
 				void AddToPipeline(std::uint32_t meshId)
 				{
-					//if (_shaderPipeline)
-					//	_id = _shaderPipeline->AddToPipeline(meshId);
+					if (_shaderPipeline)
+						_id = _shaderPipeline->AddToPipeline(meshId);
 				}
 
 				void RemoveFromPipeline(std::uint32_t meshId)
 				{
 					//if (_shaderPipeline)
 					//	_id = _shaderPipeline->RemoveFromPipeline();
+				}
+
+				bool HasValidVertexDescription(VertexDescription meshVD)
+				{
+					if (_shaderPipeline == nullptr)
+						return (false);
+					return (meshVD == _shaderPipeline->GetVertexDescription());
 				}
 	};
 }

@@ -15,8 +15,7 @@
 
 namespace Soon
 {
-	//class ShaderPipeline;
-	//class ComputePipeline;
+	class Mesh;
 
 	class GraphicsRenderer
 	{
@@ -73,6 +72,7 @@ namespace Soon
 
 		uint32_t AddMesh(Mesh* mesh);
 		void RemoveMesh(uint32_t id);
+		MeshBufferRenderer& GetMesh( uint32_t id );
 
 		private:
 		std::array<ShaderPipeline*, MAX_PIPELINES / 2>		_graphicPipelines{};
@@ -81,5 +81,6 @@ namespace Soon
 		std::bitset<MAX_PIPELINES>					_createdPipeline;
 		std::vector<uint32_t>	_freeId;
 		std::uint32_t _meshCounter = 0;
+		std::vector<MeshBufferRenderer> _meshs;
 	};
 }
