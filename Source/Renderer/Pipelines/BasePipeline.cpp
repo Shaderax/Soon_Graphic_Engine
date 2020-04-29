@@ -51,6 +51,125 @@ VertexElementType SpvTypeToVertexType(SpvReflectTypeDescription *type)
     return (ve);
 }
 
+VkDescriptorType DescriptorTypeSpvToVk(SpvReflectDescriptorType type)
+{
+    switch (type)
+    {
+    case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER:
+        return (VK_DESCRIPTOR_TYPE_SAMPLER);
+    case SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
+        return (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+    case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+        return (VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
+    case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+        return (VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+    case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
+        return (VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER);
+    case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
+        return (VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER);
+    case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+        return (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+    case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+        return (VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
+        return (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC);
+    case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
+        return (VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC);
+    case SPV_REFLECT_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
+        return (VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT);
+    default:
+        return (VkDescriptorType::VK_DESCRIPTOR_TYPE_MAX_ENUM);
+    }
+    return (VkDescriptorType::VK_DESCRIPTOR_TYPE_MAX_ENUM);
+}
+
+VkShaderStageFlags SpvStageToVulkanStage(SpvReflectShaderStageFlagBits stage)
+{
+    switch (stage)
+    {
+    case SPV_REFLECT_SHADER_STAGE_VERTEX_BIT:
+        return (VK_SHADER_STAGE_VERTEX_BIT);
+    case SPV_REFLECT_SHADER_STAGE_TESSELLATION_CONTROL_BIT:
+        return (VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT);
+    case SPV_REFLECT_SHADER_STAGE_TESSELLATION_EVALUATION_BIT:
+        return (VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT);
+    case SPV_REFLECT_SHADER_STAGE_GEOMETRY_BIT:
+        return (VK_SHADER_STAGE_GEOMETRY_BIT);
+    case SPV_REFLECT_SHADER_STAGE_FRAGMENT_BIT:
+        return (VK_SHADER_STAGE_FRAGMENT_BIT);
+    case SPV_REFLECT_SHADER_STAGE_COMPUTE_BIT:
+        return (VK_SHADER_STAGE_COMPUTE_BIT);
+    default:
+        break;
+    }
+    return (0);
+}
+VkFormat VertexTypeToVkFormat(VertexElementType vt)
+{
+    switch (vt.baseType)
+    {
+    case EnumVertexElementType::INT:
+        switch (vt.column)
+        {
+        case 1:
+            return (VK_FORMAT_R32_SINT);
+        case 2:
+            return (VK_FORMAT_R32G32_SINT);
+        case 3:
+            return (VK_FORMAT_R32G32B32_SINT);
+        case 4:
+            return (VK_FORMAT_R32G32B32A32_SINT);
+        default:
+            return (VK_FORMAT_UNDEFINED);
+        }
+    case EnumVertexElementType::UINT:
+        switch (vt.column)
+        {
+        case 1:
+            return (VK_FORMAT_R32_UINT);
+        case 2:
+            return (VK_FORMAT_R32G32_UINT);
+        case 3:
+            return (VK_FORMAT_R32G32B32_UINT);
+        case 4:
+            return (VK_FORMAT_R32G32B32A32_UINT);
+        default:
+            return (VK_FORMAT_UNDEFINED);
+        }
+    case EnumVertexElementType::FLOAT:
+        switch (vt.column)
+        {
+        case 1:
+            return (VK_FORMAT_R32_SFLOAT);
+        case 2:
+            return (VK_FORMAT_R32G32_SFLOAT);
+        case 3:
+            return (VK_FORMAT_R32G32B32_SFLOAT);
+        case 4:
+            return (VK_FORMAT_R32G32B32A32_SFLOAT);
+        default:
+            return (VK_FORMAT_UNDEFINED);
+        }
+    case EnumVertexElementType::DOUBLE:
+        switch (vt.column)
+        {
+        case 1:
+            return (VK_FORMAT_R64_SFLOAT);
+        case 2:
+            return (VK_FORMAT_R64G64_SFLOAT);
+        case 3:
+            return (VK_FORMAT_R64G64B64_SFLOAT);
+        case 4:
+            return (VK_FORMAT_R64G64B64A64_SFLOAT);
+        default:
+            return (VK_FORMAT_UNDEFINED);
+        }
+    default:
+        return (VK_FORMAT_UNDEFINED);
+    }
+    return (VK_FORMAT_UNDEFINED);
+}
+
 bool IsImageType(SpvReflectTypeFlags type)
 {
     return ((type & SPV_REFLECT_TYPE_FLAG_EXTERNAL_SAMPLER || type & SPV_REFLECT_TYPE_FLAG_EXTERNAL_IMAGE || type & SPV_REFLECT_TYPE_FLAG_EXTERNAL_SAMPLED_IMAGE));
@@ -58,6 +177,18 @@ bool IsImageType(SpvReflectTypeFlags type)
 
 BasePipeline::BasePipeline(void)
 {
+}
+
+BasePipeline::~BasePipeline(void)
+{
+
+    VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
+
+    for (VkDescriptorSetLayout &dsl : _descriptorSetLayout)
+        vkDestroyDescriptorSetLayout(device, dsl, nullptr);
+
+    vkDestroyPipeline(device, _graphicPipeline, nullptr);
+    vkDestroyPipelineLayout(device, _pipelineLayout, nullptr);
 }
 
 void BasePipeline::UpdateData(int currentImg)
@@ -257,60 +388,6 @@ void BasePipeline::GetShaderData(std::string _path)
     }
 }
 
-VkDescriptorType DescriptorTypeSpvToVk(SpvReflectDescriptorType type)
-{
-    switch (type)
-    {
-    case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER:
-        return (VK_DESCRIPTOR_TYPE_SAMPLER);
-    case SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
-        return (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
-    case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
-        return (VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
-    case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE:
-        return (VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
-    case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
-        return (VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER);
-    case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
-        return (VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER);
-    case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
-        return (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER:
-        return (VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-    case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
-        return (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC);
-    case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
-        return (VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC);
-    case SPV_REFLECT_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
-        return (VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT);
-    default:
-        return (VkDescriptorType::VK_DESCRIPTOR_TYPE_MAX_ENUM);
-    }
-    return (VkDescriptorType::VK_DESCRIPTOR_TYPE_MAX_ENUM);
-}
-
-VkShaderStageFlags SpvStageToVulkanStage(SpvReflectShaderStageFlagBits stage)
-{
-    switch (stage)
-    {
-    case SPV_REFLECT_SHADER_STAGE_VERTEX_BIT:
-        return (VK_SHADER_STAGE_VERTEX_BIT);
-    case SPV_REFLECT_SHADER_STAGE_TESSELLATION_CONTROL_BIT:
-        return (VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT);
-    case SPV_REFLECT_SHADER_STAGE_TESSELLATION_EVALUATION_BIT:
-        return (VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT);
-    case SPV_REFLECT_SHADER_STAGE_GEOMETRY_BIT:
-        return (VK_SHADER_STAGE_GEOMETRY_BIT);
-    case SPV_REFLECT_SHADER_STAGE_FRAGMENT_BIT:
-        return (VK_SHADER_STAGE_FRAGMENT_BIT);
-    case SPV_REFLECT_SHADER_STAGE_COMPUTE_BIT:
-        return (VK_SHADER_STAGE_COMPUTE_BIT);
-    default:
-        break;
-    }
-    return (0);
-}
-
 void BasePipeline::GetBindingDescription()
 {
     _bindingDescription.binding = 0;
@@ -330,84 +407,6 @@ void BasePipeline::GetAttributeDescriptions(void)
         _attributeDescriptions[index].format = VertexTypeToVkFormat(_vertexDescription.data[index].type);
         _attributeDescriptions[index].offset = _vertexDescription.GetElementOffset(index); // TODO Opti
     }
-}
-
-VkFormat VertexTypeToVkFormat(VertexElementType vt)
-{
-    switch (vt.baseType)
-    {
-    case EnumVertexElementType::INT:
-        switch (vt.column)
-        {
-        case 1:
-            return (VK_FORMAT_R32_SINT);
-        case 2:
-            return (VK_FORMAT_R32G32_SINT);
-        case 3:
-            return (VK_FORMAT_R32G32B32_SINT);
-        case 4:
-            return (VK_FORMAT_R32G32B32A32_SINT);
-        default:
-            return (VK_FORMAT_UNDEFINED);
-        }
-    case EnumVertexElementType::UINT:
-        switch (vt.column)
-        {
-        case 1:
-            return (VK_FORMAT_R32_UINT);
-        case 2:
-            return (VK_FORMAT_R32G32_UINT);
-        case 3:
-            return (VK_FORMAT_R32G32B32_UINT);
-        case 4:
-            return (VK_FORMAT_R32G32B32A32_UINT);
-        default:
-            return (VK_FORMAT_UNDEFINED);
-        }
-    case EnumVertexElementType::FLOAT:
-        switch (vt.column)
-        {
-        case 1:
-            return (VK_FORMAT_R32_SFLOAT);
-        case 2:
-            return (VK_FORMAT_R32G32_SFLOAT);
-        case 3:
-            return (VK_FORMAT_R32G32B32_SFLOAT);
-        case 4:
-            return (VK_FORMAT_R32G32B32A32_SFLOAT);
-        default:
-            return (VK_FORMAT_UNDEFINED);
-        }
-    case EnumVertexElementType::DOUBLE:
-        switch (vt.column)
-        {
-        case 1:
-            return (VK_FORMAT_R64_SFLOAT);
-        case 2:
-            return (VK_FORMAT_R64G64_SFLOAT);
-        case 3:
-            return (VK_FORMAT_R64G64B64_SFLOAT);
-        case 4:
-            return (VK_FORMAT_R64G64B64A64_SFLOAT);
-        default:
-            return (VK_FORMAT_UNDEFINED);
-        }
-    default:
-        return (VK_FORMAT_UNDEFINED);
-    }
-    return (VK_FORMAT_UNDEFINED);
-}
-
-BasePipeline::~BasePipeline(void)
-{
-
-    VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
-
-    for (VkDescriptorSetLayout &dsl : _descriptorSetLayout)
-        vkDestroyDescriptorSetLayout(device, dsl, nullptr);
-
-    vkDestroyPipeline(device, _graphicPipeline, nullptr);
-    vkDestroyPipelineLayout(device, _pipelineLayout, nullptr);
 }
 
 uint32_t BasePipeline::AddToPipeline(std::uint32_t meshId)
@@ -430,7 +429,8 @@ uint32_t BasePipeline::AddToPipeline(std::uint32_t meshId)
     for (uint32_t index = 0; index < _uniforms.size(); index++)
     {
         UniformSets ds;
-        //ds._uniformRender = GraphicsInstance::GetInstance()->CreateUniformBuffers(_uniforms[index]._size);
+        ds._uniformRender = GraphicsInstance::GetInstance()->CreateUniformBuffers(_uniforms[index]._size);
+        // Aller cherche _unifroms[index] set et binding a envoyé en dessus pour qu'il fasse 
         //ds._descriptorSets = GraphicsInstance::GetInstance()->CreateDescriptorSets( _uniforms[index]._size, layoutArray, dlayout, ds._uniformRender.buffer.data(), VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER );
         //vkDestroyBuffer(ds._uniformRender.buffer[0]);
     }

@@ -26,6 +26,8 @@ public:
 
 	~ShaderPipeline()
 	{
+		//if (_graphicPipeline != nullptr)
+		//	vkDestroyPipeline(GraphicsInstance::GetInstance()->GetDevice(), _graphicPipeline, nullptr);
 	}
 
 	void Init( void )
