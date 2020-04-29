@@ -40,7 +40,7 @@ int main()
 	{
 		if (GraphicsRenderer::GetInstance()->IsChange())
 		{
-			GraphicsInstance::GetInstance()->FillCommandBuffer();
+			//GraphicsInstance::GetInstance()->FillCommandBuffer();
 			GraphicsRenderer::GetInstance()->ResetChange();
 		}
 
