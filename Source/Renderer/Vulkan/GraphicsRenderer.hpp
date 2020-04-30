@@ -73,6 +73,8 @@ namespace Soon
 		uint32_t AddMesh(Mesh* mesh);
 		void RemoveMesh(uint32_t id);
 		MeshBufferRenderer& GetMesh( uint32_t id );
+		void DestroyAllUniforms( void );
+		void DestroyAllGraphicsPipeline( void );
 
 		private:
 		std::array<ShaderPipeline*, MAX_PIPELINES / 2>		_graphicPipelines{};

@@ -58,16 +58,6 @@ struct Image
 	VkImageView _imageView;
 };
 
-//struct VertexBufferInfo
-//{
-//	uint32_t	_nbVertex;
-//	size_t		_vertexSize;
-//	void*		_vertexData;
-//	size_t		_indexSize;
-//	void*		_indexData;
-//	Material*	_material;
-//};
-
 struct UniformSets
 {
 	std::vector<VkDescriptorSet>	_descriptorSets;
@@ -123,8 +113,8 @@ namespace Soon
 			std::vector<VkSemaphore>		_imageAvailableSemaphores;
 			std::vector<VkSemaphore>		_renderFinishedSemaphores;
 			std::vector<VkFence>			_inFlightFences;
-			size_t							_currentFrame;
-			bool 							_framebufferResized;
+			size_t							_currentFrame = 0;
+			bool 							_framebufferResized = false;
 			VkDescriptorPool				_descriptorPool;
 
 			VkImage							_depthImage;
@@ -207,6 +197,7 @@ namespace Soon
 			void PollEvent( void );
 			bool ShouldClose( GLFWwindow* window );
 			uint32_t GetNextIdImageToRender( void );
+			uint32_t GetSwapChainSize( void );
 
 
 			VkExtent2D GetSwapChainExtent( void );//						_swapChainExtent;
@@ -214,7 +205,9 @@ namespace Soon
 
 			VkPipelineLayout CreatePipelineLayout( std::vector<VkDescriptorSetLayout> descriptorSetLayout );
 			UniformSets CreateUniform( size_t size, std::vector<VkDescriptorSetLayout> layoutArray, int dlayout );
-			std::vector<VkDescriptorSet> CreateDescriptorSets( size_t size, std::vector<VkDescriptorSetLayout> layoutArray, int dlayout, VkBuffer* gpuBuffers,  VkDescriptorType dType);
+			//std::vector<VkDescriptorSet> CreateDescriptorSets( size_t size, std::vector<VkDescriptorSetLayout> layoutArray, int dlayout, VkBuffer* gpuBuffers,  VkDescriptorType dType);
+			std::vector<VkDescriptorSet> CreateDescriptorSets( size_t size, uint32_t binding, VkDescriptorSetLayout layout, VkBuffer* gpuBuffers, VkDescriptorType dType);
+
 
 	void CreateAllocator( void );
 	void DestroyAllocator( void );

@@ -1,13 +1,17 @@
 #pragma once
 
 #include "Math/vec3.hpp"
-#include <unordered_map>
 #include <string>
+
+/*
+#include <unordered_map>
 
 #include "Renderer/Texture.hpp"
 #include "Renderer/Pipelines/BasePipeline.hpp"
 
 #include "Renderer/Vulkan/GraphicsRenderer.hpp"
+*/
+#include "Utilities/Error.hpp"
 
 namespace Soon
 {
@@ -22,7 +26,7 @@ namespace Soon
 		{
 
 		}
-
+/*
 		void SetTexture( std::string name, Texture* texture )
 		{
 			//_pipeline->Set<Texture*>();
@@ -67,6 +71,13 @@ namespace Soon
 		{
 			//_vec3s[name] = vec;
 		}
+*/
+		virtual void SetUniform( std::string name, void* data ) = 0;
+		
+		void SetVec3( std::string name, vec3<float> vec )
+		{
+			SetUniform(name, &vec);
+		}
 
 /*
 		vec3<float>& GetVec3( std::string name )
@@ -75,15 +86,15 @@ namespace Soon
 		}
 		*/
 		// Maybe not and use shaderpipeline
-			template<class T>
-				void SetPipeline( void )
-				{
-					if (_pipeline)
-						_pipeline->RemoveFromPipeline(_id);
-					_pipeline = GraphicsRenderer::GetInstance()->AddPipeline<T>();
-				}
+		//	template<class T>
+		//		void SetPipeline( void )
+		//		{
+		//			if (_pipeline)
+		//				_pipeline->RemoveFromPipeline(_id);
+		//			_pipeline = GraphicsRenderer::GetInstance()->AddPipeline<T>();
+		//		}
 
-		uint32_t			_id;
-		BasePipeline* _pipeline;
+		uint32_t			_id = IdError;
+		//BasePipeline* _pipeline;
 	};
 }

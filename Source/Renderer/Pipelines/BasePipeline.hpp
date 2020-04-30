@@ -168,13 +168,13 @@ public:
 	~BasePipeline();
 	//std::vector<VkDescriptorSetLayoutBinding> GetLayoutBinding(void);
 	//void UpdateData(int currentImg);
-	void BindCaller(VkCommandBuffer commandBuffer, uint32_t index);
+	void BindCaller(VkCommandBuffer commandBuffer, uint32_t currentImage);
 	std::vector<VkVertexInputAttributeDescription> _attributeDescriptions;
 	void GetAttributeDescriptions( void );
 	VkVertexInputBindingDescription _bindingDescription;
 	void GetBindingDescription( void );
-	virtual void RecreateUniforms(void) {};
-	virtual void RecreatePipeline(void) {};
+	void RecreateUniforms(void);
+	virtual void RecreatePipeline(void) {}
 
 	virtual void Render(uint32_t id) {};
 	virtual void UnRender(uint32_t id) {};
@@ -183,6 +183,8 @@ public:
 	virtual void RemoveFromPipeline(uint32_t id) {};
 
 	VertexDescription GetVertexDescription( );
+	void DestroyAllUniforms( void );
+	void DestroyGraphicPipeline( void );
 
 	std::vector<DefaultUniformStruct> _defaultUniform{
 		/*
@@ -191,53 +193,8 @@ public:
 	*/
 	};
 
-/*
-	template <typename T>
-	void Set(std::string name, VertexElementType type, T value, uint32_t id)
-	{
-		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
-		uint32_t currentImage = GraphicsInstance::GetInstance()->GetNextIdImageToRender();
-		void *data = nullptr;
 
-		int32_t pos = name.find(".");
-		if (pos == std::string::npos)
-		{
-			for (uint32_t index = 0; index < _uniforms.size(); index++)
-			{
-				if (_uniforms[index]._name == name)
-				{
-					vkMapMemory(device, _uniforms[index]._us[id]._uniformRender._BufferMemory[currentImage], 0, _uniforms[index]._size, 0, &data);
-					memcpy(data, &value, _uniforms[index]._size);
-					vkUnmapMemory(device, _uniforms[index]._us[id]._uniformRender._BufferMemory[currentImage]);
-					return;
-				}
-			}
-		}
-		else
-		{
-			std::string varName;
-
-			for (uint32_t index = 0; index < _uniforms.size(); index++)
-			{
-				if (_uniforms[index]._name == name)
-				{
-					for (uint32_t member = 0; member < _uniforms[index]._members.size(); member++)
-					{
-						if (varName == _uniforms[index]._members[member]._name)
-						{
-							if (type != _uniforms[index]._members[member]._type) {}
-							//return; // error
-							// Memcpy
-							vkMapMemory(device, _uniforms[index]._us[id]._uniformRender._BufferMemory[currentImage], 0, _uniforms[index]._members[member]._size, 0, &data);
-							memcpy(data, &value, _uniforms[index]._members[member]._size);
-							vkUnmapMemory(device, _uniforms[index]._us[id]._uniformRender._BufferMemory[currentImage]);
-						}
-					}
-					return;
-				}
-			}
-		}
-	}*/
+	void Set(std::string name, void* value, uint32_t id);
 
 	void UpdateData(int currentImg);
 

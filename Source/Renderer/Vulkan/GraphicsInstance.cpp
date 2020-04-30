@@ -1008,6 +1008,8 @@ namespace Soon
 		else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
 			throw std::runtime_error("failed to acquire swap chain image!");
 
+
+		//std::cout << imageIndex << std::endl;
 		GraphicsRenderer::GetInstance()->UpdateAllDatas(imageIndex);
 
 		VkSubmitInfo submitInfo = {};
@@ -1067,11 +1069,6 @@ namespace Soon
 
 		vkDeviceWaitIdle(_device);
 
-		// TODO
-		// GraphicsRenderer::GetInstance()->DestroyAllGraphicsPipeline();
-//		vkDestroyPipeline(_device, _graphicsPipeline, nullptr);
-//		vkDestroyPipelineLayout(_device, _pipelineLayout, nullptr);
-
 		CleanupSwapChain();
 
 		CreateSwapChain();
@@ -1099,10 +1096,7 @@ namespace Soon
 
 		vkFreeCommandBuffers(_device, _commandPool, static_cast<uint32_t>(_commandBuffers.size()), _commandBuffers.data());
 
-		// TODO
-		// GraphicsRenderer::GetInstance()->DestroyAllGraphicsPipeline();
-//		vkDestroyPipeline(_device, _graphicsPipeline, nullptr);
-//		vkDestroyPipelineLayout(_device, _pipelineLayout, nullptr);
+		GraphicsRenderer::GetInstance()->DestroyAllGraphicsPipeline();
 
 		vkDestroyRenderPass(_device, _renderPass, nullptr);
 
@@ -1112,18 +1106,7 @@ namespace Soon
 
 		vkDestroySwapchainKHR(_device, _swapChain, nullptr);
 
-		// TODO
-		// GraphicsRenderer::GetInstance()->DestroyAllUniforms();
-		// Uniforms
-//		int j = -1;
-//		while (++j < GraphicsRenderer::GetInstance()->GetvkBuffers().size())
-//		{
-//			for (size_t i = 0; i < _swapChainImages.size(); i++)
-//			{
-//				vkDestroyBuffer(_device, GraphicsRenderer::GetInstance()->GetUniformBuffers().at(j)._Buffer[i], nullptr);
-//				vkFreeMemory(_device, GraphicsRenderer::GetInstance()->GetUniformBuffers().at(j)._BufferMemory[i], nullptr);
-//			}
-//		}
+		GraphicsRenderer::GetInstance()->DestroyAllUniforms();
 
 		vkDestroyDescriptorPool(_device, _descriptorPool, nullptr);
 	}
@@ -1460,7 +1443,7 @@ namespace Soon
 
 		if (vkAllocateMemory(_device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
 			throw std::runtime_error("failed to allocate buffer memory!");
-
+		std::cout << "Memory Created : " << bufferMemory <<" of size : " << size << std::endl;
 		vkBindBufferMemory(_device, buffer, bufferMemory, 0);
 	}
 
@@ -1616,16 +1599,16 @@ namespace Soon
 	}
 
 	// TODO : MULTISET DYNAMIC
-	std::vector<VkDescriptorSet> GraphicsInstance::CreateDescriptorSets( size_t size, std::vector<VkDescriptorSetLayout> layoutArray, int dlayout, VkBuffer* gpuBuffers, VkDescriptorType dType)
+	std::vector<VkDescriptorSet> GraphicsInstance::CreateDescriptorSets( size_t size, uint32_t binding, VkDescriptorSetLayout layout, VkBuffer* gpuBuffers, VkDescriptorType dType)
 	{
 		std::vector<VkDescriptorSet> descriptorSets;
-		std::vector<VkDescriptorSetLayout> layouts(_swapChainImages.size(), layoutArray.at(dlayout));
+		std::vector<VkDescriptorSetLayout> layouts(_swapChainImages.size(), layout);
 
 		VkDescriptorSetAllocateInfo allocInfo = {};
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		allocInfo.descriptorPool = _descriptorPool;
 		allocInfo.descriptorSetCount = 1 * static_cast<uint32_t>(_swapChainImages.size()); // number of descriptor sets to be allocated from the pool.
-		allocInfo.pSetLayouts = layouts.data();
+		allocInfo.pSetLayouts = layouts.data(); // Me faut le layout du set
 
 		descriptorSets.resize(_swapChainImages.size());
 		if (vkAllocateDescriptorSets(_device, &allocInfo, descriptorSets.data()) != VK_SUCCESS)
@@ -1634,17 +1617,17 @@ namespace Soon
 		for (size_t i = 0; i < _swapChainImages.size(); i++)
 		{
 			VkDescriptorBufferInfo bufferInfo = {};
-			if (dType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+			//if (dType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
 				bufferInfo.buffer = gpuBuffers[i];
-			else if (dType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
-				bufferInfo.buffer = gpuBuffers[0];
+			//else if (dType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
+			//	bufferInfo.buffer = gpuBuffers[0];
 			bufferInfo.offset = 0;
 			bufferInfo.range = size;
 
 			VkWriteDescriptorSet descriptorWrite = {};
 			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			descriptorWrite.dstSet = descriptorSets[i];
-			descriptorWrite.dstBinding = 0;
+			descriptorWrite.dstBinding = binding;
 			descriptorWrite.dstArrayElement = 0;
 			descriptorWrite.descriptorType = dType;
 			descriptorWrite.descriptorCount = 1;
@@ -1702,7 +1685,7 @@ namespace Soon
 
 		ds._uniformRender = CreateUniformBuffers(size);
 
-		ds._descriptorSets = CreateDescriptorSets( size, layoutArray, dlayout, ds._uniformRender.buffer.data(), VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER );
+		//ds._descriptorSets = CreateDescriptorSets( size, layoutArray, dlayout, ds._uniformRender.buffer.data(), VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER );
 
 		return (ds);
 	}
@@ -1803,7 +1786,7 @@ namespace Soon
 
 	uint32_t GraphicsInstance::GetNextIdImageToRender( void )
 	{
-		return ((_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT);
+		return ((_currentFrame + 1) % _swapChainFramebuffers.size());
 	}
 
 	void GraphicsInstance::CreateAllocator( void )
@@ -1836,4 +1819,8 @@ namespace Soon
 		vmaDestroyAllocator(_allocator);
 	}
 
+	uint32_t GraphicsInstance::GetSwapChainSize( void )
+	{
+		return (_swapChainImages.size());
+	}
 }
