@@ -176,11 +176,11 @@ public:
 	void RecreateUniforms(void);
 	virtual void RecreatePipeline(void) {}
 
-	virtual void Render(uint32_t id) {};
-	virtual void UnRender(uint32_t id) {};
+	void Render(uint32_t id);
+	void UnRender(uint32_t id);
 
 	uint32_t AddToPipeline(std::uint32_t meshId);
-	virtual void RemoveFromPipeline(uint32_t id) {};
+	void RemoveFromPipeline(uint32_t id);
 
 	VertexDescription GetVertexDescription( );
 	void DestroyAllUniforms( void );

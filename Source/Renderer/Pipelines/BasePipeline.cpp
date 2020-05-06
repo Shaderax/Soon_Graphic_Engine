@@ -243,7 +243,7 @@ namespace Soon
 
     int32_t BasePipeline::IsDefaultVertexInput(std::string name)
     {
-        for (int32_t index = 0; index < DefaultVertexInput.size(); index++)
+        for (uint32_t index = 0; index < DefaultVertexInput.size(); index++)
         {
             if (DefaultVertexInput[index].inputName == name)
                 return (index);
@@ -253,7 +253,7 @@ namespace Soon
 
     int32_t BasePipeline::IsDefaultUniform(std::string name)
     {
-        for (int32_t index = 0; index < _defaultUniform.size(); index++)
+        for (uint32_t index = 0; index < _defaultUniform.size(); index++)
         {
             if (_defaultUniform[index].name == name)
                 return (index);
@@ -268,7 +268,7 @@ namespace Soon
         if ((block->type_description->member_count != _defaultUniform[index].members.size()) || (block->name != _defaultUniform[index].name))
             return (-1);
 
-        for (uint32_t indexMember = 0; index < block->type_description->member_count; indexMember++)
+        for (int32_t indexMember = 0; index < block->type_description->member_count; indexMember++)
         {
             VertexElementType memberType = SpvTypeToVertexType(&(block->type_description->members[indexMember]));
             if (memberType != _defaultUniform[index].members[indexMember].tt)
@@ -468,13 +468,15 @@ namespace Soon
 
     void BasePipeline::Set(std::string name, void *value, uint32_t id)
     {
+
+        // Set doit maintenant aller chercher la memoire dans un giga buffer qui est réalloc a chaque fois qu'on dépasse la memoire.
         VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
         uint32_t currentImage = GraphicsInstance::GetInstance()->GetNextIdImageToRender();
         //std::cout << currentImage << std::endl;
 
         void *data = nullptr;
 
-        int32_t pos = name.find(".");
+        uint32_t pos = name.find(".");
         if (pos == std::string::npos)
         {
             for (uint32_t index = 0; index < _uniforms.size(); index++)
@@ -565,5 +567,20 @@ namespace Soon
     VertexDescription BasePipeline::GetVertexDescription()
     {
         return (_vertexDescription);
+    }
+
+	void BasePipeline::Render(uint32_t id)
+    {
+        (void)id;
+    }
+
+	void BasePipeline::UnRender(uint32_t id)
+    {
+        (void)id;
+    }
+
+	void BasePipeline::RemoveFromPipeline(uint32_t id)
+    {
+        (void)id;
     }
 } // namespace Soon

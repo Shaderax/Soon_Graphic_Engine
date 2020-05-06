@@ -58,6 +58,12 @@ public:
 
 	void RecreatePipeline(void)
 	{
+		VkExtent2D Extent = GraphicsInstance::GetInstance()->GetSwapChainExtent( );
+		_conf.viewport.width = (float)Extent.width;
+		_conf.viewport.height = (float)Extent.height;
+
+		_conf.scissor.extent = Extent;
+
 		_conf.pipelineInfo.renderPass = GraphicsInstance::GetInstance()->GetRenderPass();
 		_pipelineLayout = GraphicsInstance::GetInstance()->CreatePipelineLayout(_descriptorSetLayout);
 		_conf.pipelineInfo.layout = _pipelineLayout;

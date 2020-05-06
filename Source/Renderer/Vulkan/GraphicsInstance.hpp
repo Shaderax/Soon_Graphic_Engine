@@ -114,6 +114,7 @@ namespace Soon
 			std::vector<VkSemaphore>		_renderFinishedSemaphores;
 			std::vector<VkFence>			_inFlightFences;
 			size_t							_currentFrame = 0;
+			uint32_t						_nextSwapChainImageIdx;
 			bool 							_framebufferResized = false;
 			VkDescriptorPool				_descriptorPool;
 

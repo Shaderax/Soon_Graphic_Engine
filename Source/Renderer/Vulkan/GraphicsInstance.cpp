@@ -40,13 +40,13 @@ const bool enableValidationLayers = true;
 
 bool checkValidationLayerSupport( void )
 {
-	uint32_t layerCount;
+	uint32_t layerCount = 0;
 	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
 	std::vector<VkLayerProperties> availableLayers(layerCount);
 	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-	std::cout << "availableLayers : " << layerCount << std::endl;
+	std::cout << "num availableLayers : " << layerCount << std::endl;
 	for (const auto& layerProperties : availableLayers)
 	{
 		std::cout << "\t" << layerProperties.layerName << std::endl;
@@ -227,9 +227,8 @@ namespace Soon
 		int score = 0;
 
 		VkPhysicalDeviceProperties deviceProperties;
-		VkPhysicalDeviceFeatures deviceFeatures;
+		//VkPhysicalDeviceFeatures deviceFeatures;
 		vkGetPhysicalDeviceProperties(device, &deviceProperties);
-
 
 		VkPhysicalDeviceFeatures supportedFeatures;
 		vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
@@ -246,7 +245,9 @@ namespace Soon
 			return (score);
 		if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
 			score += 10;
-		return score + 1;
+		else if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
+			score += 5;
+		return score;
 	}
 
 	void GraphicsInstance::PickPhysicalDevice( void )
@@ -261,12 +262,15 @@ namespace Soon
 
 		std::vector<VkPhysicalDevice> devices(deviceCount);
 		vkEnumeratePhysicalDevices(_vulkanInstance, &deviceCount, devices.data());
-
+	
+		std::cout << "Devices : " << std::endl;
 		for (const auto& device : devices)
 		{
 			int score = 0;
-
+	
 			score = RateDeviceSuitable(device);
+			std::cout << "\tScore : " << score << " of Available device : ";
+			GetPhysicalDeviceInfo(device);
 			scoreDevice.insert(std::make_pair(score, device));
 		}
 
@@ -278,6 +282,7 @@ namespace Soon
 		if (_physicalDevice == VK_NULL_HANDLE)
 			std::cout << "failed to find a suitable GPU!" << std::endl;
 
+		std::cout << "Device Chosen : ";
 		GetPhysicalDeviceInfo();
 	}
 
@@ -293,10 +298,30 @@ namespace Soon
 		glfwSetFramebufferSizeCallback(_window, FramebufferResizeCallback);
 	}
 
+	std::vector<const char*> GetRequiredExtensions()
+	{
+        uint32_t glfwExtensionCount = 0;
+        const char** glfwExtensions;
+        glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+        std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+
+		std::cout << "GLFW - EXTENSIONS : " << glfwExtensionCount << std::endl;
+		for (size_t i = 0; i < glfwExtensionCount; ++i) {
+			std::cout << "\t" << glfwExtensions[i] << std::endl;
+		}
+
+        if (enableValidationLayers) {
+            extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        }
+
+        return extensions;
+    }
+
 	void GraphicsInstance::CreateInstance( void )
 	{
-		//		if (enableValidationLayers && !checkValidationLayerSupport())
-		//			throw std::runtime_error("validation layers requested, but not available!");
+		if (enableValidationLayers && !checkValidationLayerSupport())
+			throw std::runtime_error("validation layers requested, but not available!");
 
 		VkApplicationInfo appInfo = {};
 		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -310,7 +335,7 @@ namespace Soon
 		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 		createInfo.pApplicationInfo = &appInfo;
 
-		//// Check Exten
+		// Check Exten
 		uint32_t extensionCount = 0;
 		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 		std::vector<VkExtensionProperties> extensions(extensionCount);
@@ -325,33 +350,16 @@ namespace Soon
 		}
 		//// end Check Exten
 
-		uint32_t glfwExtensionCount = 0;
-		const char** glfwExtensions;
-
-		glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-		std::cout << "GLFW - EXTENSIONS : " << glfwExtensionCount << std::endl;
-		for (size_t i = 0; i < glfwExtensionCount; ++i) {
-			std::cout << "\t" << glfwExtensions[i] << std::endl;
-		}
-
-		std::vector<const char*> vecExtensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-
-		if (enableValidationLayers)
-			vecExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+		// Get  Required Extensions
+		std::vector<const char*> vecExtensions = GetRequiredExtensions();
 
 		createInfo.enabledExtensionCount = static_cast<uint32_t>(vecExtensions.size());
 		createInfo.ppEnabledExtensionNames = vecExtensions.data();
 
-		std::vector<const char*> ok;
-
-		ok.push_back("VK_LAYER_LUNARG_standard_validation");
 		if (enableValidationLayers)
 		{
-			for (const char* kk : ok)
-				std::cout << kk << std::endl;
-			createInfo.enabledLayerCount = 1;//static_cast<uint32_t>(validationLayers.size());
-			createInfo.ppEnabledLayerNames = &ok.data()[0];//validationLayers.data();
+			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+			createInfo.ppEnabledLayerNames = validationLayers.data();
 		}
 		else
 			createInfo.enabledLayerCount = 0;
@@ -363,7 +371,6 @@ namespace Soon
 
 	void GraphicsInstance::CreateLogicalDevice( void )
 	{
-		std::cout << "VK_KHR_SWAPCHAIN_EXTENSION_NAME : " << VK_KHR_SWAPCHAIN_EXTENSION_NAME << std::endl;
 		// TODO //Get queue for drawing and queue for presentation
 		int index = GetQueueFamilyIndex(_physicalDevice, VK_QUEUE_GRAPHICS_BIT);
 
@@ -388,10 +395,8 @@ namespace Soon
 		createInfo.pQueueCreateInfos = &queueCreateInfo;
 		createInfo.queueCreateInfoCount = 1;
 		createInfo.pEnabledFeatures = &deviceFeatures;
-		createInfo.enabledExtensionCount = 1;//static_cast<uint32_t>(deviceExtensions.size());
-		std::vector<const char*> ko;
-		ko.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-		createInfo.ppEnabledExtensionNames = &ko.data()[0];//deviceExtensions.data();
+		createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+		createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
 		if (vkCreateDevice(_physicalDevice, &createInfo, nullptr, &_device) != VK_SUCCESS)
 			std::cout << "failed to create logical device!" << std::endl;
@@ -434,8 +439,9 @@ namespace Soon
 			}
 			else if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR)
 			{
-				std::cout << "VK_PRESENT_MODE_IMMEDIATE_KHR" << std::endl;
-				bestMode = availablePresentMode;
+				// TODO
+				//std::cout << "VK_PRESENT_MODE_IMMEDIATE_KHR" << std::endl;
+				//bestMode = availablePresentMode;
 			}
 		}
 
@@ -999,6 +1005,7 @@ namespace Soon
 
 		uint32_t imageIndex;
 		VkResult result = vkAcquireNextImageKHR(_device, _swapChain, std::numeric_limits<uint64_t>::max(), _imageAvailableSemaphores[_currentFrame], VK_NULL_HANDLE, &imageIndex);
+		_nextSwapChainImageIdx = imageIndex;
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR)
 		{
@@ -1007,7 +1014,6 @@ namespace Soon
 		}
 		else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
 			throw std::runtime_error("failed to acquire swap chain image!");
-
 
 		//std::cout << imageIndex << std::endl;
 		GraphicsRenderer::GetInstance()->UpdateAllDatas(imageIndex);
@@ -1061,6 +1067,7 @@ namespace Soon
 	void GraphicsInstance::RecreateSwapChain( void )
 	{
 		int width = 0, height = 0;
+		glfwGetFramebufferSize(_window, &width, &height);
 		while (width == 0 || height == 0)
 		{
 			glfwGetFramebufferSize(_window, &width, &height);
@@ -1514,7 +1521,7 @@ namespace Soon
 		std::vector<VkDescriptorSetLayoutCreateInfo> layoutInfo(uboLayoutBinding.size());
 
 		descriptorSetLayout.resize(uboLayoutBinding.size());
-		for (int index = 0 ; index < descriptorSetLayout.size() ; index++)
+		for (uint32_t index = 0 ; index < descriptorSetLayout.size() ; index++)
 		{
 			layoutInfo[index].sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 			layoutInfo[index].bindingCount = uboLayoutBinding[index].size();
@@ -1786,7 +1793,7 @@ namespace Soon
 
 	uint32_t GraphicsInstance::GetNextIdImageToRender( void )
 	{
-		return ((_currentFrame + 1) % _swapChainFramebuffers.size());
+		return (_nextSwapChainImageIdx);
 	}
 
 	void GraphicsInstance::CreateAllocator( void )
