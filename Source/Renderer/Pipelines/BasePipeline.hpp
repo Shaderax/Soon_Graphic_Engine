@@ -14,63 +14,63 @@
 
 namespace Soon
 {
-enum struct PipelineType : uint32_t
-{
-	GRAPHIC = 0,
-	COMPUTE = 1
-};
+	enum struct PipelineType : uint32_t
+	{
+		GRAPHIC = 0,
+		COMPUTE = 1
+	};
 
-VertexElementType SpvTypeToVertexType(SpvReflectTypeDescription *type);
+	VertexElementType SpvTypeToVertexType(SpvReflectTypeDescription *type);
 
-struct UniformVar
-{
-	std::string _name;
-	VertexElementType _type;
-	uint32_t _size;
-	uint32_t _offset;
-};
+	struct UniformVar
+	{
+		std::string _name;
+		VertexElementType _type;
+		uint32_t _size;
+		uint32_t _offset;
+	};
 
-struct Uniform
-{
-	std::string _name;
-	uint32_t _size;
-	uint32_t _binding;
-	uint32_t _set;
-	std::vector<UniformVar> _members;
-	std::vector<UniformSets> _us;
-	std::function<void(int)> _updateFunct;
-	bool isUnique;
-};
+	struct Uniform
+	{
+		std::string _name;
+		uint32_t _size;
+		uint32_t _binding;
+		uint32_t _set;
+		std::vector<UniformVar> _members;
+		std::vector<UniformSets> _us;
+		std::function<void(int)> _updateFunct;
+		bool isUnique;
+	};
 
-struct UniformTexture
-{
-	UniformVar _data;
-	uint32_t _binding;
-	uint32_t _set;
-	std::vector<Image> _i;
-	std::vector<ImageRenderer> _iR;
-	std::vector<VkDescriptorSet> _dS;
-	std::function<void(int)> _updateFunct;
-	bool isUnique;
-};
+	struct UniformTexture
+	{
+		UniformVar _data;
+		uint32_t _binding;
+		uint32_t _set;
+		std::vector<Image> _i;
+		std::vector<ImageRenderer> _iR;
+		std::vector<VkDescriptorSet> _dS;
+		std::function<void(int)> _updateFunct;
+		bool isUnique;
+	};
 
-struct DefaultMemberStruct
-{
-	std::string name;
-	VertexElementType tt;
-};
+	struct DefaultMemberStruct
+	{
+		std::string name;
+		VertexElementType tt;
+	};
 
-struct DefaultUniformStruct
-{
-	std::string name;
-	std::string typeName;
-	VertexElementType tt;
-	bool isUnique;
-	std::vector<DefaultMemberStruct> members;
-	std::function<void(int)> updateFunc;
-};
+	struct DefaultUniformStruct
+	{
+		std::string name;
+		std::string typeName;
+		VertexElementType tt;
+		bool isUnique;
+		std::vector<DefaultMemberStruct> members;
+		std::function<void(int)> updateFunc;
+	};
 
-/*
+	/*
 void UpdateCamera(VkDeviceMemory deviceMemory) // VkDeviceMemory
 {
 	void *data = nullptr;
@@ -97,9 +97,9 @@ void UpdateCamera(VkDeviceMemory deviceMemory) // VkDeviceMemory
 	}
 */
 
-bool IsImageType(SpvReflectTypeFlags type);
+	bool IsImageType(SpvReflectTypeFlags type);
 
-/*
+	/*
 void UpdateModel(VkDeviceMemory deviceMemory, Transform3D *transform)
 {
 	void *data = nullptr;
@@ -130,7 +130,7 @@ void UpdateModel(VkDeviceMemory deviceMemory, Transform3D *transform)
 	vkUnmapMemory(device, deviceMemory);
 }
 */
-/*
+	/*
 void AutoUpdate(Uniform &uniform)
 {
 	//for (material->updated)
@@ -138,73 +138,80 @@ void AutoUpdate(Uniform &uniform)
 }
 */
 
-struct IdRender
-{
-	uint32_t matId;
-	uint32_t meshId;
-};
+	struct IdRender
+	{
+		uint32_t matId;
+		uint32_t meshId;
+	};
 
-class BasePipeline
-{
+	class BasePipeline
+	{
 	protected:
-	std::vector<VkDescriptorSetLayout> _descriptorSetLayout;
-	VkPipelineLayout _pipelineLayout;
-	VkPipeline _graphicPipeline;
-	std::vector<std::vector<VkDescriptorSetLayoutBinding>> uboLayoutBinding;
-private:
-	std::vector<IdRender> _toDraw;
-	std::vector<uint32_t> _freeId;
-	VertexDescription _vertexDescription;
+		uint8_t *_uniformData = nullptr;
+		uint32_t _uniformDataSize;
+		uint32_t _totalUniformSize = 0;
+		VkPipeline _graphicPipeline;
+		VkPipelineLayout _pipelineLayout;
+		std::vector<VkDescriptorSetLayout> _descriptorSetLayout;
+		std::vector<std::vector<VkDescriptorSetLayoutBinding>> uboLayoutBinding;
 
-	std::vector<UniformTexture> _uniformsTexture; // uniformSampler2D
-	std::vector<Uniform> _uniforms;				  // uniformModel, uniformLight
+	private:
+		uint32_t _minUniformBuffer = 100;
+		std::vector<IdRender> _toDraw;
+		std::vector<uint32_t> _freeId;
+		VertexDescription _vertexDescription;
 
-public:
-	GraphicsPipelineConf		_conf;
+		std::vector<Uniform> _uniforms;				  // uniformModel, uniformLight
+		std::vector<UniformTexture> _uniformsTexture; // uniformSampler2D
 
-	BasePipeline(void);
-
-	virtual void Init() = 0;
-	~BasePipeline();
-	//std::vector<VkDescriptorSetLayoutBinding> GetLayoutBinding(void);
-	//void UpdateData(int currentImg);
-	void BindCaller(VkCommandBuffer commandBuffer, uint32_t currentImage);
-	std::vector<VkVertexInputAttributeDescription> _attributeDescriptions;
-	void GetAttributeDescriptions( void );
-	VkVertexInputBindingDescription _bindingDescription;
-	void GetBindingDescription( void );
-	void RecreateUniforms(void);
-	virtual void RecreatePipeline(void) {}
-
-	void Render(uint32_t id);
-	void UnRender(uint32_t id);
-
-	uint32_t AddToPipeline(std::uint32_t meshId);
-	void RemoveFromPipeline(uint32_t id);
-
-	VertexDescription GetVertexDescription( );
-	void DestroyAllUniforms( void );
-	void DestroyGraphicPipeline( void );
-
-	std::vector<DefaultUniformStruct> _defaultUniform{
-		/*
+	public:
+		GraphicsPipelineConf _conf;
+		VkVertexInputBindingDescription _bindingDescription;
+		std::vector<VkVertexInputAttributeDescription> _attributeDescriptions;
+		std::vector<DefaultUniformStruct> _defaultUniform{
+			/*
 	{"uc", "UniformCamera", {EnumVertexElementType::STRUCT}, true, true, {{"view", "", {EnumVertexElementType::FLOAT, 4, 4}}, {"proj", "", {EnumVertexElementType::FLOAT, 4, 4}}}, &UpdateCamera},
 	{"um", "UniformModel", {EnumVertexElementType::STRUCT}, false, true, {{"model", "", {EnumVertexElementType::FLOAT, 4, 4}}}, &UpdateModel}
 	*/
+		};
+
+		BasePipeline(void);
+		~BasePipeline();
+
+		virtual void Init() = 0;
+
+		// Getter
+		void GetBindingDescription(void);
+		void GetShaderData(std::string _path);
+		void GetAttributeDescriptions(void);
+		VertexDescription GetVertexDescription();
+
+		void BindCaller(VkCommandBuffer commandBuffer, uint32_t currentImage);
+
+		void RecreateUniforms(void);
+		virtual void RecreatePipeline(void) = 0;
+
+		void Render(uint32_t id);
+		void UnRender(uint32_t id);
+
+		void RemoveFromPipeline(uint32_t id);
+		uint32_t AddToPipeline(std::uint32_t meshId);
+
+		void DestroyAllUniforms(void);
+		void DestroyGraphicPipeline(void);
+
+		// Setter
+		void Set(std::string name, void *value, uint32_t id);
+		bool SetDefaultUniform(DefaultUniformStruct structure);
+		void SetUniformsArray(void);
+
+		void UpdateData(int currentImg);
+
+		int32_t IsDefaultVertexInput(std::string name);
+		int32_t IsDefaultUniform(std::string name);
+		int32_t IsValidDefaultUniform(SpvReflectDescriptorBinding *block, int32_t index);
 	};
 
-
-	void Set(std::string name, void* value, uint32_t id);
-
-	void UpdateData(int currentImg);
-
-	int32_t IsDefaultVertexInput(std::string name);
-	int32_t IsDefaultUniform(std::string name);
-	int32_t IsValidDefaultUniform(SpvReflectDescriptorBinding *block, int32_t index);
-	bool SetDefaultUniform(DefaultUniformStruct structure);
-	void GetShaderData(std::string _path);
-};
-
-VkFormat VertexTypeToVkFormat( VertexElementType vt );
-VkDescriptorType DescriptorTypeSpvToVk( SpvReflectDescriptorType type );
+	VkFormat VertexTypeToVkFormat(VertexElementType vt);
+	VkDescriptorType DescriptorTypeSpvToVk(SpvReflectDescriptorType type);
 } // namespace Soon

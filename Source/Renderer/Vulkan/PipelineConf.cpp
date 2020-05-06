@@ -5,7 +5,7 @@
 
 namespace Soon
 {
-	GraphicsPipelineConf::GraphicsPipelineConf( void )
+	GraphicsPipelineConf::GraphicsPipelineConf(void)
 	{
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
@@ -23,7 +23,7 @@ namespace Soon
 
 		inputAssembly.primitiveRestartEnable = VK_FALSE;
 
-		VkExtent2D Extent = GraphicsInstance::GetInstance()->GetSwapChainExtent( );
+		VkExtent2D Extent = GraphicsInstance::GetInstance()->GetSwapChainExtent();
 		viewport.x = 0.0f;
 		viewport.y = 0.0f;
 		viewport.width = (float)Extent.width;
@@ -50,7 +50,7 @@ namespace Soon
 		//					rasterizer.polygonMode = VK_POLYGON_MODE_POINT;
 		rasterizer.lineWidth = 1.0f;
 		rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-		rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;//VK_FRONT_FACE_COUNTER_CLOCKWISE;// 
+		rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE; //VK_FRONT_FACE_COUNTER_CLOCKWISE;//
 		rasterizer.depthBiasEnable = VK_FALSE;
 
 		multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
@@ -99,4 +99,4 @@ namespace Soon
 
 		//		pipelineInfo.layout = pipelineLayout;
 	}
-}
+} // namespace Soon

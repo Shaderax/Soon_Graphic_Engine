@@ -6,71 +6,73 @@
 
 namespace Soon
 {
-class Mesh;
+	class Mesh;
 
-/*
+	/*
 	 * In material ptr or raw data ?
 */
 
-class ShaderPipeline : public BasePipeline
-{
+	class ShaderPipeline : public BasePipeline
+	{
 	private:
-public:
-	std::string _pathVert;
-	std::string _pathFrag;
-	static const PipelineType _type = PipelineType::GRAPHIC;
+	public:
+		std::string _pathVert;
+		std::string _pathFrag;
+		static const PipelineType _type = PipelineType::GRAPHIC;
 
-	ShaderPipeline()
-	{
-	}
+		ShaderPipeline()
+		{
+		}
 
-	~ShaderPipeline()
-	{
-		//if (_graphicPipeline != nullptr)
-		//	vkDestroyPipeline(GraphicsInstance::GetInstance()->GetDevice(), _graphicPipeline, nullptr);
-	}
+		~ShaderPipeline()
+		{
+			//if (_graphicPipeline != nullptr)
+			//	vkDestroyPipeline(GraphicsInstance::GetInstance()->GetDevice(), _graphicPipeline, nullptr);
+		}
 
-	void Init( void )
-	{
-		assert(!_pathVert.empty() && !_pathFrag.empty() && "Vertex Path or Frag Path not feed");
+		void Init(void)
+		{
+			assert(!_pathVert.empty() && !_pathFrag.empty() && "Vertex Path or Frag Path not feed");
 
-		GetShaderData(_pathVert);
-		GetShaderData(_pathFrag);
+			GetShaderData(_pathVert);
+			GetShaderData(_pathFrag);
 
-		GetBindingDescription();
-		GetAttributeDescriptions();
+			GetBindingDescription();
+			GetAttributeDescriptions();
 
-		_conf.vertexInputInfo.vertexBindingDescriptionCount = 1;
-		_conf.vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(_attributeDescriptions.size());
-		_conf.vertexInputInfo.pVertexBindingDescriptions = &_bindingDescription;
-		_conf.vertexInputInfo.pVertexAttributeDescriptions = _attributeDescriptions.data();
+			_conf.vertexInputInfo.vertexBindingDescriptionCount = 1;
+			_conf.vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(_attributeDescriptions.size());
+			_conf.vertexInputInfo.pVertexBindingDescriptions = &_bindingDescription;
+			_conf.vertexInputInfo.pVertexAttributeDescriptions = _attributeDescriptions.data();
 
-		_descriptorSetLayout = GraphicsInstance::GetInstance()->CreateDescriptorSetLayout( uboLayoutBinding );
-		_pipelineLayout = GraphicsInstance::GetInstance()->CreatePipelineLayout(_descriptorSetLayout);
-		_conf.pipelineInfo.layout = _pipelineLayout;
-		_graphicPipeline = GraphicsInstance::GetInstance()->CreateGraphicsPipeline(
+			_descriptorSetLayout = GraphicsInstance::GetInstance()->CreateDescriptorSetLayout(uboLayoutBinding);
+			_pipelineLayout = GraphicsInstance::GetInstance()->CreatePipelineLayout(_descriptorSetLayout);
+			_conf.pipelineInfo.layout = _pipelineLayout;
+			_graphicPipeline = GraphicsInstance::GetInstance()->CreateGraphicsPipeline(
 				_conf,
 				_pathVert,
 				_pathFrag);
 
-		// Alloc Camera
-	}
+			SetUniformsArray();
 
-	void RecreatePipeline(void)
-	{
-		VkExtent2D Extent = GraphicsInstance::GetInstance()->GetSwapChainExtent( );
-		_conf.viewport.width = (float)Extent.width;
-		_conf.viewport.height = (float)Extent.height;
+			// Alloc Camera
+		}
 
-		_conf.scissor.extent = Extent;
+		void RecreatePipeline(void)
+		{
+			VkExtent2D Extent = GraphicsInstance::GetInstance()->GetSwapChainExtent();
+			_conf.viewport.width = (float)Extent.width;
+			_conf.viewport.height = (float)Extent.height;
 
-		_conf.pipelineInfo.renderPass = GraphicsInstance::GetInstance()->GetRenderPass();
-		_pipelineLayout = GraphicsInstance::GetInstance()->CreatePipelineLayout(_descriptorSetLayout);
-		_conf.pipelineInfo.layout = _pipelineLayout;
-		_graphicPipeline = GraphicsInstance::GetInstance()->CreateGraphicsPipeline(
+			_conf.scissor.extent = Extent;
+
+			_conf.pipelineInfo.renderPass = GraphicsInstance::GetInstance()->GetRenderPass();
+			_pipelineLayout = GraphicsInstance::GetInstance()->CreatePipelineLayout(_descriptorSetLayout);
+			_conf.pipelineInfo.layout = _pipelineLayout;
+			_graphicPipeline = GraphicsInstance::GetInstance()->CreateGraphicsPipeline(
 				_conf,
 				_pathVert,
 				_pathFrag);
-	}
-};
+		}
+	};
 } // namespace Soon
