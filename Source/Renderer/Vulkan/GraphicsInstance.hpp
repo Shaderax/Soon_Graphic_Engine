@@ -39,10 +39,17 @@ struct VertexBufferRenderer
 	VkDeviceMemory bufferMemory;
 };
 
+struct IndiceBufferRenderer
+{
+	VkBuffer buffer;
+	VkDeviceMemory bufferMemory;
+	std::uint32_t numIndices;
+};
+
 struct MeshBufferRenderer
 {
 	VertexBufferRenderer vertex;
-	VertexBufferRenderer indices;
+	IndiceBufferRenderer indices;
 };
 
 struct ImageRenderer
@@ -112,7 +119,7 @@ namespace Soon
 		std::vector<VkSemaphore> _renderFinishedSemaphores;
 		std::vector<VkFence> _inFlightFences;
 		size_t _currentFrame = 0;
-		uint32_t _nextSwapChainImageIdx;
+		uint32_t _nextSwapChainImageIdx = 0;
 		bool _framebufferResized = false;
 		VkDescriptorPool _descriptorPool;
 
@@ -187,7 +194,7 @@ namespace Soon
 		void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, VkImageViewType vType);
 		VkSampler CreateTextureSampler(void);
 		//			void	CreateTextureImageView( void );
-		VertexBufferRenderer CreateIndexBuffer(uint32_t *indexData, uint32_t size);
+		IndiceBufferRenderer CreateIndexBuffer(uint32_t *indexData, uint32_t size);
 		void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 		VkFormat FindDepthFormat(void);
 		VkFormat FindSupportedFormat(const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features);

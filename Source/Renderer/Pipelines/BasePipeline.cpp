@@ -231,6 +231,13 @@ namespace Soon
 		vkMapMemory(device, _uniforms[0]._us[0]._uniformRender.bufferMemory[currentImg], 0, _uniforms[0]._members[0]._size, 0, &data);
 		memcpy(data, &vec, _uniforms[0]._members[0]._size);
 		vkUnmapMemory(device, _uniforms[0]._us[0]._uniformRender.bufferMemory[currentImg]);
+
+		// in GPU
+		for (uint32_t index = 0 ; index < _toDraw.size() ; index++)
+		{
+			//_toDraw[index].matId
+		}
+
 		/*
 		//for (UniformTexture& uniform : _uniformsTexture)
 		//{
@@ -500,11 +507,6 @@ namespace Soon
 				std::cout << _uniforms[index]._name << std::endl;
 				if (_uniforms[index]._name == name)
 				{
-					//std::cout << "Found Uniform : " << name << std::endl;
-					//vkMapMemory(device, _uniforms[index]._us[id]._uniformRender.bufferMemory[currentImage], 0, _uniforms[index]._size, 0, &data);
-					//memcpy(data, value, _uniforms[index]._size);
-					//vkUnmapMemory(device, _uniforms[index]._us[id]._uniformRender.bufferMemory[currentImage]);
-
 					// Local data
 					memcpy(_uniformData + offset + (_totalUniformSize * id), value, _uniforms[index]._size);
 
@@ -579,7 +581,7 @@ namespace Soon
 			for (uint32_t uniforms = 0; uniforms < _uniforms.size(); uniforms++)
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipelineLayout, _uniforms[uniforms]._set, 1, &(_uniforms[uniforms]._us[_toDraw[index].matId]._descriptorSets[currentImage]), 0, nullptr);
 
-			vkCmdDrawIndexed(commandBuffer, 3, 1, 0, 0, 0);
+			vkCmdDrawIndexed(commandBuffer, bu.indices.numIndices, 1, 0, 0, 0);
 		}
 	}
 

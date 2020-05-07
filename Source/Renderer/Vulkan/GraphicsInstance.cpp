@@ -1461,11 +1461,13 @@ namespace Soon
 		vkBindBufferMemory(_device, buffer, bufferMemory, 0);
 	}
 
-	VertexBufferRenderer GraphicsInstance::CreateIndexBuffer(uint32_t *indexData, uint32_t size)
+	IndiceBufferRenderer GraphicsInstance::CreateIndexBuffer(uint32_t *indexData, uint32_t size)
 	{
-		VertexBufferRenderer bufRenderer;
+		IndiceBufferRenderer bufRenderer;
 		VkDeviceSize bufferSize = sizeof(uint32_t) * size;
 		std::cout << "INDEX BUFFER CREATION : " << bufferSize << std::endl;
+
+		bufRenderer.numIndices = size;
 
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
