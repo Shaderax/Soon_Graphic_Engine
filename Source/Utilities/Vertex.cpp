@@ -3,14 +3,16 @@
 #include "Math/vec3.hpp"
 #include <vector>
 #include <assert.h>
+#include "vulkan/vulkan.h"
 
 namespace Soon
 {
-
-std::vector<VertexInput> DefaultVertexInput{
+std::vector<VertexInput> DefaultVertexInput
+{
 	{"inPosition", EnumVertexElementSementic::POSITION},
 	{"inNormal", EnumVertexElementSementic::NORMAL},
-	{"inTexCoord", EnumVertexElementSementic::TEXCOORD}};
+	{"inTexCoord", EnumVertexElementSementic::TEXCOORD}
+};
 
 VertexElementType::VertexElementType(void) : baseType(EnumVertexElementType::UNKNOW), column(1), row(1)
 {
@@ -72,7 +74,6 @@ void VertexDescription::AddVertexElement(VertexElement element)
 
 	strideSize += element.type.GetTypeSize();
 	data.push_back(element);
-	std::cout << "ICICICICI : " << element.type.GetTypeSize() << std::endl;
 }
 
 void VertexDescription::AddVertexElement(EnumVertexElementSementic sem, EnumVertexElementType type, uint32_t column, uint32_t row)
@@ -158,4 +159,178 @@ bool operator!=(const VertexDescription &lhs, const VertexDescription &rhs)
 {
 	return !(lhs == rhs);
 }
+
+	VertexElementType SpvTypeToVertexType(SpvReflectTypeDescription *type)
+	{
+		VertexElementType ve;
+
+		if (type->type_flags & SPV_REFLECT_TYPE_FLAG_VOID)
+			ve.baseType = EnumVertexElementType::VOID;
+		else if (type->type_flags & SPV_REFLECT_TYPE_FLAG_BOOL)
+			ve.baseType = EnumVertexElementType::BOOLEAN;
+		else if (type->type_flags & SPV_REFLECT_TYPE_FLAG_INT)
+		{
+			if (type->traits.numeric.scalar.signedness == 1)
+				ve.baseType = EnumVertexElementType::INT;
+			else
+				ve.baseType = EnumVertexElementType::UINT;
+		}
+		else if (type->type_flags & SPV_REFLECT_TYPE_FLAG_FLOAT)
+		{
+			if (type->traits.numeric.scalar.width == 32)
+				ve.baseType = EnumVertexElementType::FLOAT;
+			else
+				ve.baseType = EnumVertexElementType::DOUBLE;
+		}
+		else if (type->type_flags & SPV_REFLECT_TYPE_FLAG_EXTERNAL_IMAGE)
+			ve.baseType = EnumVertexElementType::IMAGE;
+		else if (type->type_flags & SPV_REFLECT_TYPE_FLAG_EXTERNAL_SAMPLER)
+			ve.baseType = EnumVertexElementType::SAMPLER;
+		else if (type->type_flags & SPV_REFLECT_TYPE_FLAG_EXTERNAL_SAMPLED_IMAGE)
+			ve.baseType = EnumVertexElementType::SAMPLEDIMAGE;
+		else if (type->type_flags & SPV_REFLECT_TYPE_FLAG_STRUCT)
+			ve.baseType = EnumVertexElementType::STRUCT;
+
+		switch (type->op)
+		{
+		case (SpvOpTypeVector):
+			ve.row = 1;
+			ve.column = type->traits.numeric.vector.component_count;
+			break;
+		case (SpvOpTypeMatrix):
+			ve.row = type->traits.numeric.matrix.row_count;
+			ve.column = type->traits.numeric.matrix.column_count;
+			break;
+		default:
+			ve.row = 1;
+			ve.column = 1;
+			break;
+		}
+		return (ve);
+	}
+
+	VkDescriptorType DescriptorTypeSpvToVk(SpvReflectDescriptorType type)
+	{
+		switch (type)
+		{
+		case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER:
+			return (VK_DESCRIPTOR_TYPE_SAMPLER);
+		case SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
+			return (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+		case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+			return (VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
+		case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+			return (VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+		case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
+			return (VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER);
+		case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
+			return (VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER);
+		case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+			return (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+		case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+			return (VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+		case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
+			return (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC);
+		case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
+			return (VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC);
+		case SPV_REFLECT_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
+			return (VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT);
+		default:
+			return (VkDescriptorType::VK_DESCRIPTOR_TYPE_MAX_ENUM);
+		}
+		return (VkDescriptorType::VK_DESCRIPTOR_TYPE_MAX_ENUM);
+	}
+
+	VkShaderStageFlags SpvStageToVulkanStage(SpvReflectShaderStageFlagBits stage)
+	{
+		switch (stage)
+		{
+		case SPV_REFLECT_SHADER_STAGE_VERTEX_BIT:
+			return (VK_SHADER_STAGE_VERTEX_BIT);
+		case SPV_REFLECT_SHADER_STAGE_TESSELLATION_CONTROL_BIT:
+			return (VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT);
+		case SPV_REFLECT_SHADER_STAGE_TESSELLATION_EVALUATION_BIT:
+			return (VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT);
+		case SPV_REFLECT_SHADER_STAGE_GEOMETRY_BIT:
+			return (VK_SHADER_STAGE_GEOMETRY_BIT);
+		case SPV_REFLECT_SHADER_STAGE_FRAGMENT_BIT:
+			return (VK_SHADER_STAGE_FRAGMENT_BIT);
+		case SPV_REFLECT_SHADER_STAGE_COMPUTE_BIT:
+			return (VK_SHADER_STAGE_COMPUTE_BIT);
+		default:
+			break;
+		}
+		return (0);
+	}
+	VkFormat VertexTypeToVkFormat(VertexElementType vt)
+	{
+		switch (vt.baseType)
+		{
+		case EnumVertexElementType::INT:
+			switch (vt.column)
+			{
+			case 1:
+				return (VK_FORMAT_R32_SINT);
+			case 2:
+				return (VK_FORMAT_R32G32_SINT);
+			case 3:
+				return (VK_FORMAT_R32G32B32_SINT);
+			case 4:
+				return (VK_FORMAT_R32G32B32A32_SINT);
+			default:
+				return (VK_FORMAT_UNDEFINED);
+			}
+		case EnumVertexElementType::UINT:
+			switch (vt.column)
+			{
+			case 1:
+				return (VK_FORMAT_R32_UINT);
+			case 2:
+				return (VK_FORMAT_R32G32_UINT);
+			case 3:
+				return (VK_FORMAT_R32G32B32_UINT);
+			case 4:
+				return (VK_FORMAT_R32G32B32A32_UINT);
+			default:
+				return (VK_FORMAT_UNDEFINED);
+			}
+		case EnumVertexElementType::FLOAT:
+			switch (vt.column)
+			{
+			case 1:
+				return (VK_FORMAT_R32_SFLOAT);
+			case 2:
+				return (VK_FORMAT_R32G32_SFLOAT);
+			case 3:
+				return (VK_FORMAT_R32G32B32_SFLOAT);
+			case 4:
+				return (VK_FORMAT_R32G32B32A32_SFLOAT);
+			default:
+				return (VK_FORMAT_UNDEFINED);
+			}
+		case EnumVertexElementType::DOUBLE:
+			switch (vt.column)
+			{
+			case 1:
+				return (VK_FORMAT_R64_SFLOAT);
+			case 2:
+				return (VK_FORMAT_R64G64_SFLOAT);
+			case 3:
+				return (VK_FORMAT_R64G64B64_SFLOAT);
+			case 4:
+				return (VK_FORMAT_R64G64B64A64_SFLOAT);
+			default:
+				return (VK_FORMAT_UNDEFINED);
+			}
+		default:
+			return (VK_FORMAT_UNDEFINED);
+		}
+		return (VK_FORMAT_UNDEFINED);
+	}
+
+	bool IsImageType(SpvReflectTypeFlags type)
+	{
+		return ((type & SPV_REFLECT_TYPE_FLAG_EXTERNAL_SAMPLER || type & SPV_REFLECT_TYPE_FLAG_EXTERNAL_IMAGE || type & SPV_REFLECT_TYPE_FLAG_EXTERNAL_SAMPLED_IMAGE));
+	}
+
 } // namespace Soon

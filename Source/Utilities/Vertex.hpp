@@ -3,70 +3,71 @@
 #include "Math/vec3.hpp"
 #include <vector>
 #include <assert.h>
+#include "Modules/SPIRV-Reflect/spirv_reflect.h"
 
 namespace Soon
 {
-enum class EnumVertexElementSementic : uint16_t
-{
-	POSITION = 0, /**< Position */
-	//VES_BLEND_WEIGHTS = 2, /**< Blend weights */
-	//VES_BLEND_INDICES = 3, /**< Blend indices */
-	NORMAL = 1, /**< Normal */
-	//VES_COLOR = 5, /**< Color */
-	TEXCOORD = 2, /**< UV coordinate */
-				  //VES_BITANGENT = 7, /**< Bitangent */
-				  //VES_TANGENT = 8, /**< Tangent */
-				  //VES_POSITIONT = 9, /**< Transformed position */
-				  //VES_PSIZE = 10 /**< Point size */
-};
+	enum class EnumVertexElementSementic : uint16_t
+	{
+		POSITION = 0, /**< Position */
+		//VES_BLEND_WEIGHTS = 2, /**< Blend weights */
+		//VES_BLEND_INDICES = 3, /**< Blend indices */
+		NORMAL = 1, /**< Normal */
+		//VES_COLOR = 5, /**< Color */
+		TEXCOORD = 2, /**< UV coordinate */
+					  //VES_BITANGENT = 7, /**< Bitangent */
+					  //VES_TANGENT = 8, /**< Tangent */
+					  //VES_POSITIONT = 9, /**< Transformed position */
+					  //VES_PSIZE = 10 /**< Point size */
+	};
 
-struct VertexInput
-{
-	std::string inputName;
-	EnumVertexElementSementic type;
-};
+	struct VertexInput
+	{
+		std::string inputName;
+		EnumVertexElementSementic type;
+	};
 
-enum class EnumVertexElementType : uint8_t
-{
-	UNKNOW = 0,
-	VOID = 1,
-	BOOLEAN = 2,
-	SBYTE = 3,
-	UBYTE = 4,
-	SHORT = 5,
-	USHORT = 6,
-	INT = 7,
-	UINT = 8,
-	INT64 = 9,
-	UINT64 = 10,
-	ATOMICCOUNTER = 11,
-	HALF = 12,
-	FLOAT = 13,
-	DOUBLE = 14,
-	STRUCT = 15,
-	IMAGE = 16,
-	SAMPLEDIMAGE = 17,
-	SAMPLER = 18,
-	ACCELERATIONSTRUCTURENV = 19,
+	enum class EnumVertexElementType : uint8_t
+	{
+		UNKNOW = 0,
+		VOID = 1,
+		BOOLEAN = 2,
+		SBYTE = 3,
+		UBYTE = 4,
+		SHORT = 5,
+		USHORT = 6,
+		INT = 7,
+		UINT = 8,
+		INT64 = 9,
+		UINT64 = 10,
+		ATOMICCOUNTER = 11,
+		HALF = 12,
+		FLOAT = 13,
+		DOUBLE = 14,
+		STRUCT = 15,
+		IMAGE = 16,
+		SAMPLEDIMAGE = 17,
+		SAMPLER = 18,
+		ACCELERATIONSTRUCTURENV = 19,
 
-	// Keep internal types at the end.
-	CONTROLPOINTARRAY = 20,
-	CHAR = 21,
-};
+		// Keep internal types at the end.
+		CONTROLPOINTARRAY = 20,
+		CHAR = 21,
+	};
 
-struct VertexElementType
-{
-	VertexElementType(void);
+	struct VertexElementType
+	{
+		VertexElementType(void);
 
-	VertexElementType(EnumVertexElementType type, uint32_t pLength, uint32_t pColumn);
+		VertexElementType(EnumVertexElementType type, uint32_t pLength, uint32_t pColumn);
 
-	EnumVertexElementType baseType;
-	uint32_t row;
-	uint32_t column;
+		EnumVertexElementType baseType;
+		uint32_t row;
+		uint32_t column;
 
-	uint32_t GetTypeSize();
+		uint32_t GetTypeSize();
 
-	/*
+		/*
 	bool operator==(const VertexElementType &lhs, const VertexElementType &rhs)
 	{
 		return (lhs.baseType == rhs.baseType && lhs.row == rhs.row && lhs.column == rhs.column);
@@ -77,46 +78,47 @@ struct VertexElementType
 		return !(lhs == rhs);
 	}
 	*/
-};
+	};
 
-bool operator==(const VertexElementType &lhs, const VertexElementType &rhs);
-bool operator!=(const VertexElementType &lhs, const VertexElementType &rhs);
+	bool operator==(const VertexElementType &lhs, const VertexElementType &rhs);
+	bool operator!=(const VertexElementType &lhs, const VertexElementType &rhs);
 
-struct VertexElement
-{
-	VertexElement( void )
+	struct VertexElement
 	{
+		VertexElement(void)
+		{
+		}
 
-	}
+		VertexElement(EnumVertexElementSementic _sem, VertexElementType _type)
+		{
+			sementic = _sem;
+			type = _type;
+		}
 
-	VertexElement(EnumVertexElementSementic _sem, VertexElementType _type)
+		EnumVertexElementSementic sementic;
+		VertexElementType type;
+	};
+
+	struct VertexDescription
 	{
-		sementic = _sem;
-		type = _type;
-	}
+		std::vector<VertexElement> data;
+		uint32_t strideSize = 0;
 
-	EnumVertexElementSementic sementic;
-	VertexElementType type;
-};
+		bool HasElement(EnumVertexElementSementic sem);
+		void AddVertexElement(VertexElement element);
+		void AddVertexElement(EnumVertexElementSementic sem, EnumVertexElementType type, uint32_t column, uint32_t row);
+		void RemoveVertexElement(EnumVertexElementSementic sem);
+		uint32_t GetVertexStrideSize(void);
+		uint32_t GetElementOffset(EnumVertexElementSementic sem);
+		uint32_t GetElementOffset(uint32_t id);
+		uint32_t GetNumElement(void);
+	};
 
-struct VertexDescription
-{
-	std::vector<VertexElement> data;
-	uint32_t strideSize = 0;
+	bool operator==(const VertexDescription &lhs, const VertexDescription &rhs);
+	bool operator!=(const VertexDescription &lhs, const VertexDescription &rhs);
 
-	bool HasElement(EnumVertexElementSementic sem);
-	void AddVertexElement(VertexElement element);
-	void AddVertexElement(EnumVertexElementSementic sem, EnumVertexElementType type, uint32_t column, uint32_t row);
-	void RemoveVertexElement(EnumVertexElementSementic sem);
-	uint32_t GetVertexStrideSize(void);
-	uint32_t GetElementOffset(EnumVertexElementSementic sem);
-	uint32_t GetElementOffset( uint32_t id );
-	uint32_t GetNumElement( void );
-};
+	extern std::vector<VertexInput> DefaultVertexInput;
 
-bool operator==(const VertexDescription &lhs, const VertexDescription &rhs);
-bool operator!=(const VertexDescription &lhs, const VertexDescription &rhs);
-
-extern std::vector<VertexInput> DefaultVertexInput;
-
+	VertexElementType SpvTypeToVertexType(SpvReflectTypeDescription *type);
+	bool IsImageType(SpvReflectTypeFlags type);
 } // namespace Soon
