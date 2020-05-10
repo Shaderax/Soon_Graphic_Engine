@@ -1,21 +1,22 @@
-#include "Renderer/Mesh.hpp"
+#include "Mesh.hpp"
+
+#include <assert.h>
 
 namespace Soon
 {
-Mesh::Mesh(VertexDescription v)
+Mesh::Mesh( VertexDescription v )
 {
-	_vertexDescription = v;
+	m_VertexDescription = v;
 }
 
-Mesh::Mesh(const Mesh &other)
+Mesh::Mesh( const Mesh &other )
 {
 	//_vertices = other._vertices;
 	//_indices = other._indices;
-
 	// Set Vertex Description.
 }
 
-Mesh::~Mesh(void)
+Mesh::~Mesh( void )
 {
 	// if (_uniqueId != IdError)
 	// 		FreeGpu();
@@ -23,47 +24,47 @@ Mesh::~Mesh(void)
 
 // Loader Free ?
 
-void Mesh::SetVertexElement(uint8_t *data, uint32_t size, VertexElement elem)
+void Mesh::SetVertexElement( uint8_t *data, uint32_t size, VertexElement elem )
 {
-	assert((_vertexDescription.HasElement(elem.sementic) && "Has Element"));
+	assert((m_VertexDescription.HasElement(elem.sementic) && "Has Element"));
 
 	uint32_t elementSize = elem.type.GetTypeSize(); // element size, 12
 	//std::cout << "elementSize : " << elementSize << std::endl;
-	_numVertex = size;
-	_vertexTotalSize = _numVertex * _vertexDescription.GetVertexStrideSize();
+	mNumVertex = size;
+	mVertexTotalSize = mNumVertex * m_VertexDescription.GetVertexStrideSize();
 	//std::cout << "_numVertx : " << _numVertex << std::endl;
-	_vertexData = new uint8_t[_vertexTotalSize];
+	mVertexData = new uint8_t[mVertexTotalSize];
 	//std::cout << "Allocate Size : " << _numVertex * elem.type.row * elem.type.column << std::endl;
-	uint32_t offset = _vertexDescription.GetElementOffset(elem.sementic); // offset of element in stride, Ex : 0
+	uint32_t offset = m_VertexDescription.GetElementOffset(elem.sementic); // offset of element in stride, Ex : 0
 	//std::cout << "offset : " << offset << std::endl;
-	uint32_t strideSize = _vertexDescription.GetVertexStrideSize(); // Ex : 12oct
+	uint32_t strideSize = m_VertexDescription.GetVertexStrideSize(); // Ex : 12oct
 	//std::cout << "strideSize : " << strideSize << std::endl;
 
 	for (uint32_t index = 0; index < size; index++)
-		memcpy(_vertexData + (index * strideSize) + offset, data + (index * elementSize), elementSize);
+		memcpy(mVertexData + (index * strideSize) + offset, data + (index * elementSize), elementSize);
 }
 
 // Material Handle
 void Mesh::SetMaterial(ShaderMaterial material)
 {
-	_material = material;
+	m_Material = material;
 }
 
 ShaderMaterial Mesh::GetMaterial()
 {
-	return (_material);
+	return (m_Material);
 }
 
 void Mesh::Render()
 {
-	if (!_material.HasValidVertexDescription(_vertexDescription))
+	if (!m_Material.HasValidVertexDescription(m_VertexDescription))
 	{
 		std::cout << "Non Valid Mesh To Pipeline" << std::endl;
 		return ;
 	}
-	if (_uniqueId == Soon::IdError)
+	if (m_UniqueId == Soon::IdError)
 		AllocGpu();
-	_material.AddToPipeline(_uniqueId);
+	m_Material.AddToPipeline(m_UniqueId);
 }
 
 void Mesh::UnRender()
@@ -72,21 +73,21 @@ void Mesh::UnRender()
 
 void Mesh::AllocGpu()
 {
-	_uniqueId = GraphicsRenderer::GetInstance()->AddMesh(this);
+	m_UniqueId = GraphicsRenderer::GetInstance()->AddMesh(this);
 	//std::cout << "Mesh Alloc GPU, id = " << _uniqueId << std::endl;
 }
 
 void Mesh::FreeGpu()
 {
 	//GraphicsRenderer::GetInstance()->RemoveMesh(_uniqueId);
-	_uniqueId = 0;
+	m_UniqueId = 0;
 }
 
 void Mesh::SetIndexBuffer( uint32_t* indexData, uint32_t size )
 {
 	// Need to free indexData
-	_indices = new uint32_t[size];
-	memcpy(_indices, indexData, size * sizeof(uint32_t));
-	_numIndices = size;
+	mIndices = new uint32_t[size];
+	memcpy(mIndices, indexData, size * sizeof(uint32_t));
+	mNumIndices = size;
 }
 }

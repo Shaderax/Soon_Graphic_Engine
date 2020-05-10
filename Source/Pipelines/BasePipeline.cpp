@@ -1,5 +1,5 @@
-#include "Renderer/Pipelines/BasePipeline.hpp"
-#include "Renderer/Vulkan/GraphicsRenderer.hpp"
+#include "Pipelines/BasePipeline.hpp"
+#include "GraphicsRenderer.hpp"
 #include "UniformsBufferManager.hpp"
 
 namespace Soon
@@ -34,7 +34,7 @@ namespace Soon
 		vkDestroyPipelineLayout(device, _pipelineLayout, nullptr);
 	}
 
-	void BasePipeline::UpdateData(int currentImg)
+	void BasePipeline::UpdateData( int currentImg )
 	{
 		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
 
@@ -42,16 +42,7 @@ namespace Soon
 
 		vec3<float> vec(0.2f, 0.2f, 0.0f);
 
-		vkMapMemory(device, _uniforms[0]._us[0]._uniformRender.bufferMemory[currentImg], 0, _uniforms[0]._members[0]._size, 0, &data);
-		memcpy(data, &vec, _uniforms[0]._members[0]._size);
-		vkUnmapMemory(device, _uniforms[0]._us[0]._uniformRender.bufferMemory[currentImg]);
-
-		_mUbm.UpdateToGPU();
-		// in GPU
-		for (uint32_t index = 0 ; index < _toDraw.size() ; index++)
-		{
-			//_toDraw[index].matId
-		}
+		_mUbm.UpdateToGPU(currentImg);
 		// TODO: How do i Auto Update Model ? We don't know.
 	}
 
@@ -79,15 +70,15 @@ namespace Soon
 	{
 		assert((index < 0 || index >= _defaultUniform.size()));
 
-		if ((block->type_description->member_count != _defaultUniform[index].members.size()) || (block->name != _defaultUniform[index].name))
-			return (-1);
+		//if ((block->type_description->member_count != _defaultUniform[index].members.size()) || (block->name != _defaultUniform[index].name))
+		//	return (-1);
 
-		for (int32_t indexMember = 0; index < block->type_description->member_count; indexMember++)
-		{
-			VertexElementType memberType = SpvTypeToVertexType(&(block->type_description->members[indexMember]));
-			if (memberType != _defaultUniform[index].members[indexMember].tt)
-				return (-1);
-		}
+		//for (int32_t indexMember = 0; index < block->type_description->member_count; indexMember++)
+		//{
+		//	VertexElementType memberType = SpvTypeToVertexType(&(block->type_description->members[indexMember]));
+		//	if (memberType != _defaultUniform[index].members[indexMember].tt)
+		//		return (-1);
+		//}
 		return (0);
 	}
 
@@ -99,25 +90,11 @@ namespace Soon
 		return (true);
 	}
 
-	void BasePipeline::GetShaderData(std::string _path)
+	void BasePipeline::GetInputBindings( spv_reflect::ShaderModule& reflection )
 	{
-		std::vector<char> spirvFile = ReadFile(_path);
-
-		spv_reflect::ShaderModule reflection(spirvFile.size(), spirvFile.data());
-
-		if (reflection.GetResult() != SPV_REFLECT_RESULT_SUCCESS)
-		{
-			std::cerr << "ERROR: could not process '"
-					  << "./SPV_Reader/Ressources/Shaders/DefaultShader.vert.spv"
-					  << "' (is it a valid SPIR-V bytecode?)" << std::endl;
-			return;
-		}
-
+		std::vector<SpvReflectInterfaceVariable *> inputs;
 		SpvReflectResult result = SPV_REFLECT_RESULT_NOT_READY;
 		uint32_t count = 0;
-		std::vector<SpvReflectDescriptorBinding *> bindings;
-		std::vector<SpvReflectInterfaceVariable *> inputs;
-
 		/// INPUT ///
 		if (reflection.GetShaderStage() == SpvReflectShaderStageFlagBits::SPV_REFLECT_SHADER_STAGE_VERTEX_BIT)
 		{
@@ -163,6 +140,14 @@ namespace Soon
 			}
 		}
 
+	}
+
+	void BasePipeline::GetDescriptorBindings( spv_reflect::ShaderModule& reflection )
+	{
+
+		SpvReflectResult result = SPV_REFLECT_RESULT_NOT_READY;
+		uint32_t count = 0;
+		std::vector<SpvReflectDescriptorBinding *> bindings;
 		/// Descriptor Binding ///
 
 		result = reflection.EnumerateDescriptorBindings(&count, nullptr);
@@ -183,17 +168,10 @@ namespace Soon
 				texture._data._type = SpvTypeToVertexType(bindings[index]->type_description);
 
 				int32_t indexDefault = IsDefaultUniform(bindings[index]->name);
-				//if (indexDefault >= 0 && IsValidDefaultUniform(bindings[index], indexDefault))
-				//{
-				//	texture.isUnique = _defaultUniform[indexDefault].isUnique;
-				//	texture._updateFunct = _defaultUniform[indexDefault].updateFunc;
-				//}
-				//else
-				//{
-					texture.isUnique = false;
-					texture._updateFunct = nullptr;
-				//}
-				_uniformsTexture.push_back(texture);
+				texture.isUnique = false;
+				texture._updateFunct = nullptr;
+				_mUbm.AddUniformTexture(texture);
+				//_uniformsTexture.push_back(texture);
 			}
 			else
 			{
@@ -214,20 +192,19 @@ namespace Soon
 					uniform._members.push_back(uniVar);
 				}
 				int32_t defaultIndex = IsDefaultUniform(bindings[index]->name);
-				if (defaultIndex >= 0 && IsValidDefaultUniform(bindings[index], defaultIndex))
+				if (defaultIndex >= 0/* && IsValidDefaultUniform(bindings[index], defaultIndex)*/)
 				{
 					uniform.isUnique = _defaultUniform[defaultIndex].isUnique;
-					uniform._updateFunct = _defaultUniform[defaultIndex].updateFunc;
+					//uniform._updateFunct = _defaultUniform[defaultIndex].updateFunc;
 				}
 				else
 				{
 					uniform.isUnique = false;
 					uniform._updateFunct = nullptr;
 				}
-				_uniforms.push_back(uniform);
+				//_uniforms.push_back(uniform);
+				_mUbm.AddUniform(uniform);
 			}
-			// total Size
-			_totalUniformSize += bindings[index]->block.size;
 			// std::cout << "Size :: " << bindings[index]->block.size << std::endl;
 			// uboLayout
 			VkDescriptorSetLayoutBinding ubo;
@@ -241,6 +218,24 @@ namespace Soon
 				uboLayoutBinding.resize(bindings[index]->set + 1);
 			uboLayoutBinding[bindings[index]->set].push_back(ubo);
 		}
+	}
+
+	void BasePipeline::GetShaderData(std::string _path)
+	{
+		std::vector<char> spirvFile = ReadFile(_path);
+
+		spv_reflect::ShaderModule reflection(spirvFile.size(), spirvFile.data());
+
+		if (reflection.GetResult() != SPV_REFLECT_RESULT_SUCCESS)
+		{
+			std::cerr << "ERROR: could not process '"
+					  << "./SPV_Reader/Ressources/Shaders/DefaultShader.vert.spv"
+					  << "' (is it a valid SPIR-V bytecode?)" << std::endl;
+			return;
+		}
+
+		GetInputBindings(reflection);
+		GetDescriptorBindings(reflection);
 	}
 
 	void BasePipeline::GetBindingDescription( void )

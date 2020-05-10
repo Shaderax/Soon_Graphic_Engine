@@ -1,15 +1,15 @@
-#include "Renderer/Vulkan/GraphicsRenderer.hpp"
+#include "GraphicsRenderer.hpp"
 #include "GraphicsInstance.hpp"
 #include <typeinfo>
 #include "Modules/ClassTypeId.hpp"
 
-#include "Renderer/Pipelines/BasePipeline.hpp"
-#include "Renderer/Pipelines/ShaderPipeline.hpp"
-#include "Renderer/Pipelines/ComputePipeline.hpp"
+#include "Pipelines/BasePipeline.hpp"
+#include "Pipelines/ShaderPipeline.hpp"
+#include "Pipelines/ComputePipeline.hpp"
 
 #include <iostream>
 
-#include "Renderer/Mesh.hpp"
+#include "Mesh.hpp"
 
 namespace Soon
 {
@@ -192,9 +192,10 @@ namespace Soon
 			++_meshCounter;
 			_meshs.resize(_meshCounter);
 		}
+
 		MeshBufferRenderer mbr;
-		mbr.vertex = GraphicsInstance::GetInstance()->CreateVertexBuffer(mesh->_vertexData, mesh->_vertexTotalSize);
-		mbr.indices = GraphicsInstance::GetInstance()->CreateIndexBuffer(mesh->_indices, mesh->_numIndices);
+		mbr.vertex = GraphicsInstance::GetInstance()->CreateVertexBuffer(mesh->mVertexData, mesh->mVertexTotalSize);
+		mbr.indices = GraphicsInstance::GetInstance()->CreateIndexBuffer(mesh->mIndices, mesh->mNumIndices);
 		_meshs[id] = mbr;
 
 		return (id);

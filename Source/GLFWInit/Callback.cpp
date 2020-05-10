@@ -1,4 +1,4 @@
-#include "Callback.hpp"
+#include "GLFWInit/Callback.hpp"
 #include <iostream>
 
 namespace Soon

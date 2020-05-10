@@ -1,4 +1,4 @@
-#include "Utilities/Vertex.hpp"
+#include "Vertex.hpp"
 
 #include "Math/vec3.hpp"
 #include <vector>

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Renderer/Pipelines/ShaderPipeline.hpp"
+#include "Pipelines/ShaderPipeline.hpp"
 #include "Materials/Material.hpp"
 
-#include "Renderer/Vulkan/GraphicsRenderer.hpp"
+#include "GraphicsRenderer.hpp"
 
 namespace Soon
 {

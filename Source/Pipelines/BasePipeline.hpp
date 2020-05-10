@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Renderer/Vulkan/GraphicsInstance.hpp"
+#include "GraphicsInstance.hpp"
 
 #include "Utilities/ShadersUniform.hpp"
-#include "Utilities/Vertex.hpp"
+#include "Vertex.hpp"
 #include "Utilities/ReadFile.hpp"
 
 #include "Modules/SPIRV-Reflect/spirv_reflect.h"
@@ -11,6 +11,8 @@
 
 #include <vector>
 #include <functional>
+
+#include "UniformsBufferManager.hpp"
 
 namespace Soon
 {
@@ -29,80 +31,12 @@ namespace Soon
 	struct DefaultUniformStruct
 	{
 		std::string name;
-		std::string typeName;
-		VertexElementType tt;
+		//std::string typeName;
+		//VertexElementType tt;
 		bool isUnique;
-		std::vector<DefaultMemberStruct> members;
-		std::function<void(int)> updateFunc;
+		//std::vector<DefaultMemberStruct> members;
+		//std::function<void(int)> updateFunc;
 	};
-
-	/*
-void UpdateCamera(VkDeviceMemory deviceMemory) // VkDeviceMemory
-{
-	void *data = nullptr;
-	VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
-
-	UniformCamera uc = {};
-
-	if (Engine::GetInstance().GetCurrentScene() && Engine::GetInstance().GetCurrentScene()->GetCurrentCamera())
-	{
-		uc.view = Engine::GetInstance().GetCurrentScene()->GetCurrentCamera()->GetViewMatrix();
-		uc.proj = Engine::GetInstance().GetCurrentScene()->GetCurrentCamera()->GetProjectionMatrix();
-	}
-	else
-	{
-		std::cout << "No Current Camera." << std::endl;
-		uc.view = mat4<float>();
-		uc.proj = mat4<float>();
-	}
-
-	//std::vector<VkDeviceMemory> vkdm = _uniformCamera._uniformRender._BufferMemory;
-	vkMapMemory(device, deviceMemory, 0, sizeof(UniformCamera), 0, &data);
-	memcpy(data, &uc, sizeof(UniformCamera));
-	vkUnmapMemory(device, deviceMemory);
-	}
-*/
-
-
-
-	/*
-void UpdateModel(VkDeviceMemory deviceMemory, Transform3D *transform)
-{
-	void *data = nullptr;
-	VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
-
-	//int i = -1;
-	//for (auto& uniform : _uniformsBuffers)
-	//{
-	//	++i;
-
-	vkMapMemory(device, deviceMemory, 0, sizeof(UniformModel), 0, &data);
-
-	mat4<float> matModel;
-
-	Transform3D *transform; // = _transforms.at(i);
-
-	matModel = transform->_rot.GetRotationMatrix();
-
-	matModel(0, 3) = transform->_pos.x;
-	matModel(1, 3) = transform->_pos.y;
-	matModel(2, 3) = transform->_pos.z;
-
-	matModel(0, 0) *= transform->_scale.x;
-	matModel(1, 1) *= transform->_scale.y;
-	matModel(2, 2) *= transform->_scale.z;
-
-	memcpy(data, &matModel, sizeof(UniformModel));
-	vkUnmapMemory(device, deviceMemory);
-}
-*/
-	/*
-void AutoUpdate(Uniform &uniform)
-{
-	//for (material->updated)
-	//	for (uint32_t index = 0; index < uniform._members)
-}
-*/
 
 	struct IdRender
 	{
@@ -124,14 +58,13 @@ void AutoUpdate(Uniform &uniform)
 		VertexDescription _vertexDescription;
 
 		UniformsBufferManager _mUbm;
-		//std::vector<Uniform> _uniforms;				  // uniformModel, uniformLight
-		//std::vector<UniformTexture> _uniformsTexture; // uniformSampler2D
 
 	public:
 		GraphicsPipelineConf _conf;
 		VkVertexInputBindingDescription _bindingDescription;
 		std::vector<VkVertexInputAttributeDescription> _attributeDescriptions;
-		std::vector<DefaultUniformStruct> _defaultUniform{
+		std::vector<DefaultUniformStruct> _defaultUniform
+		{
 			/*
 	{"uc", "UniformCamera", {EnumVertexElementType::STRUCT}, true, true, {{"view", "", {EnumVertexElementType::FLOAT, 4, 4}}, {"proj", "", {EnumVertexElementType::FLOAT, 4, 4}}}, &UpdateCamera},
 	{"um", "UniformModel", {EnumVertexElementType::STRUCT}, false, true, {{"model", "", {EnumVertexElementType::FLOAT, 4, 4}}}, &UpdateModel}
@@ -172,6 +105,9 @@ void AutoUpdate(Uniform &uniform)
 		int32_t IsDefaultVertexInput(std::string name);
 		int32_t IsDefaultUniform(std::string name);
 		int32_t IsValidDefaultUniform(SpvReflectDescriptorBinding *block, int32_t index);
+
+		void GetInputBindings( spv_reflect::ShaderModule& reflection );
+		void GetDescriptorBindings( spv_reflect::ShaderModule& reflection );
 	};
 
 	VkFormat VertexTypeToVkFormat(VertexElementType vt);

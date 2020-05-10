@@ -124,8 +124,8 @@ namespace Soon
 		VkDeviceMemory	_depthImageMemory;
 		VkImageView		_depthImageView;
 
-		VmaAllocator	_allocator;
-		VmaAllocation	_mAllocation;
+		VmaAllocator	m_Allocator;
+		VmaAllocation	m_Allocation;
 
 	public:
 		enum class ShaderType
@@ -213,7 +213,9 @@ namespace Soon
 		//std::vector<VkDescriptorSet> CreateDescriptorSets( size_t size, std::vector<VkDescriptorSetLayout> layoutArray, int dlayout, VkBuffer* gpuBuffers,  VkDescriptorType dType);
 		std::vector<VkDescriptorSet> CreateDescriptorSets(size_t size, uint32_t binding, VkDescriptorSetLayout layout, VkBuffer *gpuBuffers, VkDescriptorType dType);
 
-		void CreateAllocator(void);
-		void DestroyAllocator(void);
+		void	CreateAllocator(void);
+		void	DestroyAllocator(void);
+		void*	MapGpuMemory( );
+		void	UnMapGpuMemory( void );
 	};
 } // namespace Soon

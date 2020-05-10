@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Renderer/Pipelines/BasePipeline.hpp"
+#include "BasePipeline.hpp"
 
 namespace Soon
 {

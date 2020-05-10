@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Utilities/Vertex.hpp"
+#include "Vertex.hpp"
 #include <stdint.h>
 #include <limits>
 
-#include <Materials/ShaderMaterial.hpp>
+#include "Materials/ShaderMaterial.hpp"
 
 #include "Utilities/Error.hpp"
 
@@ -13,31 +13,31 @@ namespace Soon
 	class Mesh
 	{
 		private:
-			ShaderMaterial _material;
-			VertexDescription _vertexDescription;
+			ShaderMaterial		m_Material;
+			VertexDescription	m_VertexDescription;
 
-			uint32_t _uniqueId = IdError;
+			uint32_t	m_UniqueId = IdError;
 
 		public:
-			uint8_t* _vertexData;
-			uint32_t* _indices;
-			uint32_t _numIndices;
-			uint32_t _numVertex;
-			uint32_t _vertexTotalSize = 0;
+			uint8_t*	mVertexData;
+			uint32_t*	mIndices;
+			uint32_t	mNumIndices;
+			uint32_t	mNumVertex;
+			uint32_t	mVertexTotalSize = 0;
 
-			Mesh(VertexDescription v);
-			Mesh(const Mesh &other);
-			~Mesh(void);
+			Mesh( VertexDescription v );
+			Mesh( const Mesh &other );
+			~Mesh( void );
 			// Loader Free ?
 
-			void SetVertexElement(uint8_t* data, uint32_t size, VertexElement elem);
-			void SetIndexBuffer( uint32_t* indexData, uint32_t size );
+			void	SetVertexElement( uint8_t* data, uint32_t size, VertexElement elem );
+			void	SetIndexBuffer( uint32_t* indexData, uint32_t size );
 			// Material Handle
-			void SetMaterial(ShaderMaterial material);
-			ShaderMaterial GetMaterial();
-			void Render();
-			void UnRender();
-			void AllocGpu();
-			void FreeGpu();
+			void	SetMaterial( ShaderMaterial material );
+			ShaderMaterial	GetMaterial( void );
+			void	Render( void );
+			void	UnRender( void );
+			void	AllocGpu( void );
+			void	FreeGpu( void );
 	};
 }; // namespace Soon

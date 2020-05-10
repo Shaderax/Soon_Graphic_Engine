@@ -5,7 +5,7 @@
 #include <vector>
 #include <functional>
 
-#include "Utilities/Vertex.hpp"
+#include "Vertex.hpp"
 
 namespace Soon
 {
@@ -43,20 +43,23 @@ namespace Soon
 
 	class UniformsBufferManager
 	{
-		private:
-		uint32_t		_mMinElements;
-		uint8_t*		_mCpuBuffer;
-		VmaAllocation				_mGpuMemory;
-		std::vector<VkBuffer>		_mGpuBuffer;
-		std::vector<Uniform>		_mUniforms;
-		std::vector<Uniform>		_mUniqueUniforms;
-		std::vector<UniformTexture> _mUniformsTexture;
+	private:
+		uint32_t		m_NumElement = 0;
+		uint32_t		m_MinElements = 100;
+		uint8_t*		m_CpuBuffer = nullptr;
+		uint32_t		m_SizeUniformBlock = 0;
+		std::vector<VmaAllocation>	m_GpuMemory;
+		std::vector<VkBuffer>		m_GpuBuffer;
+		std::vector<Uniform>		m_Uniforms;
+		std::vector<Uniform>		m_UniqueUniforms;
+		std::vector<UniformTexture> m_UniformsTexture;
 
-		public:
-		void AddUniform( Uniform uniform );
+	public:
 		void InitBuffers( void );
-		void Set( std::string name, void* value );
 		void DestroyAllUniforms( void );
-		void UpdateToGPU( void );
+		void AddUniform( Uniform uniform );
+		void AddUniformTexture( UniformTexture uniform );
+		void UpdateToGPU( uint32_t currentImg );
+		void Set( std::string name, void* value );
 	};
 };

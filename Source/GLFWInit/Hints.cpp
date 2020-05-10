@@ -1,6 +1,6 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include "Hints.hpp"
+#include "GLFWInit/Hints.hpp"
 
 namespace Soon
 {

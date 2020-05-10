@@ -1,5 +1,5 @@
-#include "Init.hpp"
-#include "Callback.hpp"
+#include "GLFWInit/Init.hpp"
+#include "GLFWInit/Callback.hpp"
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <iostream>

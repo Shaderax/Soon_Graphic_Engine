@@ -1,6 +1,6 @@
 #include "Materials/ShaderMaterial.hpp"
 
-#include "Renderer/Pipelines/NewDefaultPipeline.hpp"
+#include "Pipelines/NewDefaultPipeline.hpp"
 
 #include "Utilities/Error.hpp"
 

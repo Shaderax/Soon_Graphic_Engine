@@ -3,9 +3,9 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#include "Renderer/Pipelines/BasePipeline.hpp"
-#include "Renderer/Pipelines/ShaderPipeline.hpp"
-#include "Renderer/Pipelines/ComputePipeline.hpp"
+#include "Pipelines/BasePipeline.hpp"
+#include "Pipelines/ShaderPipeline.hpp"
+#include "Pipelines/ComputePipeline.hpp"
 
 #include "Modules/ClassTypeId.hpp"
 

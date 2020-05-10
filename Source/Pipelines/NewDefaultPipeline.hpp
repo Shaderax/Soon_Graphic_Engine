@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Renderer/Pipelines/ShaderPipeline.hpp"
+#include "Pipelines/ShaderPipeline.hpp"
 
 namespace Soon
 {
@@ -12,7 +12,10 @@ class NewDefaultPipeline : public ShaderPipeline
             _pathVert = "Ressources/Shaders/TestShaders/TestShader.vert.spv";
             _pathFrag = "Ressources/Shaders/TestShaders/TestShader.frag.spv";
 
-            //SetDefaultUniform("unitruc");
+			DefaultUniformStruct defaultStruct;
+			defaultStruct.isUnique = true;
+			defaultStruct.name = "UniformModel";
+            SetDefaultUniform(defaultStruct);
         }
 
         ~NewDefaultPipeline( void )

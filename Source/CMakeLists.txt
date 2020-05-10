@@ -1,23 +1,23 @@
 cmake_minimum_required (VERSION 3.10)
 
-add_compile_options(-Wall -Wextra -g3)
+add_compile_options(-Wall -Wextra -g3 -Wshadow -Wnon-virtual-dtor -pedantic)
 
 set(SRC 
 	Materials/ShaderMaterial.cpp
 
-	Renderer/Vulkan/GraphicsInstance.cpp
-	Renderer/Vulkan/GraphicsRenderer.cpp
-	Renderer/Vulkan/PipelineConf.cpp
+	GraphicsInstance.cpp
+	GraphicsRenderer.cpp
+	PipelineConf.cpp
 
-	Renderer/GLFW/Init.cpp
-	Renderer/GLFW/Hints.cpp
-	Renderer/GLFW/Callback.cpp
+	GLFWInit/Init.cpp
+	GLFWInit/Hints.cpp
+	GLFWInit/Callback.cpp
 
-	Renderer/Pipelines/BasePipeline.cpp
+	Pipelines/BasePipeline.cpp
 
-	Renderer/Mesh.cpp
+	Mesh.cpp
 
-	Utilities/Vertex.cpp
+	Vertex.cpp
 	Utilities/ReadFile.cpp
 
 	../Modules/SPIRV-Reflect/spirv_reflect.c

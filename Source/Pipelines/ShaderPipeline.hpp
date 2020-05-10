@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Renderer/Pipelines/BasePipeline.hpp"
+#include "Pipelines/BasePipeline.hpp"
 
 #include <vector>
 

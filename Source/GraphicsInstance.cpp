@@ -19,8 +19,8 @@
 
 #define MAX_FRAMES_IN_FLIGHT 2
 
-#include "Renderer/GLFW/Init.hpp"
-#include "Renderer/GLFW/Hints.hpp"
+#include "GLFWInit/Init.hpp"
+#include "GLFWInit/Hints.hpp"
 
 const std::vector<const char *> validationLayers = {
 	"VK_LAYER_LUNARG_standard_validation"};
@@ -1149,7 +1149,7 @@ namespace Soon
 		VertexBufferRenderer bufRenderer;
 		std::cout << "Storage BUFFER CREATION : " << size << std::endl;
 
-		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer.buffer, stagingBuffer.bufferMemory);
+		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, stagingBuffer.buffer);
 
 		if (ptrData)
 		{
@@ -1159,7 +1159,7 @@ namespace Soon
 			vkUnmapMemory(_device, stagingBuffer.bufferMemory);
 		}
 
-		CreateBuffer(size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, bufRenderer.buffer, bufRenderer.bufferMemory);
+		CreateBuffer(size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY, bufRenderer.buffer);
 
 		CopyBuffer(stagingBuffer.buffer, bufRenderer.buffer, size);
 
@@ -1175,7 +1175,7 @@ namespace Soon
 		VertexBufferRenderer bufRenderer;
 		std::cout << "Vertex BUFFER CREATION : " << size << std::endl;
 
-		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer.buffer, stagingBuffer.bufferMemory);
+		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, stagingBuffer.buffer);
 
 		if (ptrData)
 		{
@@ -1185,7 +1185,7 @@ namespace Soon
 			vkUnmapMemory(_device, stagingBuffer.bufferMemory);
 		}
 
-		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, bufRenderer.buffer, bufRenderer.bufferMemory);
+		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY, bufRenderer.buffer);
 
 		CopyBuffer(stagingBuffer.buffer, bufRenderer.buffer, size);
 
@@ -1251,14 +1251,14 @@ namespace Soon
 		std::cout << "ImageSize BUFFER CREATION : " << imageSize << std::endl;
 		//std::cout << "width " << texture->_width <<  " " << "Height : " << texture->_height << "Format : " << texture->_format << std::endl;
 
-		CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+		CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, stagingBuffer);
 
 		void *data;
 		vkMapMemory(_device, stagingBufferMemory, 0, imageSize, 0, &data);
 		memcpy(data, textureData, static_cast<size_t>(imageSize));
 		vkUnmapMemory(_device, stagingBufferMemory);
 
-		CreateImage(width, width, layer, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, ir._textureImage, ir._textureImageMemory);
+		CreateImage(width, width, layer, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VMA_MEMORY_USAGE_GPU_ONLY, ir._textureImage, ir._textureImageMemory);
 
 		TransitionImageLayout(ir._textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, layer == 1 ? VK_IMAGE_VIEW_TYPE_2D : VK_IMAGE_VIEW_TYPE_CUBE);
 		CopyBufferToImage(stagingBuffer, ir._textureImage, static_cast<uint32_t>(width), static_cast<uint32_t>(height), layer == 1 ? VK_IMAGE_VIEW_TYPE_2D : VK_IMAGE_VIEW_TYPE_CUBE);
@@ -1489,14 +1489,14 @@ namespace Soon
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
 
-		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, stagingBuffer);
 
 		void *data;
 		vkMapMemory(_device, stagingBufferMemory, 0, bufferSize, 0, (void **)&data);
 		memcpy(data, indexData, (size_t)bufferSize);
 		vkUnmapMemory(_device, stagingBufferMemory);
 
-		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, bufRenderer.buffer, bufRenderer.bufferMemory);
+		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY, bufRenderer.buffer);
 
 		CopyBuffer(stagingBuffer, bufRenderer.buffer, bufferSize);
 
@@ -1568,7 +1568,7 @@ namespace Soon
 		buf.bufferMemory.resize(_swapChainImages.size());
 
 		for (size_t i = 0; i < _swapChainImages.size(); i++)
-			CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buf.buffer[i], buf.bufferMemory[i]);
+			CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_ONLY, buf.buffer[i]);
 
 		return (buf);
 	}
@@ -1848,11 +1848,25 @@ namespace Soon
 	{
 		//Destroy
 		//vmaDestroyBuffer(allocator, buffer, allocation);
-		vmaDestroyAllocator(_allocator);
+		vmaDestroyAllocator(m_Allocator);
 	}
 
 	uint32_t GraphicsInstance::GetSwapChainSize(void)
 	{
 		return (_swapChainImages.size());
+	}
+
+	void* GraphicsInstance::MapGpuMemory( )
+	{
+		void* mappedData = nullptr;
+
+		vmaMapMemory(m_Allocator, m_Allocation, &mappedData);
+
+		return mappedData;
+	}
+
+	void GraphicsInstance::UnMapGpuMemory( void )
+	{
+		vmaUnmapMemory(m_Allocator, m_Allocation);
 	}
 } // namespace Soon
