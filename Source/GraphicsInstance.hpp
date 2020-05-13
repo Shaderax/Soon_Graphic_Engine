@@ -211,7 +211,7 @@ namespace Soon
 		UniformSets CreateUniform(size_t size, std::vector<VkDescriptorSetLayout> layoutArray, int dlayout);
 		//std::vector<VkDescriptorSet> CreateDescriptorSets( size_t size, std::vector<VkDescriptorSetLayout> layoutArray, int dlayout, VkBuffer* gpuBuffers,  VkDescriptorType dType);
 		//std::vector<VkDescriptorSet> CreateDescriptorSets(size_t size, uint32_t binding, VkDescriptorSetLayout layout, VkBuffer *gpuBuffers, VkDescriptorType dType);
-		std::vector<VkDescriptorSet> GraphicsInstance::CreateDescriptorSets(size_t size, uint32_t binding, uint32_t offset, VkDescriptorSetLayout layout, VkBuffer* gpuBuffers, uint32_t bufferCount);
+		std::vector<VkDescriptorSet> CreateDescriptorSets(size_t size, uint32_t binding, uint32_t offset, VkDescriptorSetLayout layout, VkBuffer* gpuBuffers, uint32_t bufferCount);
 
 		void	CreateAllocator(void);
 		void	DestroyAllocator(void);

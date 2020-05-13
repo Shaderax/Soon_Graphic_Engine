@@ -72,7 +72,7 @@ namespace Soon
 		};
 
 		BasePipeline(void);
-		~BasePipeline();
+		virtual ~BasePipeline();
 
 		virtual void Init() = 0;
 

@@ -40,4 +40,4 @@ namespace Soon
 			void	AllocGpu( void );
 			void	FreeGpu( void );
 	};
-}; // namespace Soon
+} // namespace Soon

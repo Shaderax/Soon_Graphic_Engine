@@ -21,6 +21,8 @@ set(SRC
 	Utilities/ReadFile.cpp
 
 	../Modules/SPIRV-Reflect/spirv_reflect.c
+
+	UniformsBufferManager.cpp
 	)
 
 add_library(Source ${SRC})

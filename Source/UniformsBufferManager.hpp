@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdint.h>
 #include <iostream>
 #include "vulkan/vulkan.h"
@@ -6,6 +8,8 @@
 #include <functional>
 
 #include "Vertex.hpp"
+
+#include "ThirdParty/VkMemoryAllocator/vk_mem_alloc.h"
 
 namespace Soon
 {
@@ -61,6 +65,8 @@ namespace Soon
 		std::vector<std::vector<VkDescriptorSetLayoutBinding>> uboLayoutBinding;
 
 	public:
+		UniformsBufferManager( void );
+		~UniformsBufferManager( void );
 		void InitBuffers( void );
 		void DestroyAllUniforms( void );
 		void AddUniform( Uniform uniform );
@@ -76,4 +82,4 @@ namespace Soon
 		std::vector<Uniform>& GetNonUniqueUniforms( void );
 		std::vector<VkDescriptorSet>& GetDescriptorSet( uint32_t image, uint32_t idMat );
 	};
-};
+}

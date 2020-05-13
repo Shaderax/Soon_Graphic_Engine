@@ -220,4 +220,4 @@ namespace Soon
 			if (bp)
 				bp->DestroyAllUniforms();
 	}
-}; // namespace Soon
+} // namespace Soon

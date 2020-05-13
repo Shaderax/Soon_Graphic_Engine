@@ -18,9 +18,9 @@ endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}) 
 include_directories(Source)
-include_directories(ThirdParty)
-include_directories(ThirdParty/glfw/include)
-include_directories(Modules)
+include_directories([SYSTEM] ThirdParty)
+include_directories([SYSTEM] ThirdParty/glfw/include)
+include_directories([SYSTEM] Modules)
 
 #include_directories(/usr/include/)
 #include_directories(ThirdParty/)

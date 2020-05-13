@@ -30,7 +30,7 @@ namespace Soon
 			//	vkDestroyPipeline(GraphicsInstance::GetInstance()->GetDevice(), _graphicPipeline, nullptr);
 		}
 
-		void Init(void)
+		void Init( void )
 		{
 			assert(!_pathVert.empty() && !_pathFrag.empty() && "Vertex Path or Frag Path not feed");
 
