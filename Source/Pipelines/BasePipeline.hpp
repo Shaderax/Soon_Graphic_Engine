@@ -51,13 +51,13 @@ namespace Soon
 		VkPipelineLayout _pipelineLayout;
 		std::vector<VkDescriptorSetLayout> _descriptorSetLayout;
 		std::vector<std::vector<VkDescriptorSetLayoutBinding>> uboLayoutBinding;
+		UniformsBufferManager _mUbm;
 
 	private:
 		std::vector<IdRender> _toDraw;
 		std::vector<uint32_t> _freeId;
 		VertexDescription _vertexDescription;
 
-		UniformsBufferManager _mUbm;
 
 	public:
 		GraphicsPipelineConf _conf;
@@ -98,7 +98,6 @@ namespace Soon
 		// Setter
 		void Set(std::string name, void *value, uint32_t id);
 		bool SetDefaultUniform(DefaultUniformStruct structure);
-		void SetUniformsArray(void);
 
 		void UpdateData(int currentImg);
 

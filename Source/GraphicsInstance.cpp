@@ -1143,7 +1143,7 @@ namespace Soon
 		throw std::runtime_error("failed to find suitable memory type!");
 	}
 
-	VertexBufferRenderer GraphicsInstance::CreateStorageBuffer(void *ptrData, uint32_t size)
+	VertexBufferRenderer GraphicsInstance::CreateStorageBuffer(void *ptrData, uint32_t size, VmaAllocation* allocation )
 	{
 		VertexBufferRenderer stagingBuffer;
 		VertexBufferRenderer bufRenderer;
@@ -1169,11 +1169,14 @@ namespace Soon
 		return (bufRenderer);
 	}
 
-	VertexBufferRenderer GraphicsInstance::CreateVertexBuffer(uint8_t *ptrData, uint32_t size)
+	VertexBufferRenderer GraphicsInstance::CreateVertexBuffer(uint8_t *ptrData, uint32_t size, VmaAllocation* allocation )
 	{
 		VertexBufferRenderer stagingBuffer;
 		VertexBufferRenderer bufRenderer;
 		std::cout << "Vertex BUFFER CREATION : " << size << std::endl;
+
+		if (allocation == nullptr)
+			allocation = &m_Allocation;
 
 		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, stagingBuffer.buffer);
 
@@ -1439,7 +1442,7 @@ namespace Soon
 	}
 
 	//void GraphicsInstance::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory)
-	void GraphicsInstance::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage, VkBuffer &buffer)
+	void GraphicsInstance::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage, VkBuffer &buffer, VmaAllocation* allocation )
 	{
 		// TODO: Impl VMA
 		VkBufferCreateInfo bufferInfo = {};
@@ -1451,7 +1454,7 @@ namespace Soon
 		VmaAllocationCreateInfo allocInfo = {};
 		allocInfo.usage = memoryUsage;
 
-		vmaCreateBuffer(_allocator, &bufferInfo, &allocInfo, &buffer, &_mAllocation, nullptr);
+		vmaCreateBuffer(m_Allocator, &bufferInfo, &allocInfo, &buffer, &m_Allocation, nullptr);
 
 		/*
 		VkBufferCreateInfo bufferInfo = {};
@@ -1478,7 +1481,7 @@ namespace Soon
 		*/
 	}
 
-	IndiceBufferRenderer GraphicsInstance::CreateIndexBuffer(uint32_t *indexData, uint32_t size)
+	IndiceBufferRenderer GraphicsInstance::CreateIndexBuffer(uint32_t *indexData, uint32_t size, VmaAllocation* allocation )
 	{
 		IndiceBufferRenderer bufRenderer;
 		VkDeviceSize bufferSize = sizeof(uint32_t) * size;
@@ -1632,37 +1635,37 @@ namespace Soon
 	}
 
 	// TODO : MULTISET DYNAMIC
-	std::vector<VkDescriptorSet> GraphicsInstance::CreateDescriptorSets(size_t size, uint32_t binding, VkDescriptorSetLayout layout, VkBuffer *gpuBuffers, VkDescriptorType dType)
+	std::vector<VkDescriptorSet> GraphicsInstance::CreateDescriptorSets(size_t size, uint32_t offset, uint32_t binding, VkDescriptorSetLayout layout, VkBuffer* gpuBuffers, uint32_t bufferCount)
 	{
+		// TODO: bufferCount
 		std::vector<VkDescriptorSet> descriptorSets;
-		std::vector<VkDescriptorSetLayout> layouts(_swapChainImages.size(), layout);
+
+		descriptorSets.resize(_swapChainImages.size());
 
 		VkDescriptorSetAllocateInfo allocInfo = {};
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		allocInfo.descriptorPool = _descriptorPool;
-		allocInfo.descriptorSetCount = 1 * static_cast<uint32_t>(_swapChainImages.size()); // number of descriptor sets to be allocated from the pool.
-		allocInfo.pSetLayouts = layouts.data();											   // Me faut le layout du set
+		allocInfo.descriptorSetCount = _swapChainImages.size(); // number of descriptor sets to be allocated from the pool.
+		allocInfo.pSetLayouts = &layout;
 
-		descriptorSets.resize(_swapChainImages.size());
 		if (vkAllocateDescriptorSets(_device, &allocInfo, descriptorSets.data()) != VK_SUCCESS)
 			throw std::runtime_error("failed to allocate descriptor sets!");
 
 		for (size_t i = 0; i < _swapChainImages.size(); i++)
 		{
 			VkDescriptorBufferInfo bufferInfo = {};
-			//if (dType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
 			bufferInfo.buffer = gpuBuffers[i];
-			//else if (dType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
-			//	bufferInfo.buffer = gpuBuffers[0];
-			bufferInfo.offset = 0;
+			bufferInfo.offset = offset;
 			bufferInfo.range = size;
+			// Le vkBuf que je prends doit etre celui de ma frame
+			// Son offset C'est ou doit etre le descriptor dans le buffer
 
 			VkWriteDescriptorSet descriptorWrite = {};
 			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			descriptorWrite.dstSet = descriptorSets[i];
 			descriptorWrite.dstBinding = binding;
 			descriptorWrite.dstArrayElement = 0;
-			descriptorWrite.descriptorType = dType;
+			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
 			descriptorWrite.descriptorCount = 1;
 			descriptorWrite.pBufferInfo = &bufferInfo;
 
@@ -1673,10 +1676,10 @@ namespace Soon
 
 	/*
 	// TODO : MULTISET DYNAMIC
-	std::vector<VkDescriptorSet> GraphicsInstance::CreateDescriptorSets( size_t size, std::vector<VkDescriptorSetLayout> layoutArray, int dlayout, VkBuffer* gpuBuffers, VkDescriptorType dType)
+	std::vector<VkDescriptorSet> GraphicsInstance::CreateDescriptorSets(size_t size, uint32_t binding, VkDescriptorSetLayout layout, VkBuffer *gpuBuffers, VkDescriptorType dType)
 	{
 		std::vector<VkDescriptorSet> descriptorSets;
-		std::vector<VkDescriptorSetLayout> layouts(_swapChainImages.size(), layoutArray.at(dlayout));
+		std::vector<VkDescriptorSetLayout> layouts(_swapChainImages.size(), layout);
 
 		VkDescriptorSetAllocateInfo allocInfo = {};
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -1691,17 +1694,19 @@ namespace Soon
 		for (size_t i = 0; i < _swapChainImages.size(); i++)
 		{
 			VkDescriptorBufferInfo bufferInfo = {};
-			if (dType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
-				bufferInfo.buffer = gpuBuffers[i];
-			else if (dType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
-				bufferInfo.buffer = gpuBuffers[0];
+			//if (dType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+			bufferInfo.buffer = gpuBuffers[i];
+			//else if (dType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
+			//	bufferInfo.buffer = gpuBuffers[0];
 			bufferInfo.offset = 0;
 			bufferInfo.range = size;
+			// Le vkBuf que je prends doit etre celui de ma frame
+			// Son offset C'est ou doit etre le descriptor dans le buffer
 
 			VkWriteDescriptorSet descriptorWrite = {};
 			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			descriptorWrite.dstSet = descriptorSets[i];
-			descriptorWrite.dstBinding = 0;
+			descriptorWrite.dstBinding = binding;
 			descriptorWrite.dstArrayElement = 0;
 			descriptorWrite.descriptorType = dType;
 			descriptorWrite.descriptorCount = 1;
@@ -1711,7 +1716,8 @@ namespace Soon
 		}
 		return (descriptorSets);
 	}
-*/
+	*/
+
 	UniformSets GraphicsInstance::CreateUniform(size_t size, std::vector<VkDescriptorSetLayout> layoutArray, int dlayout)
 	{
 		UniformSets ds;
@@ -1821,6 +1827,11 @@ namespace Soon
 		return (_nextSwapChainImageIdx);
 	}
 
+	VmaAllocator& GraphicsInstance::GetAllocator( void )
+	{
+		return m_Allocator;
+	}
+
 	void GraphicsInstance::CreateAllocator(void)
 	{
 		VmaAllocatorCreateInfo allocatorInfo = {};
@@ -1828,7 +1839,7 @@ namespace Soon
 		allocatorInfo.device = _device;
 		allocatorInfo.instance = _vulkanInstance;
 
-		vmaCreateAllocator(&allocatorInfo, &_allocator);
+		vmaCreateAllocator(&allocatorInfo, &m_Allocator);
 		/*
 		// Buffer Creation
 		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };

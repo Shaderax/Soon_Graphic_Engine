@@ -25,6 +25,7 @@ namespace Soon
 		uint32_t _set;
 		std::vector<UniformVar> _members;
 		//std::vector<UniformSets> _us;
+		// Ou que je met les DescriptorSet ?
 		std::function<void(int)> _updateFunct;
 		bool isUnique;
 	};
@@ -44,15 +45,20 @@ namespace Soon
 	class UniformsBufferManager
 	{
 	private:
-		uint32_t		m_NumElement = 0;
+		uint32_t		m_NumElements = 0;
 		uint32_t		m_MinElements = 100;
 		uint8_t*		m_CpuBuffer = nullptr;
+		uint32_t		m_SizeUniqueUniformBlock = 0;
 		uint32_t		m_SizeUniformBlock = 0;
 		std::vector<VmaAllocation>	m_GpuMemory;
-		std::vector<VkBuffer>		m_GpuBuffer;
+		std::vector<VkBuffer>		m_GpuBuffer; // TODO: Aligment in vulkan (16)
 		std::vector<Uniform>		m_Uniforms;
 		std::vector<Uniform>		m_UniqueUniforms;
 		std::vector<UniformTexture> m_UniformsTexture;
+		std::vector<std::vector<VkDescriptorSet>> m_DescriptorSets;
+
+		std::vector<VkDescriptorSetLayout> _descriptorSetLayout; // TODO: UniformTexture
+		std::vector<std::vector<VkDescriptorSetLayoutBinding>> uboLayoutBinding;
 
 	public:
 		void InitBuffers( void );
@@ -60,6 +66,14 @@ namespace Soon
 		void AddUniform( Uniform uniform );
 		void AddUniformTexture( UniformTexture uniform );
 		void UpdateToGPU( uint32_t currentImg );
-		void Set( std::string name, void* value );
+		void Set( std::string name, void* value, uint32_t matId );
+		void Allocate( uint32_t idMat );
+		void AddLayoutBinding(VkDescriptorSetLayoutBinding ubo, uint32_t set);
+		std::vector<VkDescriptorSetLayout> CreateDescriptorSetLayout( void );
+		void DestroyElement( uint32_t idMat );
+		void RecreateUniforms( void );
+		std::vector<VkDescriptorSetLayout> GetDescriptorSetLayout( void );
+		std::vector<Uniform>& GetNonUniqueUniforms( void );
+		std::vector<VkDescriptorSet>& GetDescriptorSet( uint32_t image, uint32_t idMat );
 	};
 };

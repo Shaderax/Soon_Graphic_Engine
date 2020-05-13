@@ -44,19 +44,19 @@ namespace Soon
 			_conf.vertexInputInfo.pVertexBindingDescriptions = &_bindingDescription;
 			_conf.vertexInputInfo.pVertexAttributeDescriptions = _attributeDescriptions.data();
 
-			_descriptorSetLayout = GraphicsInstance::GetInstance()->CreateDescriptorSetLayout(uboLayoutBinding);
-			_pipelineLayout = GraphicsInstance::GetInstance()->CreatePipelineLayout(_descriptorSetLayout);
+			_pipelineLayout = GraphicsInstance::GetInstance()->CreatePipelineLayout(_mUbm.CreateDescriptorSetLayout());
 			_conf.pipelineInfo.layout = _pipelineLayout;
 			_graphicPipeline = GraphicsInstance::GetInstance()->CreateGraphicsPipeline(
 				_conf,
 				_pathVert,
 				_pathFrag);
 
-			SetUniformsArray();
+			_mUbm.InitBuffers();
 
 			// Alloc Camera
 		}
 
+		// TODO: DESTROY _mUbm.CreateDescriptorSetLayout()
 		void RecreatePipeline(void)
 		{
 			VkExtent2D Extent = GraphicsInstance::GetInstance()->GetSwapChainExtent();
@@ -66,7 +66,7 @@ namespace Soon
 			_conf.scissor.extent = Extent;
 
 			_conf.pipelineInfo.renderPass = GraphicsInstance::GetInstance()->GetRenderPass();
-			_pipelineLayout = GraphicsInstance::GetInstance()->CreatePipelineLayout(_descriptorSetLayout);
+			_pipelineLayout = GraphicsInstance::GetInstance()->CreatePipelineLayout(_mUbm.CreateDescriptorSetLayout());
 			_conf.pipelineInfo.layout = _pipelineLayout;
 			_graphicPipeline = GraphicsInstance::GetInstance()->CreateGraphicsPipeline(
 				_conf,

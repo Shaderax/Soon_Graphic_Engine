@@ -12,9 +12,6 @@ namespace Soon
 	{
 		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
 
-		for (VkDescriptorSetLayout &dsl : _descriptorSetLayout)
-			vkDestroyDescriptorSetLayout(device, dsl, nullptr);
-
 		vkDestroyPipeline(device, _graphicPipeline, nullptr);
 		vkDestroyPipelineLayout(device, _pipelineLayout, nullptr);
 
@@ -23,7 +20,7 @@ namespace Soon
 
 	void BasePipeline::DestroyAllUniforms(void)
 	{
-		// TODO:
+		_mUbm.DestroyAllUniforms();
 	}
 
 	void BasePipeline::DestroyGraphicPipeline(void)
@@ -36,14 +33,7 @@ namespace Soon
 
 	void BasePipeline::UpdateData( int currentImg )
 	{
-		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
-
-		void *data = nullptr;
-
-		vec3<float> vec(0.2f, 0.2f, 0.0f);
-
 		_mUbm.UpdateToGPU(currentImg);
-		// TODO: How do i Auto Update Model ? We don't know.
 	}
 
 	int32_t BasePipeline::IsDefaultVertexInput(std::string name)
@@ -90,6 +80,89 @@ namespace Soon
 		return (true);
 	}
 
+	void BasePipeline::GetBindingDescription( void )
+	{
+		_bindingDescription.binding = 0;
+		_bindingDescription.stride = _vertexDescription.GetVertexStrideSize(); // stride : size of one pointe
+		_bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+	}
+
+	uint32_t BasePipeline::AddToPipeline( std::uint32_t meshId )
+	{
+		uint32_t idMat;
+
+		if (!_freeId.empty())
+		{
+			idMat = _freeId.back();
+			_freeId.pop_back();
+			_toDraw.push_back({idMat, meshId});
+		}
+		else
+		{
+			idMat = _toDraw.size();
+			_toDraw.push_back({idMat, meshId});
+		}
+
+		_mUbm.Allocate(idMat);
+
+		return idMat;
+	}
+
+	void BasePipeline::Set(std::string name, void *value, uint32_t id)
+	{
+		_mUbm.Set( name, value, id );
+	}
+
+	void BasePipeline::RecreateUniforms(void)
+	{
+		_mUbm.RecreateUniforms();
+	}
+
+	void BasePipeline::BindCaller(VkCommandBuffer commandBuffer, uint32_t currentImage)
+	{
+		std::cout << "Bind Caller for the Current Image : " << currentImage << std::endl;
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _graphicPipeline);
+
+		VkDeviceSize offsets[] = {0};
+
+		//_mUbm.GetUniqueUniforms();
+		for (uint32_t index = 0; index < _toDraw.size(); index++)
+		{
+			MeshBufferRenderer &bu = GraphicsRenderer::GetInstance()->GetMesh(_toDraw[index].meshId);
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &(bu.vertex.buffer), offsets);
+
+			vkCmdBindIndexBuffer(commandBuffer, bu.indices.buffer, 0, VK_INDEX_TYPE_UINT32);
+
+			std::vector<Uniform>& uniforms = _mUbm.GetNonUniqueUniforms();
+			for (uint32_t uniformId = 0; uniformId < uniforms.size(); uniformId++)
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipelineLayout, uniforms[uniformId]._set, 1, &(_mUbm.GetDescriptorSet(currentImage, _toDraw[index].matId)[uniformId]), 0, nullptr);
+																																// ^-> TODO: 
+			vkCmdDrawIndexed(commandBuffer, bu.indices.numIndices, 1, 0, 0, 0);
+		}
+	}
+
+	VertexDescription BasePipeline::GetVertexDescription()
+	{
+		return (_vertexDescription);
+	}
+
+	void BasePipeline::Render(uint32_t id)
+	{
+		(void)id;
+	}
+
+	void BasePipeline::UnRender(uint32_t id)
+	{
+		(void)id;
+	}
+
+	void BasePipeline::RemoveFromPipeline(uint32_t id)
+	{
+		(void)id;
+	}
+
+	/////////// GET SHADER DATA /////////////
+	
 	void BasePipeline::GetInputBindings( spv_reflect::ShaderModule& reflection )
 	{
 		std::vector<SpvReflectInterfaceVariable *> inputs;
@@ -214,9 +287,7 @@ namespace Soon
 			ubo.pImmutableSamplers = nullptr;
 			ubo.stageFlags = reflection.GetShaderModule().shader_stage;
 
-			if (uboLayoutBinding.size() <= bindings[index]->set)
-				uboLayoutBinding.resize(bindings[index]->set + 1);
-			uboLayoutBinding[bindings[index]->set].push_back(ubo);
+			_mUbm.AddLayoutBinding(ubo, bindings[index]->set);
 		}
 	}
 
@@ -237,158 +308,5 @@ namespace Soon
 		GetInputBindings(reflection);
 		GetDescriptorBindings(reflection);
 	}
-
-	void BasePipeline::GetBindingDescription( void )
-	{
-		_bindingDescription.binding = 0;
-		_bindingDescription.stride = _vertexDescription.GetVertexStrideSize(); // stride : size of one pointe
-		_bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-	}
-
-	uint32_t BasePipeline::AddToPipeline(std::uint32_t meshId)
-	{
-		// TODO Make VMA in CreateBuffer
-		uint32_t idMat;
-
-		if (!_freeId.empty())
-		{
-			idMat = _freeId.back();
-			_freeId.pop_back();
-			_toDraw.push_back({idMat, meshId});
-		}
-		else
-		{
-			idMat = _toDraw.size();
-			_toDraw.push_back({idMat, meshId});
-		}
-
-		for (uint32_t index = 0; index < _uniforms.size(); index++)
-		{
-			UniformSets ds;
-			ds._uniformRender = GraphicsInstance::GetInstance()->CreateUniformBuffers(_uniforms[index]._size);
-			ds._descriptorSets = GraphicsInstance::GetInstance()->CreateDescriptorSets(_uniforms[index]._size, _uniforms[index]._binding, _descriptorSetLayout[_uniforms[index]._set], ds._uniformRender.buffer.data(), VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-			_uniforms[index]._us.push_back(ds);
-		}
-
-		for (uint32_t index = 0; index < _uniformsTexture.size(); index++)
-		{
-		}
-		return 0;
-	}
-
-	void BasePipeline::Set(std::string name, void *value, uint32_t id)
-	{
-		// TODO: If we exced _uniformDataSize
-		// Set doit maintenant aller chercher la memoire dans un giga buffer qui est réalloc a chaque fois qu'on dépasse la memoire.
-		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
-		uint32_t currentImage = GraphicsInstance::GetInstance()->GetNextIdImageToRender();
-
-		uint32_t offset = 0;
-
-		void *data = nullptr;
-
-		int32_t pos = name.find(".");
-		if (pos == std::string::npos)
-		{
-			for (uint32_t index = 0; index < _uniforms.size(); index++)
-			{
-				std::cout << _uniforms[index]._name << std::endl;
-				if (_uniforms[index]._name == name)
-				{
-					// Local data
-					memcpy(_uniformData + offset + (_totalUniformSize * id), value, _uniforms[index]._size);
-
-					return;
-				}
-				offset += _uniforms[index]._size;
-			}
-		}
-		else
-		{
-			std::string varName;
-			varName = name.substr(pos + 1);
-
-			for (uint32_t index = 0; index < _uniforms.size(); index++)
-			{
-				if (_uniforms[index]._name == name.substr(0, pos))
-				{
-					for (uint32_t member = 0; member < _uniforms[index]._members.size(); member++)
-					{
-						if (varName == _uniforms[index]._members[member]._name)
-						{
-							//std::cout << "Found Uniform : " << name.substr(0, pos) + "." << varName << std::endl;
-							//vkMapMemory(device, _uniforms[index]._us[id]._uniformRender.bufferMemory[currentImage], 0, _uniforms[index]._members[member]._size, 0, &data);
-							//memcpy(data, value, _uniforms[index]._members[member]._size);
-							//vkUnmapMemory(device, _uniforms[index]._us[id]._uniformRender.bufferMemory[currentImage]);
-
-							// Local data
-							memcpy(_uniformData + offset + (_totalUniformSize * id), value, _uniforms[index]._members[member]._size);
-						}
-						offset += _uniforms[index]._members[member]._size;
-					}
-					return;
-				}
-				offset += _uniforms[index]._size;
-			}
-		}
-	}
-
-	void BasePipeline::SetUniformsArray(void)
-	{
-		_uniformData = new uint8_t[_totalUniformSize * _minUniformBuffer];
-		_uniformDataSize = _totalUniformSize * _minUniformBuffer;
-	}
-
-	void BasePipeline::RecreateUniforms(void)
-	{
-		for (uint32_t index = 0; index < _uniforms.size(); index++)
-		{
-			for (uint32_t uniform = 0; uniform < _uniforms[index]._us.size(); uniform++)
-			{
-				_uniforms[index]._us[uniform]._uniformRender = GraphicsInstance::GetInstance()->CreateUniformBuffers(_uniforms[index]._size);
-				_uniforms[index]._us[uniform]._descriptorSets = GraphicsInstance::GetInstance()->CreateDescriptorSets(_uniforms[index]._size, _uniforms[index]._binding, _descriptorSetLayout[_uniforms[index]._set], _uniforms[index]._us[uniform]._uniformRender.buffer.data(), VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-			}
-		}
-	}
-
-	void BasePipeline::BindCaller(VkCommandBuffer commandBuffer, uint32_t currentImage)
-	{
-		std::cout << "Bind Caller for the Current Image : " << currentImage << std::endl;
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _graphicPipeline);
-
-		VkDeviceSize offsets[] = {0};
-
-		for (uint32_t index = 0; index < _toDraw.size(); index++)
-		{
-			MeshBufferRenderer &bu = GraphicsRenderer::GetInstance()->GetMesh(_toDraw[index].meshId);
-			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &(bu.vertex.buffer), offsets);
-
-			vkCmdBindIndexBuffer(commandBuffer, bu.indices.buffer, 0, VK_INDEX_TYPE_UINT32);
-
-			for (uint32_t uniforms = 0; uniforms < _uniforms.size(); uniforms++)
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipelineLayout, _uniforms[uniforms]._set, 1, &(_uniforms[uniforms]._us[_toDraw[index].matId]._descriptorSets[currentImage]), 0, nullptr);
-
-			vkCmdDrawIndexed(commandBuffer, bu.indices.numIndices, 1, 0, 0, 0);
-		}
-	}
-
-	VertexDescription BasePipeline::GetVertexDescription()
-	{
-		return (_vertexDescription);
-	}
-
-	void BasePipeline::Render(uint32_t id)
-	{
-		(void)id;
-	}
-
-	void BasePipeline::UnRender(uint32_t id)
-	{
-		(void)id;
-	}
-
-	void BasePipeline::RemoveFromPipeline(uint32_t id)
-	{
-		(void)id;
-	}
+	///////////////////////////
 } // namespace Soon

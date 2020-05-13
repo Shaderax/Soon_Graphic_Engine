@@ -176,12 +176,11 @@ namespace Soon
 		void	CleanupSwapChain(void);
 		VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
 		static void FramebufferResizeCallback(GLFWwindow *window, int width, int height);
-		VertexBufferRenderer CreateVertexBuffer(uint8_t *ptrData, uint32_t size);
-		VertexBufferRenderer CreateStorageBuffer(void *ptrData, uint32_t size);
+		VertexBufferRenderer CreateVertexBuffer(uint8_t *ptrData, uint32_t size, VmaAllocation* allocation = nullptr );
+		VertexBufferRenderer CreateStorageBuffer(void *ptrData, uint32_t size, VmaAllocation* allocation = nullptr );
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 		void FillCommandBuffer(void);
-		//void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory);
-		void	CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage, VkBuffer &buffer);
+		void	CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage, VkBuffer &buffer, VmaAllocation* allocation = nullptr );
 		BufferRenderer	CreateUniformBuffers(size_t size);
 		void	UpdateUniformBuffer(uint32_t currentImage);
 		void	CreateDescriptorPool(void);
@@ -193,7 +192,7 @@ namespace Soon
 		void	TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, VkImageViewType vType);
 		void	CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, VkImageViewType vType);
 		VkSampler	CreateTextureSampler(void);
-		IndiceBufferRenderer	CreateIndexBuffer(uint32_t *indexData, uint32_t size);
+		IndiceBufferRenderer	CreateIndexBuffer(uint32_t *indexData, uint32_t size, VmaAllocation* allocation = nullptr );
 		void	CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 		VkFormat	FindDepthFormat(void);
 		VkFormat	FindSupportedFormat(const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
@@ -211,11 +210,14 @@ namespace Soon
 		VkPipelineLayout CreatePipelineLayout(std::vector<VkDescriptorSetLayout> descriptorSetLayout);
 		UniformSets CreateUniform(size_t size, std::vector<VkDescriptorSetLayout> layoutArray, int dlayout);
 		//std::vector<VkDescriptorSet> CreateDescriptorSets( size_t size, std::vector<VkDescriptorSetLayout> layoutArray, int dlayout, VkBuffer* gpuBuffers,  VkDescriptorType dType);
-		std::vector<VkDescriptorSet> CreateDescriptorSets(size_t size, uint32_t binding, VkDescriptorSetLayout layout, VkBuffer *gpuBuffers, VkDescriptorType dType);
+		//std::vector<VkDescriptorSet> CreateDescriptorSets(size_t size, uint32_t binding, VkDescriptorSetLayout layout, VkBuffer *gpuBuffers, VkDescriptorType dType);
+		std::vector<VkDescriptorSet> GraphicsInstance::CreateDescriptorSets(size_t size, uint32_t binding, uint32_t offset, VkDescriptorSetLayout layout, VkBuffer* gpuBuffers, uint32_t bufferCount);
 
 		void	CreateAllocator(void);
 		void	DestroyAllocator(void);
 		void*	MapGpuMemory( );
 		void	UnMapGpuMemory( void );
+
+		VmaAllocator& GetAllocator( void );
 	};
 } // namespace Soon
