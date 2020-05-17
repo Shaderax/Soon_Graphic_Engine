@@ -40,7 +40,6 @@ int main()
 	// Loop
 	while (!GraphicsInstance::GetInstance()->ShouldClose(GraphicsInstance::GetInstance()->GetWindow()))
 	{
-		//mesh->GetMaterial().SetVec3("cou.bondour", vec3<float>(0.2f, 0.1f, 0.0f));
 		if (GraphicsRenderer::GetInstance()->IsChange())
 		{
 			GraphicsInstance::GetInstance()->FillCommandBuffer();

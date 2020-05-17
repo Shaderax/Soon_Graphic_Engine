@@ -51,20 +51,25 @@ namespace Soon
 		vkDeviceWaitIdle(device);
 		RemoveAllPipelines();
 
+		//vmaFreeMemory(GraphicsInstance::GetInstance()->GetAllocator(), m_Allocation );
 		for (uint32_t index = 0; index < _meshs.size(); index++)
 		{
 			// VERTEX
-			vkDestroyBuffer(device, _meshs[index].vertex.buffer, nullptr);
-			vkFreeMemory(device, _meshs[index].vertex.bufferMemory, nullptr);
+			vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[index].vertex.buffer, m_Allocation);
+			//vkDestroyBuffer(device, _meshs[index].vertex.buffer, nullptr);
+			//vkFreeMemory(device, _meshs[index].vertex.bufferMemory, nullptr);
 
 			// INDICE
-			vkDestroyBuffer(device, _meshs[index].indices.buffer, nullptr);
-			vkFreeMemory(device, _meshs[index].indices.bufferMemory, nullptr);
+			vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[index].indices.buffer, m_Allocation);
+			//vkDestroyBuffer(device, _meshs[index].indices.buffer, nullptr);
+			//vkFreeMemory(device, _meshs[index].indices.bufferMemory, nullptr);
 		}
 	}
 
 	void GraphicsRenderer::DestroyAllGraphicsPipeline( void )
 	{
+		std::cout << "Renderer : Destroy All Graphics Pipelines" << std::endl;
+
 		for (ShaderPipeline *bp : _graphicPipelines)
 		{
 			if (bp)
@@ -88,6 +93,8 @@ namespace Soon
 
 	void GraphicsRenderer::RemoveAllPipelines(void)
 	{
+		std::cout << "Renderer : Remove All Pipelines" << std::endl;
+
 		for (ShaderPipeline *bp : _graphicPipelines)
 		{
 			if (bp)
@@ -108,6 +115,8 @@ namespace Soon
 
 	void GraphicsRenderer::RecreateAllUniforms(void)
 	{
+		std::cout << "Renderer : Recreate All Uniforms" << std::endl;
+
 		for (ShaderPipeline *bp : _graphicPipelines)
 			if (bp)
 				bp->RecreateUniforms();
@@ -118,6 +127,8 @@ namespace Soon
 
 	void GraphicsRenderer::RecreateAllPipelines(void)
 	{
+		std::cout << "Renderer : Recreate All Pipelines" << std::endl;
+
 		for (ShaderPipeline *bp : _graphicPipelines)
 			if (bp)
 				bp->RecreatePipeline();
@@ -128,6 +139,7 @@ namespace Soon
 
 	void GraphicsRenderer::UpdateAllDatas(uint32_t imageIndex)
 	{
+		std::cout << "Renderer : Update All Datas" << std::endl;
 		for (ShaderPipeline *bp : _graphicPipelines)
 			if (bp)
 				bp->UpdateData(imageIndex);
@@ -194,8 +206,8 @@ namespace Soon
 		}
 
 		MeshBufferRenderer mbr;
-		mbr.vertex = GraphicsInstance::GetInstance()->CreateVertexBuffer(mesh->mVertexData, mesh->mVertexTotalSize);
-		mbr.indices = GraphicsInstance::GetInstance()->CreateIndexBuffer(mesh->mIndices, mesh->mNumIndices);
+		mbr.vertex = GraphicsInstance::GetInstance()->CreateVertexBuffer(mesh->mVertexData, mesh->mVertexTotalSize, m_Allocation);
+		mbr.indices = GraphicsInstance::GetInstance()->CreateIndexBuffer(mesh->mIndices, mesh->mNumIndices, m_Allocation);
 		_meshs[id] = mbr;
 
 		return (id);
@@ -213,6 +225,7 @@ namespace Soon
 
 	void GraphicsRenderer::DestroyAllUniforms(void)
 	{
+		std::cout << "Renderer : Destroy All Uniforms" << std::endl;
 		for (ShaderPipeline *bp : _graphicPipelines)
 			if (bp)
 				bp->DestroyAllUniforms();

@@ -102,9 +102,7 @@ namespace Soon
 			idMat = _toDraw.size();
 			_toDraw.push_back({idMat, meshId});
 		}
-
 		_mUbm.Allocate(idMat);
-
 		return idMat;
 	}
 
@@ -115,7 +113,7 @@ namespace Soon
 
 	void BasePipeline::RecreateUniforms(void)
 	{
-		_mUbm.RecreateUniforms();
+		_mUbm.RecreateUniforms(_toDraw);
 	}
 
 	void BasePipeline::BindCaller(VkCommandBuffer commandBuffer, uint32_t currentImage)
@@ -124,6 +122,7 @@ namespace Soon
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _graphicPipeline);
 
 		VkDeviceSize offsets[] = {0};
+		uint32_t dynamicOffset = 0;
 
 		//_mUbm.GetUniqueUniforms();
 		for (uint32_t index = 0; index < _toDraw.size(); index++)
@@ -133,10 +132,11 @@ namespace Soon
 
 			vkCmdBindIndexBuffer(commandBuffer, bu.indices.buffer, 0, VK_INDEX_TYPE_UINT32);
 
+			// TODO: Here
 			std::vector<Uniform>& uniforms = _mUbm.GetNonUniqueUniforms();
 			for (uint32_t uniformId = 0; uniformId < uniforms.size(); uniformId++)
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipelineLayout, uniforms[uniformId]._set, 1, &(_mUbm.GetDescriptorSet(currentImage, _toDraw[index].matId)[uniformId]), 0, nullptr);
-																																// ^-> TODO: 
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipelineLayout, uniforms[uniformId]._set, 1, &(_mUbm.GetDescriptorSet(currentImage)[uniformId + (uniforms.size() * _toDraw[index].matId)]), 0, nullptr);
+
 			vkCmdDrawIndexed(commandBuffer, bu.indices.numIndices, 1, 0, 0, 0);
 		}
 	}

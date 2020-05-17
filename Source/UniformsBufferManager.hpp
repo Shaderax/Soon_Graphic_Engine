@@ -13,6 +13,8 @@
 
 namespace Soon
 {
+	struct IdRender;
+
 	struct UniformVar
 	{
 		std::string _name;
@@ -77,9 +79,9 @@ namespace Soon
 		void AddLayoutBinding(VkDescriptorSetLayoutBinding ubo, uint32_t set);
 		std::vector<VkDescriptorSetLayout> CreateDescriptorSetLayout( void );
 		void DestroyElement( uint32_t idMat );
-		void RecreateUniforms( void );
+		void RecreateUniforms( std::vector<Soon::IdRender> toDraw );
 		std::vector<VkDescriptorSetLayout> GetDescriptorSetLayout( void );
 		std::vector<Uniform>& GetNonUniqueUniforms( void );
-		std::vector<VkDescriptorSet>& GetDescriptorSet( uint32_t image, uint32_t idMat );
+		std::vector<VkDescriptorSet>& GetDescriptorSet( uint32_t image );
 	};
 }

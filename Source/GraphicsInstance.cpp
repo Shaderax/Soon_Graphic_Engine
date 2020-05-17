@@ -1143,23 +1143,24 @@ namespace Soon
 		throw std::runtime_error("failed to find suitable memory type!");
 	}
 
-	VertexBufferRenderer GraphicsInstance::CreateStorageBuffer(void *ptrData, uint32_t size, VmaAllocation* allocation )
+	VertexBufferRenderer GraphicsInstance::CreateStorageBuffer(void *ptrData, uint32_t size, VmaAllocation& allocation )
 	{
 		VertexBufferRenderer stagingBuffer;
 		VertexBufferRenderer bufRenderer;
 		std::cout << "Storage BUFFER CREATION : " << size << std::endl;
 
-		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, stagingBuffer.buffer);
+		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, stagingBuffer.buffer, allocation);
 
 		if (ptrData)
 		{
-			void *data;
-			vkMapMemory(_device, stagingBuffer.bufferMemory, 0, size, 0, &data);
+			void *data = MapGpuMemory();
+			//vkMapMemory(_device, stagingBuffer.bufferMemory, 0, size, 0, &data);
 			memcpy(data, ptrData, (size_t)size);
-			vkUnmapMemory(_device, stagingBuffer.bufferMemory);
+			//vkUnmapMemory(_device, stagingBuffer.bufferMemory);
+			UnMapGpuMemory();
 		}
 
-		CreateBuffer(size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY, bufRenderer.buffer);
+		CreateBuffer(size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY, bufRenderer.buffer, allocation);
 
 		CopyBuffer(stagingBuffer.buffer, bufRenderer.buffer, size);
 
@@ -1169,31 +1170,63 @@ namespace Soon
 		return (bufRenderer);
 	}
 
-	VertexBufferRenderer GraphicsInstance::CreateVertexBuffer(uint8_t *ptrData, uint32_t size, VmaAllocation* allocation )
+	VertexBufferRenderer GraphicsInstance::CreateVertexBuffer(uint8_t *ptrData, uint32_t size, VmaAllocation& allocation )
 	{
 		VertexBufferRenderer stagingBuffer;
 		VertexBufferRenderer bufRenderer;
 		std::cout << "Vertex BUFFER CREATION : " << size << std::endl;
 
-		if (allocation == nullptr)
-			allocation = &m_Allocation;
+		VmaAllocation staginAlloc;
 
-		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, stagingBuffer.buffer);
+		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, stagingBuffer.buffer, staginAlloc);
 
 		if (ptrData)
 		{
 			void *data;
-			vkMapMemory(_device, stagingBuffer.bufferMemory, 0, size, 0, &data);
+			vmaMapMemory(m_Allocator, staginAlloc, &data);
+			//vkMapMemory(_device, stagingBuffer.bufferMemory, 0, size, 0, &data);
 			memcpy(data, ptrData, (size_t)size);
-			vkUnmapMemory(_device, stagingBuffer.bufferMemory);
+			vmaUnmapMemory(m_Allocator, staginAlloc);
+			//vkUnmapMemory(_device, stagingBuffer.bufferMemory);
 		}
 
-		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY, bufRenderer.buffer);
+		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY, bufRenderer.buffer, allocation);
 
 		CopyBuffer(stagingBuffer.buffer, bufRenderer.buffer, size);
 
-		vkDestroyBuffer(_device, stagingBuffer.buffer, nullptr);
-		vkFreeMemory(_device, stagingBuffer.bufferMemory, nullptr);
+		vmaDestroyBuffer(m_Allocator, stagingBuffer.buffer, staginAlloc);
+		//vmaFreeMemory(m_Allocator, staginAlloc);
+		return (bufRenderer);
+	}
+
+	IndiceBufferRenderer GraphicsInstance::CreateIndexBuffer(uint32_t *indexData, uint32_t size, VmaAllocation& allocation )
+	{
+		IndiceBufferRenderer bufRenderer;
+		VkDeviceSize bufferSize = sizeof(uint32_t) * size;
+
+		std::cout << "INDEX BUFFER CREATION : " << bufferSize << std::endl;
+
+		bufRenderer.numIndices = size;
+
+		VkBuffer stagingBuffer;
+		VmaAllocation staginAlloc;
+		//VkDeviceMemory stagingBufferMemory;
+
+		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, stagingBuffer, staginAlloc);
+
+		void *data;
+		vmaMapMemory(m_Allocator, staginAlloc, &data);
+		//vkMapMemory(_device, stagingBufferMemory, 0, bufferSize, 0, (void **)&data);
+		memcpy(data, indexData, (size_t)bufferSize);
+		//vkUnmapMemory(_device, stagingBufferMemory);
+		vmaUnmapMemory(m_Allocator, staginAlloc);
+
+		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY, bufRenderer.buffer, allocation);
+
+		CopyBuffer(stagingBuffer, bufRenderer.buffer, bufferSize);
+
+		vmaDestroyBuffer(m_Allocator, stagingBuffer, staginAlloc);
+		//vmaFreeMemory(m_Allocator, staginAlloc);
 
 		return (bufRenderer);
 	}
@@ -1244,7 +1277,7 @@ namespace Soon
 	//		textureImageView = CreateImageView(textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
 	//	}
 
-	ImageRenderer GraphicsInstance::CreateTextureImage(uint32_t width, uint32_t height, void *textureData, uint8_t layer, uint8_t pixelSize)
+	ImageRenderer GraphicsInstance::CreateTextureImage(uint32_t width, uint32_t height, void *textureData, uint8_t layer, uint8_t pixelSize, VmaAllocation& allocation)
 	{
 		ImageRenderer ir;
 		size_t imageSize = layer * width * height * 4; //texture->_format;
@@ -1254,7 +1287,7 @@ namespace Soon
 		std::cout << "ImageSize BUFFER CREATION : " << imageSize << std::endl;
 		//std::cout << "width " << texture->_width <<  " " << "Height : " << texture->_height << "Format : " << texture->_format << std::endl;
 
-		CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, stagingBuffer);
+		CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, stagingBuffer, allocation);
 
 		void *data;
 		vkMapMemory(_device, stagingBufferMemory, 0, imageSize, 0, &data);
@@ -1442,7 +1475,7 @@ namespace Soon
 	}
 
 	//void GraphicsInstance::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory)
-	void GraphicsInstance::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage, VkBuffer &buffer, VmaAllocation* allocation )
+	void GraphicsInstance::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage, VkBuffer &buffer, VmaAllocation& allocation )
 	{
 		// TODO: Impl VMA
 		VkBufferCreateInfo bufferInfo = {};
@@ -1453,8 +1486,9 @@ namespace Soon
 
 		VmaAllocationCreateInfo allocInfo = {};
 		allocInfo.usage = memoryUsage;
+		//allocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT | VMA_ALLOCATION_CREATE_CAN_BECOME_LOST_BIT | VMA_ALLOCATION_CREATE_CAN_MAKE_OTHER_LOST_BIT;
 
-		vmaCreateBuffer(m_Allocator, &bufferInfo, &allocInfo, &buffer, &m_Allocation, nullptr);
+		vmaCreateBuffer(m_Allocator, &bufferInfo, &allocInfo, &buffer, &allocation, nullptr);
 
 		/*
 		VkBufferCreateInfo bufferInfo = {};
@@ -1479,34 +1513,6 @@ namespace Soon
 		std::cout << "Memory Created : " << bufferMemory << " of size : " << size << std::endl;
 		vkBindBufferMemory(_device, buffer, bufferMemory, 0);
 		*/
-	}
-
-	IndiceBufferRenderer GraphicsInstance::CreateIndexBuffer(uint32_t *indexData, uint32_t size, VmaAllocation* allocation )
-	{
-		IndiceBufferRenderer bufRenderer;
-		VkDeviceSize bufferSize = sizeof(uint32_t) * size;
-		std::cout << "INDEX BUFFER CREATION : " << bufferSize << std::endl;
-
-		bufRenderer.numIndices = size;
-
-		VkBuffer stagingBuffer;
-		VkDeviceMemory stagingBufferMemory;
-
-		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, stagingBuffer);
-
-		void *data;
-		vkMapMemory(_device, stagingBufferMemory, 0, bufferSize, 0, (void **)&data);
-		memcpy(data, indexData, (size_t)bufferSize);
-		vkUnmapMemory(_device, stagingBufferMemory);
-
-		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY, bufRenderer.buffer);
-
-		CopyBuffer(stagingBuffer, bufRenderer.buffer, bufferSize);
-
-		vkDestroyBuffer(_device, stagingBuffer, nullptr);
-		vkFreeMemory(_device, stagingBufferMemory, nullptr);
-
-		return (bufRenderer);
 	}
 
 	void GraphicsInstance::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
@@ -1561,17 +1567,17 @@ namespace Soon
 		return (descriptorSetLayout);
 	}
 
-	BufferRenderer GraphicsInstance::CreateUniformBuffers(size_t size)
+	BufferRenderer GraphicsInstance::CreateUniformBuffers(size_t size, VmaAllocation& allocation)
 	{
 		BufferRenderer buf;
 		VkDeviceSize bufferSize = size;
 		std::cout << "UNIFORM BUFFER CREATION : " << bufferSize << std::endl;
 
 		buf.buffer.resize(_swapChainImages.size());
-		buf.bufferMemory.resize(_swapChainImages.size());
+		//buf.bufferMemory.resize(_swapChainImages.size());
 
 		for (size_t i = 0; i < _swapChainImages.size(); i++)
-			CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_ONLY, buf.buffer[i]);
+			CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_ONLY, buf.buffer[i], allocation);
 
 		return (buf);
 	}
@@ -1639,6 +1645,7 @@ namespace Soon
 	{
 		// TODO: bufferCount
 		std::vector<VkDescriptorSet> descriptorSets;
+		std::vector<VkDescriptorSetLayout> layouts(_swapChainImages.size(), layout);
 
 		descriptorSets.resize(_swapChainImages.size());
 
@@ -1646,7 +1653,7 @@ namespace Soon
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		allocInfo.descriptorPool = _descriptorPool;
 		allocInfo.descriptorSetCount = _swapChainImages.size(); // number of descriptor sets to be allocated from the pool.
-		allocInfo.pSetLayouts = &layout;
+		allocInfo.pSetLayouts = layouts.data();
 
 		if (vkAllocateDescriptorSets(_device, &allocInfo, descriptorSets.data()) != VK_SUCCESS)
 			throw std::runtime_error("failed to allocate descriptor sets!");
@@ -1657,15 +1664,13 @@ namespace Soon
 			bufferInfo.buffer = gpuBuffers[i];
 			bufferInfo.offset = offset;
 			bufferInfo.range = size;
-			// Le vkBuf que je prends doit etre celui de ma frame
-			// Son offset C'est ou doit etre le descriptor dans le buffer
 
 			VkWriteDescriptorSet descriptorWrite = {};
 			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			descriptorWrite.dstSet = descriptorSets[i];
 			descriptorWrite.dstBinding = binding;
 			descriptorWrite.dstArrayElement = 0;
-			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 			descriptorWrite.descriptorCount = 1;
 			descriptorWrite.pBufferInfo = &bufferInfo;
 
@@ -1722,7 +1727,7 @@ namespace Soon
 	{
 		UniformSets ds;
 
-		ds._uniformRender = CreateUniformBuffers(size);
+		//ds._uniformRender = CreateUniformBuffers(size);
 
 		//ds._descriptorSets = CreateDescriptorSets( size, layoutArray, dlayout, ds._uniformRender.buffer.data(), VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER );
 
@@ -1840,19 +1845,6 @@ namespace Soon
 		allocatorInfo.instance = _vulkanInstance;
 
 		vmaCreateAllocator(&allocatorInfo, &m_Allocator);
-		/*
-		// Buffer Creation
-		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-		bufferInfo.size = 65536;
-		bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
- 
-		VmaAllocationCreateInfo allocInfo = {};
-		allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
- 
-		VkBuffer buffer;
-		VmaAllocation allocation;
-		vmaCreateBuffer(allocator, &bufferInfo, &allocInfo, &buffer, &allocation, nullptr);
-*/
 	}
 
 	void GraphicsInstance::DestroyAllocator(void)

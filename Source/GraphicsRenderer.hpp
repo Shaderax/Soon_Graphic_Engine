@@ -13,12 +13,17 @@
 #include <array>
 #include <vector>
 
+#include "ThirdParty/VkMemoryAllocator/vk_mem_alloc.h"
+
 namespace Soon
 {
 	class Mesh;
 
 	class GraphicsRenderer
 	{
+	private:
+		VmaAllocation m_Allocation;
+	public:
 		static GraphicsRenderer* _instance;
 		static constexpr const std::uint32_t MAX_PIPELINES = 32;
 		//static GraphicsRenderer* _instance;
