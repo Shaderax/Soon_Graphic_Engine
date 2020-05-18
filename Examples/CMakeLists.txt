@@ -1,10 +1,13 @@
 cmake_minimum_required (VERSION 3.10)
 
-set (CMAKE_CXX_STANDARD 17)
+#project(ex)
 
-project(ex)
-
-add_compile_options(-Wall -Wextra)
+# Set default compile flags for GCC
+if(CMAKE_COMPILER_IS_GNUCXX)
+	message(STATUS "GCC detected, adding compile flags")
+	add_compile_options(-Wextra) 
+endif(CMAKE_COMPILER_IS_GNUCXX)
+add_compile_options(-Wall)
 
 add_executable(GraphicEngineTest main.cpp)
 

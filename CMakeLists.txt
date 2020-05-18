@@ -1,10 +1,13 @@
 cmake_minimum_required (VERSION 3.10)
-set(CMAKE_CXX_COMPILER g++)
-set (CMAKE_CXX_STANDARD 17)
 
-project(Soon_Graphic_Engine)
+set(CMAKE_CXX_COMPILER g++)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CC_COMPILER gcc)
+set(CMAKE_C_STANDARD 11)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMake")
+
+project(Soon_Graphic_Engine)
 
 find_package(Vulkan REQUIRED)
 

@@ -1,6 +1,12 @@
 cmake_minimum_required (VERSION 3.10)
 
-add_compile_options(-Wall -Wextra -g3 -Wshadow -Wnon-virtual-dtor -pedantic)
+# Set default compile flags for GCC
+if(CMAKE_COMPILER_IS_GNUCXX)
+    message(STATUS "GCC detected, adding compile flags")
+     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++98 -pedantic -Wall -Wextra")
+	add_compile_options(-Wextra -Wshadow -Wnon-virtual-dtor) 
+endif(CMAKE_COMPILER_IS_GNUCXX)
+add_compile_options(-Wall -g3 -pedantic)
 
 set(SRC 
 	Materials/ShaderMaterial.cpp
