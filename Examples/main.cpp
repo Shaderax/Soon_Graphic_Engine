@@ -8,6 +8,8 @@
 
 #include "Pipelines/NewDefaultPipeline.hpp"
 
+#include "Utilities/ShowFps.hpp"
+
 std::vector<vec3<float>> triangle =
 {
 	{0.0, -0.500000, 0.000000},
@@ -37,9 +39,11 @@ int main()
 
 	mesh->Render();
 	mesh->GetMaterial().SetVec3("cou.bondour", vec3<float>(0.2f, 0.1f, 0.0f));
+	double lastTime = 0;
 	// Loop
 	while (!GraphicsInstance::GetInstance()->ShouldClose(GraphicsInstance::GetInstance()->GetWindow()))
 	{
+		lastTime = ShowFPS(lastTime);
 		if (GraphicsRenderer::GetInstance()->IsChange())
 		{
 			GraphicsInstance::GetInstance()->FillCommandBuffer();

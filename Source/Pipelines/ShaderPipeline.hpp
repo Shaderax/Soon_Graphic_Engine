@@ -66,7 +66,7 @@ namespace Soon
 			_conf.scissor.extent = Extent;
 
 			_conf.pipelineInfo.renderPass = GraphicsInstance::GetInstance()->GetRenderPass();
-			_pipelineLayout = GraphicsInstance::GetInstance()->CreatePipelineLayout(_mUbm.CreateDescriptorSetLayout());
+			_pipelineLayout = GraphicsInstance::GetInstance()->CreatePipelineLayout(_mUbm.GetDescriptorSetLayout());
 			_conf.pipelineInfo.layout = _pipelineLayout;
 			_graphicPipeline = GraphicsInstance::GetInstance()->CreateGraphicsPipeline(
 				_conf,

@@ -51,18 +51,12 @@ namespace Soon
 		vkDeviceWaitIdle(device);
 		RemoveAllPipelines();
 
-		//vmaFreeMemory(GraphicsInstance::GetInstance()->GetAllocator(), m_Allocation );
 		for (uint32_t index = 0; index < _meshs.size(); index++)
 		{
 			// VERTEX
-			vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[index].vertex.buffer, m_Allocation);
-			//vkDestroyBuffer(device, _meshs[index].vertex.buffer, nullptr);
-			//vkFreeMemory(device, _meshs[index].vertex.bufferMemory, nullptr);
-
+			vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[index].vertex.buffer, _meshs[index].vertex.bufferMemory);
 			// INDICE
-			vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[index].indices.buffer, m_Allocation);
-			//vkDestroyBuffer(device, _meshs[index].indices.buffer, nullptr);
-			//vkFreeMemory(device, _meshs[index].indices.bufferMemory, nullptr);
+			vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[index].indices.buffer, _meshs[index].indices.bufferMemory);
 		}
 	}
 
@@ -139,7 +133,7 @@ namespace Soon
 
 	void GraphicsRenderer::UpdateAllDatas(uint32_t imageIndex)
 	{
-		std::cout << "Renderer : Update All Datas" << std::endl;
+		//std::cout << "Renderer : Update All Datas" << std::endl;
 		for (ShaderPipeline *bp : _graphicPipelines)
 			if (bp)
 				bp->UpdateData(imageIndex);
@@ -206,8 +200,8 @@ namespace Soon
 		}
 
 		MeshBufferRenderer mbr;
-		mbr.vertex = GraphicsInstance::GetInstance()->CreateVertexBuffer(mesh->mVertexData, mesh->mVertexTotalSize, m_Allocation);
-		mbr.indices = GraphicsInstance::GetInstance()->CreateIndexBuffer(mesh->mIndices, mesh->mNumIndices, m_Allocation);
+		mbr.vertex = GraphicsInstance::GetInstance()->CreateVertexBuffer(mesh->mVertexData, mesh->mVertexTotalSize);
+		mbr.indices = GraphicsInstance::GetInstance()->CreateIndexBuffer(mesh->mIndices, mesh->mNumIndices);
 		_meshs[id] = mbr;
 
 		return (id);

@@ -49,7 +49,7 @@ namespace Soon
 	protected:
 		VkPipeline _graphicPipeline;
 		VkPipelineLayout _pipelineLayout;
-		std::vector<VkDescriptorSetLayout> _descriptorSetLayout;
+		//std::vector<VkDescriptorSetLayout> _descriptorSetLayout;
 		std::vector<std::vector<VkDescriptorSetLayoutBinding>> uboLayoutBinding;
 		UniformsBufferManager _mUbm;
 

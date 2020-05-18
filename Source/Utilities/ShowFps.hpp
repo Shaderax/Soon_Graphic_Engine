@@ -14,5 +14,5 @@ double ShowFPS( double lastTime )
 	}
 	nbFrames++;
 
-     return lastTime;
+    return lastTime;
 }
