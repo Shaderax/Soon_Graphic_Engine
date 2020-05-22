@@ -53,10 +53,13 @@ namespace Soon
 
 		for (uint32_t index = 0; index < _meshs.size(); index++)
 		{
-			// VERTEX
-			vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[index].vertex.buffer, _meshs[index].vertex.bufferMemory);
-			// INDICE
-			vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[index].indices.buffer, _meshs[index].indices.bufferMemory);
+			if (_meshs[index].count > 0)
+			{
+				// VERTEX
+				vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[index].bufferRenderer.vertex.buffer, _meshs[index].bufferRenderer.vertex.bufferMemory);
+				// INDICE
+				vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[index].bufferRenderer.indices.buffer, _meshs[index].bufferRenderer.indices.bufferMemory);
+			}
 		}
 	}
 
@@ -183,38 +186,65 @@ namespace Soon
 		_changes = false;
 	}
 
-	uint32_t GraphicsRenderer::AddMesh(Mesh *mesh)
+	bool GraphicsRenderer::IsValidMeshId( uint32_t id )
 	{
-		uint32_t id;
+		return (id < _meshCounter && _meshs[id].count > 0);
+	}
+
+	uint32_t GraphicsRenderer::AddMesh(Mesh *mesh, uint32_t meshId)
+	{
+		if (meshId != Soon::IdError)
+		{
+			if (IsValidMeshId(meshId))
+			{
+				_meshs[meshId].count += 1;
+				return (meshId);
+			}
+			// TODO: ERROR
+		}
+
 		// Alloc Mesh
 		if (!_freeId.empty())
 		{
-			id = _freeId.back();
+			meshId = _freeId.back();
 			_freeId.pop_back();
 		}
 		else
 		{
-			id = _meshCounter;
+			meshId = _meshCounter;
 			++_meshCounter;
 			_meshs.resize(_meshCounter);
 		}
 
-		MeshBufferRenderer mbr;
-		mbr.vertex = GraphicsInstance::GetInstance()->CreateVertexBuffer(mesh->mVertexData, mesh->mVertexTotalSize);
-		mbr.indices = GraphicsInstance::GetInstance()->CreateIndexBuffer(mesh->mIndices, mesh->mNumIndices);
-		_meshs[id] = mbr;
+		MeshRenderer mr;
+		mr.count = 0;
+		mr.bufferRenderer.vertex = GraphicsInstance::GetInstance()->CreateVertexBuffer(mesh->mVertexData, mesh->mVertexTotalSize);
+		mr.bufferRenderer.indices = GraphicsInstance::GetInstance()->CreateIndexBuffer(mesh->mIndices, mesh->mNumIndices);
+		_meshs[meshId] = mr;
 
-		return (id);
+		return (meshId);
 	}
 
-	void GraphicsRenderer::RemoveMesh(uint32_t idMesh)
+	void GraphicsRenderer::RemoveMesh(uint32_t meshId)
 	{
+		if (meshId == Soon::IdError || !IsValidMeshId(meshId))
+			; // TODO: Error
+
+		_meshs[meshId].count -= 1;
+		if (_meshs[meshId].count == 0)
+		{
+			// VERTEX
+			vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[meshId].bufferRenderer.vertex.buffer, _meshs[meshId].bufferRenderer.vertex.bufferMemory);
+			// INDICE
+			vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[meshId].bufferRenderer.indices.buffer, _meshs[meshId].bufferRenderer.indices.bufferMemory);
+
+			_freeId.push_back(meshId);
+		}
 	}
 
 	MeshBufferRenderer &GraphicsRenderer::GetMesh(uint32_t id)
 	{
-		//std::cout << "Try to get mesh at id : " << id << std::endl;
-		return (_meshs[id]);
+		return (_meshs[id].bufferRenderer);
 	}
 
 	void GraphicsRenderer::DestroyAllUniforms(void)

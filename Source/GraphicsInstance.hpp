@@ -10,15 +10,6 @@
 
 #include "VkMemoryAllocator/vk_mem_alloc.h"
 
-enum DescriptorTypeLayout
-{
-	CAMERA = 0,
-	MODEL = 1,
-	IMAGE = 2,
-	MATERIAL = 3,
-	LIGHT = 4
-};
-
 //Swap chain struct
 struct SwapChainSupportDetails
 {
@@ -188,6 +179,7 @@ namespace Soon
 		ImageRenderer CreateTextureImage(uint32_t width, uint32_t height, void *textureData, uint8_t layer, uint8_t pixelSize, VmaAllocation &allocation);
 		void CreateImage(uint32_t width, uint32_t height, uint8_t layer, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory);
 		std::vector<VkDescriptorSet> CreateDescriptorSets(size_t size, uint32_t binding, uint32_t offset, VkDescriptorSetLayout layout, VkBuffer *gpuBuffers, uint32_t bufferCount);
+		void DestroyDescriptorSet(VkDescriptorSet descriptor);
 		void CreateAllocator(void);
 
 		void UpdateUniformBuffer(uint32_t currentImage);
@@ -203,7 +195,6 @@ namespace Soon
 		void PollEvent(void);
 		bool ShouldClose(GLFWwindow *window);
 		void DestroySwapChain( void );
-
 
 		void GetPhysicalDeviceInfo(void);
 		void GetPhysicalDeviceInfo(VkPhysicalDevice device);

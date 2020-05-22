@@ -1699,49 +1699,10 @@ namespace Soon
 		return (descriptorSets);
 	}
 
-	/*
-	// TODO : MULTISET DYNAMIC
-	std::vector<VkDescriptorSet> GraphicsInstance::CreateDescriptorSets(size_t size, uint32_t binding, VkDescriptorSetLayout layout, VkBuffer *gpuBuffers, VkDescriptorType dType)
+	void GraphicsInstance::DestroyDescriptorSet(VkDescriptorSet descriptor)
 	{
-		std::vector<VkDescriptorSet> descriptorSets;
-		std::vector<VkDescriptorSetLayout> layouts(_swapChainImages.size(), layout);
-
-		VkDescriptorSetAllocateInfo allocInfo = {};
-		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		allocInfo.descriptorPool = _descriptorPool;
-		allocInfo.descriptorSetCount = 1 * static_cast<uint32_t>(_swapChainImages.size()); // number of descriptor sets to be allocated from the pool.
-		allocInfo.pSetLayouts = layouts.data();
-
-		descriptorSets.resize(_swapChainImages.size());
-		if (vkAllocateDescriptorSets(_device, &allocInfo, descriptorSets.data()) != VK_SUCCESS)
-			throw std::runtime_error("failed to allocate descriptor sets!");
-
-		for (size_t i = 0; i < _swapChainImages.size(); i++)
-		{
-			VkDescriptorBufferInfo bufferInfo = {};
-			//if (dType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
-			bufferInfo.buffer = gpuBuffers[i];
-			//else if (dType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
-			//	bufferInfo.buffer = gpuBuffers[0];
-			bufferInfo.offset = 0;
-			bufferInfo.range = size;
-			// Le vkBuf que je prends doit etre celui de ma frame
-			// Son offset C'est ou doit etre le descriptor dans le buffer
-
-			VkWriteDescriptorSet descriptorWrite = {};
-			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrite.dstSet = descriptorSets[i];
-			descriptorWrite.dstBinding = binding;
-			descriptorWrite.dstArrayElement = 0;
-			descriptorWrite.descriptorType = dType;
-			descriptorWrite.descriptorCount = 1;
-			descriptorWrite.pBufferInfo = &bufferInfo;
-
-			vkUpdateDescriptorSets(_device, 1, &descriptorWrite, 0, nullptr);
-		}
-		return (descriptorSets);
+		vkFreeDescriptorSets(_device, _descriptorPool, 1, &descriptor);
 	}
-	*/
 
 	UniformSets GraphicsInstance::CreateUniform(size_t size, std::vector<VkDescriptorSetLayout> layoutArray, int dlayout)
 	{

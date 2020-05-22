@@ -33,8 +33,8 @@ namespace Soon
 			void	SetVertexElement( uint8_t* data, uint32_t size, VertexElement elem );
 			void	SetIndexBuffer( uint32_t* indexData, uint32_t size );
 			// Material Handle
-			void	SetMaterial( ShaderMaterial material );
-			ShaderMaterial	GetMaterial( void );
+			void	SetMaterial( ShaderMaterial& material );
+			ShaderMaterial&	GetMaterial( void );
 			void	Render( void );
 			void	UnRender( void );
 			void	AllocGpu( void );

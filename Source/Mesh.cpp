@@ -18,8 +18,8 @@ Mesh::Mesh( const Mesh &other )
 
 Mesh::~Mesh( void )
 {
-	// if (_uniqueId != IdError)
-	// 		FreeGpu();
+	if (m_UniqueId != IdError)
+		FreeGpu();
 }
 
 // Loader Free ?
@@ -45,42 +45,43 @@ void Mesh::SetVertexElement( uint8_t *data, uint32_t size, VertexElement elem )
 }
 
 // Material Handle
-void Mesh::SetMaterial(ShaderMaterial material)
+void Mesh::SetMaterial(ShaderMaterial& material)
 {
 	m_Material = material;
 }
 
-ShaderMaterial Mesh::GetMaterial()
+ShaderMaterial& Mesh::GetMaterial()
 {
 	return (m_Material);
 }
 
-void Mesh::Render()
+void Mesh::Render( void )
 {
 	if (!m_Material.HasValidVertexDescription(m_VertexDescription))
 	{
 		std::cout << "Non Valid Mesh To Pipeline" << std::endl;
 		return ;
+		// TODO: ERROR ?
 	}
 	if (m_UniqueId == Soon::IdError)
 		AllocGpu();
-	m_Material.AddToPipeline(m_UniqueId);
+	m_Material.Render(m_UniqueId);
 }
 
-void Mesh::UnRender()
+void Mesh::UnRender( void )
 {
+	m_Material.UnRender();
 }
 
-void Mesh::AllocGpu()
+void Mesh::AllocGpu( void )
 {
-	m_UniqueId = GraphicsRenderer::GetInstance()->AddMesh(this);
-	//std::cout << "Mesh Alloc GPU, id = " << _uniqueId << std::endl;
+	m_UniqueId = GraphicsRenderer::GetInstance()->AddMesh(this, m_UniqueId);
 }
 
-void Mesh::FreeGpu()
+void Mesh::FreeGpu( void )
 {
-	//GraphicsRenderer::GetInstance()->RemoveMesh(_uniqueId);
-	m_UniqueId = 0;
+	GraphicsRenderer::GetInstance()->RemoveMesh(m_UniqueId);
+	m_UniqueId = Soon::IdError;
 }
 
 void Mesh::SetIndexBuffer( uint32_t* indexData, uint32_t size )

@@ -26,7 +26,6 @@ int main()
 	GraphicsRenderer::GetInstance()->Initialize();
 
 	VertexDescription vd;
-	//std::cout << "Mesh Vertex Element" << std::endl;
 	vd.AddVertexElement(VertexElement(EnumVertexElementSementic::POSITION, VertexElementType(EnumVertexElementType::FLOAT, 1, 3)));
 	Mesh* mesh = new Mesh(vd);
 	mesh->SetVertexElement((uint8_t*)triangle.data(), triangle.size(),VertexElement(EnumVertexElementSementic::POSITION, VertexElementType(EnumVertexElementType::FLOAT, 1, 3)));

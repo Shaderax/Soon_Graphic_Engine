@@ -13,10 +13,16 @@
 #include <array>
 #include <vector>
 
-#include "ThirdParty/VkMemoryAllocator/vk_mem_alloc.h"
+#include "VkMemoryAllocator/vk_mem_alloc.h"
 
 namespace Soon
 {
+	struct MeshRenderer
+	{
+		MeshBufferRenderer bufferRenderer;
+		uint32_t count;
+	};
+
 	class Mesh;
 
 	class GraphicsRenderer
@@ -24,7 +30,7 @@ namespace Soon
 	private:
 
 	public:
-		static GraphicsRenderer *_instance;
+		static GraphicsRenderer* _instance;
 		static constexpr const std::uint32_t MAX_PIPELINES = 32;
 		//static GraphicsRenderer* _instance;
 
@@ -44,6 +50,8 @@ namespace Soon
 		void HasChange(void);
 		bool IsChange(void);
 		void ResetChange(void);
+		bool IsValidMeshId( uint32_t id );
+
 
 		// TODO
 		// Max pipelines reach
@@ -74,8 +82,8 @@ namespace Soon
 		template <typename T>
 		void RemovePipeline(void);
 
-		uint32_t AddMesh(Mesh *mesh);
-		void RemoveMesh(uint32_t id);
+		uint32_t AddMesh(Mesh *mesh, uint32_t meshId);
+		void RemoveMesh(uint32_t meshId);
 		MeshBufferRenderer &GetMesh(uint32_t id);
 		void DestroyAllUniforms(void);
 		void DestroyAllGraphicsPipeline(void);
@@ -85,7 +93,7 @@ namespace Soon
 		std::uint32_t _meshCounter = 0;
 		std::bitset<MAX_PIPELINES> _createdPipeline;
 		std::vector<uint32_t> _freeId;
-		std::vector<MeshBufferRenderer> _meshs;
+		std::vector<MeshRenderer> _meshs;
 		std::array<ShaderPipeline *, MAX_PIPELINES / 2> _graphicPipelines{};
 		std::array<ComputePipeline *, MAX_PIPELINES / 2> _computePipelines{};
 	};

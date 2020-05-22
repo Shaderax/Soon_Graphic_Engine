@@ -87,25 +87,6 @@ namespace Soon
 		_bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 	}
 
-	uint32_t BasePipeline::AddToPipeline( std::uint32_t meshId )
-	{
-		uint32_t idMat;
-
-		if (!_freeId.empty())
-		{
-			idMat = _freeId.back();
-			_freeId.pop_back();
-			_toDraw.push_back({idMat, meshId});
-		}
-		else
-		{
-			idMat = _toDraw.size();
-			_toDraw.push_back({idMat, meshId});
-		}
-		_mUbm.Allocate(idMat);
-		return idMat;
-	}
-
 	void BasePipeline::Set(std::string name, void *value, uint32_t id)
 	{
 		_mUbm.Set( name, value, id );
@@ -113,7 +94,7 @@ namespace Soon
 
 	void BasePipeline::RecreateUniforms(void)
 	{
-		_mUbm.RecreateUniforms(_toDraw);
+		_mUbm.RecreateUniforms(m_ToDraw);
 	}
 
 	void BasePipeline::BindCaller(VkCommandBuffer commandBuffer, uint32_t currentImage)
@@ -125,9 +106,9 @@ namespace Soon
 		uint32_t dynamicOffset = 0;
 
 		//_mUbm.GetUniqueUniforms();
-		for (uint32_t index = 0; index < _toDraw.size(); index++)
+		for ( std::unordered_map<uint32_t, uint32_t>::iterator it = m_ToDraw.begin(); it != m_ToDraw.end(); ++it )
 		{
-			MeshBufferRenderer &bu = GraphicsRenderer::GetInstance()->GetMesh(_toDraw[index].meshId);
+			MeshBufferRenderer &bu = GraphicsRenderer::GetInstance()->GetMesh(m_RenderData[it->second].meshId);
 			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &(bu.vertex.buffer), offsets);
 
 			vkCmdBindIndexBuffer(commandBuffer, bu.indices.buffer, 0, VK_INDEX_TYPE_UINT32);
@@ -135,7 +116,7 @@ namespace Soon
 			// TODO: Here
 			std::vector<Uniform>& uniforms = _mUbm.GetNonUniqueUniforms();
 			for (uint32_t uniformId = 0; uniformId < uniforms.size(); uniformId++)
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipelineLayout, uniforms[uniformId]._set, 1, &(_mUbm.GetDescriptorSet(currentImage)[uniformId + (uniforms.size() * _toDraw[index].matId)]), 0, nullptr);
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipelineLayout, uniforms[uniformId]._set, 1, &(_mUbm.GetDescriptorSet(currentImage)[uniformId + (uniforms.size() * it->second)]), 0, nullptr);
 
 			vkCmdDrawIndexed(commandBuffer, bu.indices.numIndices, 1, 0, 0, 0);
 		}
@@ -148,17 +129,52 @@ namespace Soon
 
 	void BasePipeline::Render(uint32_t id)
 	{
-		(void)id;
+		if (!m_RenderData[id].cached)
+			return ;
+		m_RenderData[id].cached = false;
+		m_ToDraw[id] = id;
 	}
 
 	void BasePipeline::UnRender(uint32_t id)
 	{
-		(void)id;
+		m_ToDraw.erase(id);
+		m_RenderData[id].cached = true;
 	}
+
+	uint32_t BasePipeline::AddToPipeline( std::uint32_t meshId )
+	{
+		uint32_t idMat;
+
+		if (!_freeId.empty())
+		{
+			idMat = _freeId.back();
+			_freeId.pop_back();
+			m_RenderData[idMat] = {idMat, meshId, false};
+			m_ToDraw[idMat] = idMat;
+		}
+		else
+		{
+			idMat = m_RenderData.size();
+			m_RenderData.push_back({idMat, meshId, false});
+			m_ToDraw[idMat] = idMat;
+		}
+		_mUbm.Allocate(idMat);
+		return idMat;
+	}
+
+/*
+	void BasePipeline::SetMesh( uint32_t matId, uint32_t meshId )
+	{
+
+	}
+*/
 
 	void BasePipeline::RemoveFromPipeline(uint32_t id)
 	{
-		(void)id;
+		if (!m_RenderData[id].cached)
+			m_ToDraw.erase(id);
+		_freeId.push_back(id);
+		//_mUbm.Free(id);
 	}
 
 	/////////// GET SHADER DATA /////////////

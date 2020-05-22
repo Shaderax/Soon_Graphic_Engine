@@ -9,7 +9,7 @@
 
 #include "Vertex.hpp"
 
-#include "ThirdParty/VkMemoryAllocator/vk_mem_alloc.h"
+#include "VkMemoryAllocator/vk_mem_alloc.h"
 
 namespace Soon
 {
@@ -53,6 +53,7 @@ namespace Soon
 	private:
 		uint32_t		m_NumElements = 0;
 		uint32_t		m_MinElements = 100;
+		uint32_t		m_ActualResize = 0;
 		uint8_t*		m_CpuBuffer = nullptr;
 		uint32_t		m_SizeUniqueUniformBlock = 0;
 		uint32_t		m_SizeUniformBlock = 0;
@@ -78,10 +79,12 @@ namespace Soon
 		void Allocate( uint32_t idMat );
 		void AddLayoutBinding(VkDescriptorSetLayoutBinding ubo, uint32_t set);
 		std::vector<VkDescriptorSetLayout> CreateDescriptorSetLayout( void );
-		void DestroyElement( uint32_t idMat );
-		void RecreateUniforms( std::vector<Soon::IdRender> toDraw );
 		std::vector<VkDescriptorSetLayout> GetDescriptorSetLayout( void );
 		std::vector<Uniform>& GetNonUniqueUniforms( void );
 		std::vector<VkDescriptorSet>& GetDescriptorSet( uint32_t image );
+		void Free( uint32_t idMat );
+		void RecreateUniforms( std::unordered_map<uint32_t, uint32_t>& toDraw );
+		void CheckAndResize( uint32_t num );
+
 	};
 }
