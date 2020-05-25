@@ -106,6 +106,8 @@ namespace Soon
 		uint32_t dynamicOffset = 0;
 
 		//_mUbm.GetUniqueUniforms();
+		std::vector<Uniform>& uniforms = _mUbm.GetNonUniqueUniforms();
+
 		for ( std::unordered_map<uint32_t, uint32_t>::iterator it = m_ToDraw.begin(); it != m_ToDraw.end(); ++it )
 		{
 			MeshBufferRenderer &bu = GraphicsRenderer::GetInstance()->GetMesh(m_RenderData[it->second].meshId);
@@ -114,7 +116,6 @@ namespace Soon
 			vkCmdBindIndexBuffer(commandBuffer, bu.indices.buffer, 0, VK_INDEX_TYPE_UINT32);
 
 			// TODO: Here
-			std::vector<Uniform>& uniforms = _mUbm.GetNonUniqueUniforms();
 			for (uint32_t uniformId = 0; uniformId < uniforms.size(); uniformId++)
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipelineLayout, uniforms[uniformId]._set, 1, &(_mUbm.GetDescriptorSet(currentImage)[uniformId + (uniforms.size() * it->second)]), 0, nullptr);
 
@@ -253,13 +254,14 @@ namespace Soon
 				UniformTexture texture;
 				texture._binding = bindings[index]->binding;
 				texture._set = bindings[index]->set;
-				texture._data._name = bindings[index]->name;
-				texture._data._type = SpvTypeToVertexType(bindings[index]->type_description);
+				texture._name = bindings[index]->name;
+				texture._type = SpvTypeToVertexType(bindings[index]->type_description);
 
 				int32_t indexDefault = IsDefaultUniform(bindings[index]->name);
-				texture.isUnique = false;
+				//texture.isTexture = true;
+				// TODO: Unique
 				texture._updateFunct = nullptr;
-				_mUbm.AddUniformTexture(texture);
+				_mUbm.AddUniform(texture);
 				//_uniformsTexture.push_back(texture);
 			}
 			else
@@ -280,8 +282,9 @@ namespace Soon
 
 					uniform._members.push_back(uniVar);
 				}
+				/*
 				int32_t defaultIndex = IsDefaultUniform(bindings[index]->name);
-				if (defaultIndex >= 0/* && IsValidDefaultUniform(bindings[index], defaultIndex)*/)
+				if (defaultIndex >= 0 && IsValidDefaultUniform(bindings[index], defaultIndex))
 				{
 					uniform.isUnique = _defaultUniform[defaultIndex].isUnique;
 					//uniform._updateFunct = _defaultUniform[defaultIndex].updateFunc;
@@ -291,7 +294,8 @@ namespace Soon
 					uniform.isUnique = false;
 					uniform._updateFunct = nullptr;
 				}
-				//_uniforms.push_back(uniform);
+				*/
+				// IF UNIQUE ADD_UNIQUE_UNIFORM()
 				_mUbm.AddUniform(uniform);
 			}
 			// std::cout << "Size :: " << bindings[index]->block.size << std::endl;
@@ -300,6 +304,7 @@ namespace Soon
 			ubo.binding = bindings[index]->binding;
 			ubo.descriptorCount = (bindings[index]->array.dims_count != 0) ? bindings[index]->array.dims[0] : 1;
 			ubo.descriptorType = DescriptorTypeSpvToVk(bindings[index]->descriptor_type); //VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			std::cout << ubo.descriptorType << std::endl;
 			ubo.pImmutableSamplers = nullptr;
 			ubo.stageFlags = reflection.GetShaderModule().shader_stage;
 

@@ -10,6 +10,8 @@
 
 #include "VkMemoryAllocator/vk_mem_alloc.h"
 
+#include "Texture.hpp"
+
 //Swap chain struct
 struct SwapChainSupportDetails
 {
@@ -46,10 +48,10 @@ struct MeshBufferRenderer
 struct ImageRenderer
 {
 	VkImage _textureImage;
-	VkDeviceMemory _textureImageMemory;
+	VmaAllocation _textureImageMemory;
 };
 
-struct Image
+struct ImageProperties
 {
 	VkSampler _textureSampler;
 	VkImageView _imageView;
@@ -63,6 +65,8 @@ struct UniformSets
 
 namespace Soon
 {
+	class Texture;
+
 	class GraphicsInstance
 	{
 	public:
@@ -112,7 +116,7 @@ namespace Soon
 		VkDescriptorPool _descriptorPool;
 
 		VkImage _depthImage;
-		VkDeviceMemory _depthImageMemory;
+		VmaAllocation _depthImageMemory;
 		VkImageView _depthImageView;
 
 		VmaAllocator m_Allocator;
@@ -167,7 +171,7 @@ namespace Soon
 		void CreateCommandBuffers(void);
 		void CreateSyncObjects(void);
 		void CreateDescriptorPool(void);
-		VkSampler CreateTextureSampler(void);
+		VkSampler CreateTextureSampler(Texture* texture);
 		BufferRenderer CreateUniformBuffers(size_t size);
 		VkPipelineLayout CreatePipelineLayout(std::vector<VkDescriptorSetLayout> descriptorSetLayout);
 		VertexBufferRenderer CreateStorageBuffer(void *ptrData, uint32_t size);
@@ -175,9 +179,9 @@ namespace Soon
 		UniformSets CreateUniform(size_t size, std::vector<VkDescriptorSetLayout> layoutArray, int dlayout);
 		IndiceBufferRenderer CreateIndexBuffer(uint32_t *indexData, uint32_t size);
 		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage, VkBuffer &buffer, VmaAllocation &allocation);
-		std::vector<VkDescriptorSet> CreateImageDescriptorSets(VkImageView textureImageView, VkSampler textureSampler, VkDescriptorSetLayout descriptorSetLayout);
-		ImageRenderer CreateTextureImage(uint32_t width, uint32_t height, void *textureData, uint8_t layer, uint8_t pixelSize, VmaAllocation &allocation);
-		void CreateImage(uint32_t width, uint32_t height, uint8_t layer, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory);
+		std::vector<VkDescriptorSet> CreateImageDescriptorSets(VkImageView textureImageView, VkSampler textureSampler, VkDescriptorSetLayout layout, uint32_t binding);
+		ImageRenderer CreateTextureImage(Texture* texture);
+		void CreateImage(VkExtent2D textureExtent, VkFormat format, uint32_t layer, VkImageTiling tiling, VkImageUsageFlags usage, VmaMemoryUsage properties, VkImage &image, VmaAllocation &imageMemory, VmaAllocationCreateFlags flag = 0);
 		std::vector<VkDescriptorSet> CreateDescriptorSets(size_t size, uint32_t binding, uint32_t offset, VkDescriptorSetLayout layout, VkBuffer *gpuBuffers, uint32_t bufferCount);
 		void DestroyDescriptorSet(VkDescriptorSet descriptor);
 		void CreateAllocator(void);
@@ -208,4 +212,8 @@ namespace Soon
 
 		void DestroyAllocator(void);
 	};
+	VkFormat TextureFormatToVkFormat( TextureFormat format );
+	VkImageViewType TextureTypeToVkImageType( EnumTextureType type );
+	VkFilter TextureFilterModeToVk( EnumFilterMode filterMode );
+
 } // namespace Soon

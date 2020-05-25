@@ -26,26 +26,22 @@ namespace Soon
 	struct Uniform
 	{
 		std::string _name;
+		VertexElementType _type;
 		uint32_t _size;
 		uint32_t _binding;
 		uint32_t _set;
 		std::vector<UniformVar> _members;
-		//std::vector<UniformSets> _us;
-		// Ou que je met les DescriptorSet ?
 		std::function<void(int)> _updateFunct;
-		bool isUnique;
 	};
 
 	struct UniformTexture
 	{
-		UniformVar _data;
+		std::string _name;
+		VertexElementType _type;
 		uint32_t _binding;
 		uint32_t _set;
-		//std::vector<Image> _i;
-		//std::vector<ImageRenderer> _iR;
-		std::vector<VkDescriptorSet> _dS;
+		std::vector<uint32_t> _textureId;	// TODO: For uniqueTexture change vector
 		std::function<void(int)> _updateFunct;
-		bool isUnique;
 	};
 
 	class UniformsBufferManager
@@ -54,14 +50,19 @@ namespace Soon
 		uint32_t		m_NumElements = 0;
 		uint32_t		m_MinElements = 100;
 		uint32_t		m_ActualResize = 0;
-		uint8_t*		m_CpuBuffer = nullptr;
 		uint32_t		m_SizeUniqueUniformBlock = 0;
 		uint32_t		m_SizeUniformBlock = 0;
+
+		uint8_t*	m_CpuBuffer = nullptr;
 		std::vector<VmaAllocation>	m_GpuMemory;
 		std::vector<VkBuffer>		m_GpuBuffer; // TODO: Aligment in vulkan (16)
+
 		std::vector<Uniform>		m_Uniforms;
 		std::vector<Uniform>		m_UniqueUniforms;
-		std::vector<UniformTexture> m_UniformsTexture;
+
+		std::vector<UniformTexture>		m_UniformsTexture;
+		std::vector<UniformTexture>		m_UniqueUniformsTexture;
+
 		std::vector<std::vector<VkDescriptorSet>> m_DescriptorSets;
 
 		std::vector<VkDescriptorSetLayout> _descriptorSetLayout; // TODO: UniformTexture
@@ -73,7 +74,9 @@ namespace Soon
 		void InitBuffers( void );
 		void DestroyAllUniforms( void );
 		void AddUniform( Uniform uniform );
-		void AddUniformTexture( UniformTexture uniform );
+		void AddUniform( UniformTexture uniform );
+		void AddUniqueUniform( Uniform uniform );
+		void AddUniqueUniform( UniformTexture uniform );
 		void UpdateToGPU( uint32_t currentImg );
 		void Set( std::string name, void* value, uint32_t matId );
 		void Allocate( uint32_t idMat );

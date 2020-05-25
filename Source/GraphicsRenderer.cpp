@@ -10,6 +10,7 @@
 #include <iostream>
 
 #include "Mesh.hpp"
+#include "Texture.hpp"
 
 namespace Soon
 {
@@ -63,7 +64,7 @@ namespace Soon
 		}
 	}
 
-	void GraphicsRenderer::DestroyAllGraphicsPipeline( void )
+	void GraphicsRenderer::DestroyAllGraphicsPipeline(void)
 	{
 		std::cout << "Renderer : Destroy All Graphics Pipelines" << std::endl;
 
@@ -186,7 +187,18 @@ namespace Soon
 		_changes = false;
 	}
 
-	bool GraphicsRenderer::IsValidMeshId( uint32_t id )
+	void GraphicsRenderer::DestroyAllUniforms(void)
+	{
+		std::cout << "Renderer : Destroy All Uniforms" << std::endl;
+		for (ShaderPipeline *bp : _graphicPipelines)
+			if (bp)
+				bp->DestroyAllUniforms();
+		for (ComputePipeline *bp : _computePipelines)
+			if (bp)
+				bp->DestroyAllUniforms();
+	}
+
+	bool GraphicsRenderer::IsValidMeshId(uint32_t id)
 	{
 		return (id < _meshCounter && _meshs[id].count > 0);
 	}
@@ -217,7 +229,7 @@ namespace Soon
 		}
 
 		MeshRenderer mr;
-		mr.count = 0;
+		mr.count = 1;
 		mr.bufferRenderer.vertex = GraphicsInstance::GetInstance()->CreateVertexBuffer(mesh->mVertexData, mesh->mVertexTotalSize);
 		mr.bufferRenderer.indices = GraphicsInstance::GetInstance()->CreateIndexBuffer(mesh->mIndices, mesh->mNumIndices);
 		_meshs[meshId] = mr;
@@ -233,6 +245,10 @@ namespace Soon
 		_meshs[meshId].count -= 1;
 		if (_meshs[meshId].count == 0)
 		{
+			// TODO: DEGUEU
+			//VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
+			//vkDeviceWaitIdle(device);
+
 			// VERTEX
 			vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[meshId].bufferRenderer.vertex.buffer, _meshs[meshId].bufferRenderer.vertex.bufferMemory);
 			// INDICE
@@ -242,19 +258,68 @@ namespace Soon
 		}
 	}
 
-	MeshBufferRenderer &GraphicsRenderer::GetMesh(uint32_t id)
+	MeshBufferRenderer& GraphicsRenderer::GetMesh(uint32_t id)
 	{
 		return (_meshs[id].bufferRenderer);
 	}
 
-	void GraphicsRenderer::DestroyAllUniforms(void)
+	bool GraphicsRenderer::IsValidTextureId(uint32_t id)
 	{
-		std::cout << "Renderer : Destroy All Uniforms" << std::endl;
-		for (ShaderPipeline *bp : _graphicPipelines)
-			if (bp)
-				bp->DestroyAllUniforms();
-		for (ComputePipeline *bp : _computePipelines)
-			if (bp)
-				bp->DestroyAllUniforms();
+		return (id < m_TextureCounter && m_Textures[id].count > 0);
+	}
+
+	uint32_t GraphicsRenderer::AddTexture(Texture* texture, uint32_t textureId)
+	{
+		if (textureId != Soon::IdError)
+		{
+			if (IsValidTextureId(textureId))
+			{
+				m_Textures[textureId].count += 1;
+				return (textureId);
+			}
+			// TODO: ERROR
+		}
+
+		if (!m_FreeTextureId.empty())
+		{
+			textureId = m_FreeTextureId.back();
+			m_FreeTextureId.pop_back();
+		}
+		else
+		{
+			textureId = m_TextureCounter;
+			++m_TextureCounter;
+			m_Textures.resize(m_TextureCounter);
+		}
+
+		TextureRenderer mr;
+		mr.count = 0;
+		mr.imageRenderer = GraphicsInstance::GetInstance()->CreateTextureImage(texture);
+		mr.image._imageView = GraphicsInstance::GetInstance()->CreateImageView(mr.imageRenderer._textureImage, TextureFormatToVkFormat(texture->GetFormat()), VK_IMAGE_ASPECT_COLOR_BIT, TextureTypeToVkImageType(texture->GetType()));
+		mr.image._textureSampler = GraphicsInstance::GetInstance()->CreateTextureSampler(texture);
+		m_Textures[textureId] = mr;
+
+		return (textureId);
+	}
+
+	void GraphicsRenderer::RemoveTexture(uint32_t textureId)
+	{
+		if (textureId == Soon::IdError || !IsValidTextureId(textureId))
+			; // TODO: Error
+
+		m_Textures[textureId].count -= 1;
+		if (m_Textures[textureId].count == 0)
+		{
+			vmaDestroyImage(GraphicsInstance::GetInstance()->GetAllocator(), m_Textures[textureId].imageRenderer._textureImage, m_Textures[textureId].imageRenderer._textureImageMemory);
+			vkDestroySampler(GraphicsInstance::GetInstance()->GetDevice(), m_Textures[textureId].image._textureSampler, nullptr);
+			vkDestroyImageView(GraphicsInstance::GetInstance()->GetDevice(), m_Textures[textureId].image._imageView, nullptr);
+
+			_freeId.push_back(textureId);
+		}
+	}
+
+	ImageProperties& GraphicsRenderer::GetImageProperties(uint32_t id)
+	{
+		return (m_Textures[id].image);
 	}
 } // namespace Soon

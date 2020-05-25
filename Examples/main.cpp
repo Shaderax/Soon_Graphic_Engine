@@ -10,6 +10,9 @@
 
 #include "Utilities/ShowFps.hpp"
 
+#include <chrono>
+#include <ctime>
+
 std::vector<vec3<float>> triangle =
 {
 	{0.0, -0.500000, 0.000000},
@@ -39,10 +42,21 @@ int main()
 	mesh->Render();
 	mesh->GetMaterial().SetVec3("cou.bondour", vec3<float>(0.2f, 0.1f, 0.0f));
 	double lastTime = 0;
+	bool did = false;
+	double time = glfwGetTime();
 	// Loop
+	std::cout << "Begin Loop" << std::endl;
 	while (!GraphicsInstance::GetInstance()->ShouldClose(GraphicsInstance::GetInstance()->GetWindow()))
 	{
+
 		lastTime = ShowFPS(lastTime);
+
+		if (!did && glfwGetTime() - time > 5.0f)
+		{
+			did = true;
+			delete mesh;
+		}
+
 		if (GraphicsRenderer::GetInstance()->IsChange())
 		{
 			GraphicsInstance::GetInstance()->FillCommandBuffer();
@@ -51,9 +65,8 @@ int main()
 
 		GraphicsInstance::GetInstance()->PollEvent();
 		GraphicsInstance::GetInstance()->DrawFrame();
-	}
 
-	delete mesh;
+	}
 
 	// Destroy
 	GraphicsRenderer::ReleaseInstance();

@@ -29,6 +29,8 @@ set(SRC
 	../Modules/SPIRV-Reflect/spirv_reflect.c
 
 	UniformsBufferManager.cpp
+
+	Texture.cpp
 	)
 
 add_library(Source ${SRC})

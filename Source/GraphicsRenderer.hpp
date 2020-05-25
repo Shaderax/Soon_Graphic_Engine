@@ -23,6 +23,14 @@ namespace Soon
 		uint32_t count;
 	};
 
+	struct TextureRenderer
+	{
+		ImageRenderer imageRenderer;
+		ImageProperties image;
+		//MeshBufferRenderer bufferRenderer;
+		uint32_t count;
+	};
+
 	class Mesh;
 
 	class GraphicsRenderer
@@ -51,6 +59,7 @@ namespace Soon
 		bool IsChange(void);
 		void ResetChange(void);
 		bool IsValidMeshId( uint32_t id );
+		bool IsValidTextureId(uint32_t id);
 
 
 		// TODO
@@ -82,18 +91,29 @@ namespace Soon
 		template <typename T>
 		void RemovePipeline(void);
 
+		// Add Mesh in tab
 		uint32_t AddMesh(Mesh *mesh, uint32_t meshId);
 		void RemoveMesh(uint32_t meshId);
 		MeshBufferRenderer &GetMesh(uint32_t id);
 		void DestroyAllUniforms(void);
 		void DestroyAllGraphicsPipeline(void);
 
+		uint32_t AddTexture(Texture* texture, uint32_t textureId);
+		void RemoveTexture(uint32_t textureId);
+		ImageProperties& GetImageProperties(uint32_t id);
+
 	private:
 		bool _changes;
-		std::uint32_t _meshCounter = 0;
 		std::bitset<MAX_PIPELINES> _createdPipeline;
+
+		std::uint32_t _meshCounter = 0;
 		std::vector<uint32_t> _freeId;
 		std::vector<MeshRenderer> _meshs;
+
+		std::uint32_t m_TextureCounter = 0;
+		std::vector<uint32_t> m_FreeTextureId;
+		std::vector<TextureRenderer> m_Textures;
+
 		std::array<ShaderPipeline *, MAX_PIPELINES / 2> _graphicPipelines{};
 		std::array<ComputePipeline *, MAX_PIPELINES / 2> _computePipelines{};
 	};

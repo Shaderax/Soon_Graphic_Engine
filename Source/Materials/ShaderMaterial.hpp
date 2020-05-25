@@ -31,37 +31,10 @@ namespace Soon
 		}
 */
 
-		void Render( std::uint32_t meshId )
-		{
-			if (_shaderPipeline && _id != Soon::IdError)
-				_shaderPipeline->Render(_id);
-			else if (_shaderPipeline && _id == Soon::IdError)
-				_id = _shaderPipeline->AddToPipeline(meshId);
-		}
-
-		void UnRender( void )
-		{
-			if (_shaderPipeline && _id != Soon::IdError)
-				_shaderPipeline->UnRender(_id);
-		}
-
-		void RemoveFromPipeline(std::uint32_t meshId)
-		{
-			//if (_shaderPipeline)
-			//	_id = _shaderPipeline->RemoveFromPipeline();
-		}
-
-		bool HasValidVertexDescription(VertexDescription meshVD)
-		{
-			if (_shaderPipeline == nullptr)
-				return (false);
-			return (meshVD == _shaderPipeline->GetVertexDescription());
-		}
-
-		 void SetUniform( std::string name, void* data )
-		 {
-			 if (_shaderPipeline && _id != IdError)
-			 	_shaderPipeline->Set(name, data, _id);
-		 }
+		void Render( std::uint32_t meshId );
+		void UnRender( void );
+		void RemoveFromPipeline(std::uint32_t meshId);
+		bool HasValidVertexDescription(VertexDescription meshVD);
+		void SetUniform( std::string name, void* data );
 	};
 } // namespace Soon

@@ -7,6 +7,8 @@
 
 #include "Utilities/ReadFile.hpp"
 
+#include "Texture.hpp"
+
 #include <iostream>
 #include <vector>
 #include <map>
@@ -1105,8 +1107,9 @@ namespace Soon
 	void GraphicsInstance::DestroySwapChain( void )
 	{
 		vkDestroyImageView(_device, _depthImageView, nullptr);
-		vkDestroyImage(_device, _depthImage, nullptr);
-		vkFreeMemory(_device, _depthImageMemory, nullptr);
+		vmaDestroyImage(m_Allocator, _depthImage, _depthImageMemory);
+		//vkDestroyImage(_device, _depthImage, nullptr);
+		//vkFreeMemory(_device, _depthImageMemory, nullptr);
 
 		for (auto framebuffer : _swapChainFramebuffers)
 			vkDestroyFramebuffer(_device, framebuffer, nullptr);
@@ -1126,8 +1129,9 @@ namespace Soon
 	void GraphicsInstance::CleanupSwapChain(void)
 	{
 		vkDestroyImageView(_device, _depthImageView, nullptr);
-		vkDestroyImage(_device, _depthImage, nullptr);
-		vkFreeMemory(_device, _depthImageMemory, nullptr);
+		vmaDestroyImage(m_Allocator, _depthImage, _depthImageMemory);
+		//vkDestroyImage(_device, _depthImage, nullptr);
+		//vkFreeMemory(_device, _depthImageMemory, nullptr);
 
 		for (auto framebuffer : _swapChainFramebuffers)
 			vkDestroyFramebuffer(_device, framebuffer, nullptr);
@@ -1203,10 +1207,8 @@ namespace Soon
 		{
 			void *data;
 			vmaMapMemory(m_Allocator, stagingBuffer.bufferMemory, &data);
-			//vkMapMemory(_device, stagingBuffer.bufferMemory, 0, size, 0, &data);
 			memcpy(data, ptrData, (size_t)size);
 			vmaUnmapMemory(m_Allocator, stagingBuffer.bufferMemory);
-			//vkUnmapMemory(_device, stagingBuffer.bufferMemory);
 		}
 
 		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY, bufRenderer.buffer, bufRenderer.bufferMemory);
@@ -1235,9 +1237,7 @@ namespace Soon
 
 		void *data;
 		vmaMapMemory(m_Allocator, staginAlloc, &data);
-		//vkMapMemory(_device, stagingBufferMemory, 0, bufferSize, 0, (void **)&data);
 		memcpy(data, indexData, (size_t)bufferSize);
-		//vkUnmapMemory(_device, stagingBufferMemory);
 		vmaUnmapMemory(m_Allocator, staginAlloc);
 
 		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY, bufRenderer.buffer, bufRenderer.bufferMemory);
@@ -1259,19 +1259,19 @@ namespace Soon
 		app->_windowAttribute._height = height;
 	}
 
-	VkSampler GraphicsInstance::CreateTextureSampler(void)
+	VkSampler GraphicsInstance::CreateTextureSampler(Texture* texture)
 	{
 		VkSampler textureSampler;
 
 		VkSamplerCreateInfo samplerInfo = {};
 		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-		samplerInfo.magFilter = VK_FILTER_LINEAR;
-		samplerInfo.minFilter = VK_FILTER_LINEAR;
+		samplerInfo.magFilter = TextureFilterModeToVk(texture->GetFilterMode());
+		samplerInfo.minFilter = TextureFilterModeToVk(texture->GetFilterMode());
 		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT; // VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE
 		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 		samplerInfo.anisotropyEnable = VK_TRUE;
-		samplerInfo.maxAnisotropy = 16;
+		samplerInfo.maxAnisotropy = texture->GetAnisotropLevel();
 		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 		samplerInfo.unnormalizedCoordinates = VK_FALSE;
 		samplerInfo.compareEnable = VK_FALSE;
@@ -1287,55 +1287,91 @@ namespace Soon
 		return textureSampler;
 	}
 
-	//	void GraphicsInstance::CreateTextureImageView( void )
-	//	{
-	//		// TODO Cleanup
-	//		VkImageView	textureImageView;
-	//		VkImage		textureImage;
-	//
-	//		textureImageView = CreateImageView(textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
-	//	}
+	VkFilter TextureFilterModeToVk( EnumFilterMode filterMode )
+	{
+		switch (filterMode)
+		{
+			case EnumFilterMode::LINEAR:
+				return (VK_FILTER_LINEAR);
+			case EnumFilterMode::NEAREST:
+				return (VK_FILTER_NEAREST);
+			default:
+				return VK_FILTER_LINEAR;
+		}
+		return VK_FILTER_LINEAR;
+	}
 
-	ImageRenderer GraphicsInstance::CreateTextureImage(uint32_t width, uint32_t height, void *textureData, uint8_t layer, uint8_t pixelSize, VmaAllocation& allocation)
+	VkImageViewType TextureTypeToVkImageType( EnumTextureType type )
+	{
+		switch (type)
+		{
+			case EnumTextureType::TEXTURE_2D:
+				return (VK_IMAGE_VIEW_TYPE_2D);
+			case EnumTextureType::TEXTURE_CUBE:
+				return (VK_IMAGE_VIEW_TYPE_CUBE);
+			default:
+				return (VK_IMAGE_VIEW_TYPE_2D);
+		}
+		return (VK_IMAGE_VIEW_TYPE_2D);
+	}
+
+	ImageRenderer GraphicsInstance::CreateTextureImage(Texture* texture)
 	{
 		ImageRenderer ir;
-		size_t imageSize = layer * width * height * 4; //texture->_format;
+		size_t imageSize = texture->GetArrayLayer() * texture->mWidth * texture->mHeight * texture->GetFormat().GetSize();
+
 		VkBuffer stagingBuffer;
-		VkDeviceMemory stagingBufferMemory;
+		VmaAllocation staginAlloc;
+		//VkDeviceMemory stagingBufferMemory;
 
 		std::cout << "ImageSize BUFFER CREATION : " << imageSize << std::endl;
 		//std::cout << "width " << texture->_width <<  " " << "Height : " << texture->_height << "Format : " << texture->_format << std::endl;
 
-		CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, stagingBuffer, allocation);
+		CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, stagingBuffer, staginAlloc);
 
 		void *data;
-		vkMapMemory(_device, stagingBufferMemory, 0, imageSize, 0, &data);
-		memcpy(data, textureData, static_cast<size_t>(imageSize));
-		vkUnmapMemory(_device, stagingBufferMemory);
+		vmaMapMemory(m_Allocator, staginAlloc, &data);
+		memcpy(data, texture->GetData(), static_cast<size_t>(imageSize));
+		vmaUnmapMemory(m_Allocator, staginAlloc);
 
-		CreateImage(width, width, layer, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VMA_MEMORY_USAGE_GPU_ONLY, ir._textureImage, ir._textureImageMemory);
+		CreateImage({texture->mWidth, texture->mHeight}, TextureFormatToVkFormat(texture->GetFormat()), texture->GetArrayLayer(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VMA_MEMORY_USAGE_GPU_ONLY, ir._textureImage, ir._textureImageMemory);
 
-		TransitionImageLayout(ir._textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, layer == 1 ? VK_IMAGE_VIEW_TYPE_2D : VK_IMAGE_VIEW_TYPE_CUBE);
-		CopyBufferToImage(stagingBuffer, ir._textureImage, static_cast<uint32_t>(width), static_cast<uint32_t>(height), layer == 1 ? VK_IMAGE_VIEW_TYPE_2D : VK_IMAGE_VIEW_TYPE_CUBE);
-		TransitionImageLayout(ir._textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, layer == 1 ? VK_IMAGE_VIEW_TYPE_2D : VK_IMAGE_VIEW_TYPE_CUBE);
+		TransitionImageLayout(ir._textureImage, TextureFormatToVkFormat(texture->GetFormat()), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, TextureTypeToVkImageType(texture->GetType()));
+		CopyBufferToImage(stagingBuffer, ir._textureImage, texture->mWidth, texture->mHeight, TextureTypeToVkImageType(texture->GetType()));
+		TransitionImageLayout(ir._textureImage, TextureFormatToVkFormat(texture->GetFormat()), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, TextureTypeToVkImageType(texture->GetType()));
 
-		vkDestroyBuffer(_device, stagingBuffer, nullptr);
-		vkFreeMemory(_device, stagingBufferMemory, nullptr);
-
-		// TODO
-		//	vkDestroyImage(device, textureImage, nullptr);
-		//	vkFreeMemory(device, textureImageMemory, nullptr);
+		vmaDestroyBuffer(m_Allocator, stagingBuffer, staginAlloc);
+		//vkDestroyBuffer(_device, stagingBuffer, nullptr);
+		//vkFreeMemory(_device, stagingBufferMemory, nullptr);
 
 		return (ir);
 	}
 
-	void GraphicsInstance::CreateImage(uint32_t width, uint32_t height, uint8_t layer, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory)
+	VkFormat TextureFormatToVkFormat( TextureFormat format )
+	{
+		switch (format.mFormat)
+		{
+			case EnumTextureFormat::G:
+				return (VK_FORMAT_R8_SNORM);
+			case EnumTextureFormat::GA:
+				return (VK_FORMAT_R8G8_UNORM);
+			case EnumTextureFormat::RGB:
+				return (VK_FORMAT_R8G8B8_UNORM);
+			case EnumTextureFormat::RGBA:
+				return (VK_FORMAT_R8G8B8A8_UNORM);
+			default:
+				return (VK_FORMAT_UNDEFINED);
+		};
+		return (VK_FORMAT_UNDEFINED);
+	}
+
+	void GraphicsInstance::CreateImage(VkExtent2D textureExtent, VkFormat format, uint32_t layer, VkImageTiling tiling, VkImageUsageFlags usage, VmaMemoryUsage properties, VkImage &image, VmaAllocation &imageMemory, VmaAllocationCreateFlags flag )
 	{
 		VkImageCreateInfo imageInfo = {};
 		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		imageInfo.imageType = VK_IMAGE_TYPE_2D;
-		imageInfo.extent.width = width;
-		imageInfo.extent.height = height;
+		imageInfo.extent.width = textureExtent.width;
+		imageInfo.extent.height = textureExtent.height;
 		imageInfo.extent.depth = 1;
 		imageInfo.mipLevels = 1;
 		imageInfo.format = format;
@@ -1345,9 +1381,16 @@ namespace Soon
 		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		imageInfo.arrayLayers = layer;
-		if (layer == 6)
+		if (imageInfo.arrayLayers == 6)
 			imageInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
 
+		VmaAllocationCreateInfo allocInfo = {};
+		allocInfo.usage = properties;
+		allocInfo.flags = flag;
+
+		vmaCreateImage(m_Allocator, &imageInfo, &allocInfo, &image, &imageMemory, nullptr);
+
+/*
 		if (vkCreateImage(_device, &imageInfo, nullptr, &image) != VK_SUCCESS)
 			throw std::runtime_error("failed to create image!");
 
@@ -1363,6 +1406,7 @@ namespace Soon
 			throw std::runtime_error("failed to allocate image memory!");
 
 		vkBindImageMemory(_device, image, imageMemory, 0);
+*/
 	}
 
 	VkCommandBuffer GraphicsInstance::BeginSingleTimeCommands(void)
@@ -1493,10 +1537,8 @@ namespace Soon
 		EndSingleTimeCommands(commandBuffer);
 	}
 
-	//void GraphicsInstance::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory)
 	void GraphicsInstance::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage, VkBuffer &buffer, VmaAllocation& allocation )
 	{
-		// TODO: Impl VMA
 		VkBufferCreateInfo bufferInfo = {};
 		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		bufferInfo.size = size;
@@ -1505,7 +1547,6 @@ namespace Soon
 
 		VmaAllocationCreateInfo allocInfo = {};
 		allocInfo.usage = memoryUsage;
-		//allocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT | VMA_ALLOCATION_CREATE_CAN_BECOME_LOST_BIT | VMA_ALLOCATION_CREATE_CAN_MAKE_OTHER_LOST_BIT;
 
 		vmaCreateBuffer(m_Allocator, &bufferInfo, &allocInfo, &buffer, &allocation, nullptr);
 
@@ -1622,19 +1663,20 @@ namespace Soon
 			throw std::runtime_error("failed to create descriptor pool!");
 	}
 
-	std::vector<VkDescriptorSet> GraphicsInstance::CreateImageDescriptorSets(VkImageView textureImageView, VkSampler textureSampler, VkDescriptorSetLayout descriptorSetLayout)
+	std::vector<VkDescriptorSet> GraphicsInstance::CreateImageDescriptorSets(VkImageView textureImageView, VkSampler textureSampler, VkDescriptorSetLayout layout, uint32_t binding)
 	{
 		std::vector<VkDescriptorSet> ds;
 
-		std::vector<VkDescriptorSetLayout> layouts(_swapChainImages.size(), descriptorSetLayout);
+		std::vector<VkDescriptorSetLayout> layouts(_swapChainImages.size(), layout);
 
 		VkDescriptorSetAllocateInfo allocInfo = {};
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		allocInfo.descriptorPool = _descriptorPool;
-		allocInfo.descriptorSetCount = 1 * static_cast<uint32_t>(_swapChainImages.size()); // number of descriptor sets to be allocated from the pool.
+		allocInfo.descriptorSetCount = static_cast<uint32_t>(_swapChainImages.size()); // number of descriptor sets to be allocated from the pool.
 		allocInfo.pSetLayouts = layouts.data();
 
 		ds.resize(_swapChainImages.size());
+
 		if (vkAllocateDescriptorSets(_device, &allocInfo, ds.data()) != VK_SUCCESS)
 			throw std::runtime_error("failed to allocate descriptor sets!");
 
@@ -1648,7 +1690,7 @@ namespace Soon
 			VkWriteDescriptorSet descriptorWrite = {};
 			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			descriptorWrite.dstSet = ds[i];
-			descriptorWrite.dstBinding = 0;
+			descriptorWrite.dstBinding = binding;
 			descriptorWrite.dstArrayElement = 0;
 			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			descriptorWrite.descriptorCount = 1;
@@ -1750,7 +1792,7 @@ namespace Soon
 	{
 		VkFormat depthFormat = FindDepthFormat();
 
-		CreateImage(_swapChainExtent.width, _swapChainExtent.height, 1, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, _depthImage, _depthImageMemory);
+		CreateImage({_swapChainExtent.width, _swapChainExtent.height}, depthFormat, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VMA_MEMORY_USAGE_GPU_ONLY, _depthImage, _depthImageMemory, VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT);
 		_depthImageView = CreateImageView(_depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_VIEW_TYPE_2D);
 
 		TransitionImageLayout(_depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_VIEW_TYPE_2D);
