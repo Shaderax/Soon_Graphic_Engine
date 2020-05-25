@@ -36,5 +36,6 @@ namespace Soon
 		void RemoveFromPipeline(std::uint32_t meshId);
 		bool HasValidVertexDescription(VertexDescription meshVD);
 		void SetUniform( std::string name, void* data );
+		void SetTexture(std::string name, Texture& texture);
 	};
 } // namespace Soon

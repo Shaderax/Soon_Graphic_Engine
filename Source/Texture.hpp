@@ -79,5 +79,6 @@ namespace Soon
 		uint8_t GetMipMapLevel( void );
 		uint8_t GetArrayLayer( void );
 		EnumTextureType GetType( void );
+		uint32_t GetId( void );
 	};
 } // namespace Soon

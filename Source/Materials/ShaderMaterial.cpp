@@ -51,4 +51,11 @@ namespace Soon
 		if (_shaderPipeline && _id != IdError)
 			_shaderPipeline->Set(name, data, _id);
 	}
+
+	void ShaderMaterial::SetTexture(std::string name, Texture& texture)
+	{
+		if (_shaderPipeline && _id != IdError)
+			_shaderPipeline->SetTexture(name, _id, texture.GetId());
+	}
+
 } // namespace Soon

@@ -4,6 +4,9 @@
 
 namespace Soon
 {
+	/**
+	 * CONSTRUCTOR/DESTRUCTOR
+	 */
 	BasePipeline::BasePipeline( void )
 	{
 	}
@@ -18,32 +21,25 @@ namespace Soon
 		DestroyAllUniforms();
 	}
 
+	/**
+	 * Uniforms
+	 */
 	void BasePipeline::DestroyAllUniforms(void)
 	{
 		_mUbm.DestroyAllUniforms();
 	}
 
-	void BasePipeline::DestroyGraphicPipeline(void)
+	void BasePipeline::RecreateUniforms(void)
 	{
-		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
-
-		vkDestroyPipeline(device, _graphicPipeline, nullptr);
-		vkDestroyPipelineLayout(device, _pipelineLayout, nullptr);
+		_mUbm.RecreateUniforms(m_ToDraw);
 	}
 
-	void BasePipeline::UpdateData( int currentImg )
+	bool BasePipeline::SetDefaultUniform(DefaultUniformStruct structure)
 	{
-		_mUbm.UpdateToGPU(currentImg);
-	}
+		// Check if already exist
+		_defaultUniform.push_back(structure);
 
-	int32_t BasePipeline::IsDefaultVertexInput(std::string name)
-	{
-		for (uint32_t index = 0; index < DefaultVertexInput.size(); index++)
-		{
-			if (DefaultVertexInput[index].inputName == name)
-				return (index);
-		}
-		return (-1);
+		return (true);
 	}
 
 	int32_t BasePipeline::IsDefaultUniform(std::string name)
@@ -72,12 +68,35 @@ namespace Soon
 		return (0);
 	}
 
-	bool BasePipeline::SetDefaultUniform(DefaultUniformStruct structure)
+	void BasePipeline::Set(std::string name, void *value, uint32_t id)
 	{
-		// Check if already exist
-		_defaultUniform.push_back(structure);
+		_mUbm.Set( name, value, id );
+	}
 
-		return (true);
+	/**
+	 * PIPELINES
+	 */
+	void BasePipeline::DestroyGraphicPipeline(void)
+	{
+		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
+
+		vkDestroyPipeline(device, _graphicPipeline, nullptr);
+		vkDestroyPipelineLayout(device, _pipelineLayout, nullptr);
+	}
+
+	void BasePipeline::UpdateData( int currentImg )
+	{
+		_mUbm.UpdateToGPU(currentImg);
+	}
+
+	int32_t BasePipeline::IsDefaultVertexInput(std::string name)
+	{
+		for (uint32_t index = 0; index < DefaultVertexInput.size(); index++)
+		{
+			if (DefaultVertexInput[index].inputName == name)
+				return (index);
+		}
+		return (-1);
 	}
 
 	void BasePipeline::GetBindingDescription( void )
@@ -85,16 +104,6 @@ namespace Soon
 		_bindingDescription.binding = 0;
 		_bindingDescription.stride = _vertexDescription.GetVertexStrideSize(); // stride : size of one pointe
 		_bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-	}
-
-	void BasePipeline::Set(std::string name, void *value, uint32_t id)
-	{
-		_mUbm.Set( name, value, id );
-	}
-
-	void BasePipeline::RecreateUniforms(void)
-	{
-		_mUbm.RecreateUniforms(m_ToDraw);
 	}
 
 	void BasePipeline::BindCaller(VkCommandBuffer commandBuffer, uint32_t currentImage)
@@ -105,8 +114,8 @@ namespace Soon
 		VkDeviceSize offsets[] = {0};
 		uint32_t dynamicOffset = 0;
 
-		//_mUbm.GetUniqueUniforms();
 		std::vector<Uniform>& uniforms = _mUbm.GetNonUniqueUniforms();
+		// TODO: UNIQUE / TEXTURE
 
 		for ( std::unordered_map<uint32_t, uint32_t>::iterator it = m_ToDraw.begin(); it != m_ToDraw.end(); ++it )
 		{
@@ -128,6 +137,9 @@ namespace Soon
 		return (_vertexDescription);
 	}
 
+	/**
+	 * OBJECT ID
+	 */
 	void BasePipeline::Render(uint32_t id)
 	{
 		if (!m_RenderData[id].cached)
@@ -166,13 +178,6 @@ namespace Soon
 		return idMat;
 	}
 
-/*
-	void BasePipeline::SetMesh( uint32_t matId, uint32_t meshId )
-	{
-
-	}
-*/
-
 	void BasePipeline::RemoveFromPipeline(uint32_t id)
 	{
 		if (!m_RenderData[id].cached)
@@ -183,6 +188,25 @@ namespace Soon
 		_freeId.push_back(id);
 		//_mUbm.Free(id);
 	}
+
+	/**
+	 * MESH
+	 */
+	/*
+		void BasePipeline::SetMesh( uint32_t matId, uint32_t meshId )
+		{
+
+		}
+	*/
+
+	/**
+	 * TEXTURE
+	 */
+	void BasePipeline::SetTexture(std::string name, uint32_t idMat, uint32_t textureId)
+	{
+		_mUbm.SetTexture(name, idMat, textureId);
+	}
+
 
 	/////////// GET SHADER DATA /////////////
 	

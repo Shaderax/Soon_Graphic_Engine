@@ -82,4 +82,10 @@ namespace Soon
 	{
 		return m_Type;
 	}
+
+	uint32_t Texture::GetId( void )
+	{
+		return (m_UniqueId);
+	}
+
 } // namespace Soon
