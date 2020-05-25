@@ -134,12 +134,14 @@ namespace Soon
 			return ;
 		m_RenderData[id].cached = false;
 		m_ToDraw[id] = id;
+		GraphicsRenderer::GetInstance()->HasChange();
 	}
 
 	void BasePipeline::UnRender(uint32_t id)
 	{
 		m_ToDraw.erase(id);
 		m_RenderData[id].cached = true;
+		GraphicsRenderer::GetInstance()->HasChange();
 	}
 
 	uint32_t BasePipeline::AddToPipeline( std::uint32_t meshId )
@@ -160,6 +162,7 @@ namespace Soon
 			m_ToDraw[idMat] = idMat;
 		}
 		_mUbm.Allocate(idMat);
+		GraphicsRenderer::GetInstance()->HasChange();
 		return idMat;
 	}
 
@@ -174,6 +177,9 @@ namespace Soon
 	{
 		if (!m_RenderData[id].cached)
 			m_ToDraw.erase(id);
+
+		GraphicsRenderer::GetInstance()->HasChange();
+
 		_freeId.push_back(id);
 		//_mUbm.Free(id);
 	}

@@ -52,6 +52,8 @@ namespace Soon
 		vkDeviceWaitIdle(device);
 		RemoveAllPipelines();
 
+		DestroyInvalidMeshs();
+
 		for (uint32_t index = 0; index < _meshs.size(); index++)
 		{
 			if (_meshs[index].count > 0)
@@ -172,21 +174,6 @@ namespace Soon
 		std::cout << std::endl;
 	}
 
-	void GraphicsRenderer::HasChange(void)
-	{
-		_changes = true;
-	}
-
-	bool GraphicsRenderer::IsChange(void)
-	{
-		return (_changes);
-	}
-
-	void GraphicsRenderer::ResetChange(void)
-	{
-		_changes = false;
-	}
-
 	void GraphicsRenderer::DestroyAllUniforms(void)
 	{
 		std::cout << "Renderer : Destroy All Uniforms" << std::endl;
@@ -237,17 +224,19 @@ namespace Soon
 		return (meshId);
 	}
 
-	void GraphicsRenderer::RemoveMesh(uint32_t meshId)
+	void GraphicsRenderer::DestroyInvalidMeshs( void )
 	{
-		if (meshId == Soon::IdError || !IsValidMeshId(meshId))
-			; // TODO: Error
+		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
+		vkDeviceWaitIdle(device);
 
-		_meshs[meshId].count -= 1;
-		if (_meshs[meshId].count == 0)
+		for (uint32_t index = 0 ; index < m_MeshToSupress.size() ; index++)
 		{
 			// TODO: DEGUEU
 			//VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
 			//vkDeviceWaitIdle(device);
+
+			uint32_t meshId = m_MeshToSupress.back();
+			m_MeshToSupress.pop_back();
 
 			// VERTEX
 			vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[meshId].bufferRenderer.vertex.buffer, _meshs[meshId].bufferRenderer.vertex.bufferMemory);
@@ -256,6 +245,16 @@ namespace Soon
 
 			_freeId.push_back(meshId);
 		}
+	}
+
+	void GraphicsRenderer::RemoveMesh(uint32_t meshId)
+	{
+		if (meshId == Soon::IdError || !IsValidMeshId(meshId))
+			; // TODO: Error
+
+		_meshs[meshId].count -= 1;
+		if (_meshs[meshId].count == 0)
+			m_MeshToSupress.push_back(meshId);
 	}
 
 	MeshBufferRenderer& GraphicsRenderer::GetMesh(uint32_t id)
@@ -321,5 +320,20 @@ namespace Soon
 	ImageProperties& GraphicsRenderer::GetImageProperties(uint32_t id)
 	{
 		return (m_Textures[id].image);
+	}
+
+	void GraphicsRenderer::HasChange(void)
+	{
+		_changes = true;
+	}
+
+	bool GraphicsRenderer::IsChange(void)
+	{
+		return (_changes);
+	}
+
+	void GraphicsRenderer::ResetChange(void)
+	{
+		_changes = false;
 	}
 } // namespace Soon

@@ -950,6 +950,9 @@ namespace Soon
 	void GraphicsInstance::FillCommandBuffer(void)
 	{
 		for (size_t i = 0; i < _commandBuffers.size(); i++)
+			vkResetCommandBuffer(_commandBuffers[i], VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+
+		for (size_t i = 0; i < _commandBuffers.size(); i++)
 		{
 			VkCommandBufferBeginInfo beginInfo = {};
 			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -1024,8 +1027,6 @@ namespace Soon
 		}
 		else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
 			throw std::runtime_error("failed to acquire swap chain image!");
-
-		//std::cout << imageIndex << std::endl;
 
 		GraphicsRenderer::GetInstance()->UpdateAllDatas(imageIndex);
 

@@ -95,6 +95,9 @@ namespace Soon
 		uint32_t AddMesh(Mesh *mesh, uint32_t meshId);
 		void RemoveMesh(uint32_t meshId);
 		MeshBufferRenderer &GetMesh(uint32_t id);
+
+		void DestroyInvalidMeshs( void );
+
 		void DestroyAllUniforms(void);
 		void DestroyAllGraphicsPipeline(void);
 
@@ -116,5 +119,7 @@ namespace Soon
 
 		std::array<ShaderPipeline *, MAX_PIPELINES / 2> _graphicPipelines{};
 		std::array<ComputePipeline *, MAX_PIPELINES / 2> _computePipelines{};
+
+		std::vector<uint32_t> m_MeshToSupress;
 	};
 } // namespace Soon

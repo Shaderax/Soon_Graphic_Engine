@@ -51,14 +51,24 @@ int main()
 
 		lastTime = ShowFPS(lastTime);
 
-		if (!did && glfwGetTime() - time > 5.0f)
+		if (glfwGetTime() - time > 5.0f)
 		{
-			did = true;
-			delete mesh;
+			time = glfwGetTime();
+			if (!did)
+			{
+				did = true;
+				mesh->UnRender();
+			}
+			else
+			{
+				mesh->Render();
+				did = false;
+			}
 		}
 
 		if (GraphicsRenderer::GetInstance()->IsChange())
 		{
+			GraphicsRenderer::GetInstance()->DestroyInvalidMeshs();
 			GraphicsInstance::GetInstance()->FillCommandBuffer();
 			GraphicsRenderer::GetInstance()->ResetChange();
 		}
@@ -67,6 +77,8 @@ int main()
 		GraphicsInstance::GetInstance()->DrawFrame();
 
 	}
+	
+	delete mesh;
 
 	// Destroy
 	GraphicsRenderer::ReleaseInstance();
