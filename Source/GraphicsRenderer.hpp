@@ -101,9 +101,12 @@ namespace Soon
 		void DestroyAllUniforms(void);
 		void DestroyAllGraphicsPipeline(void);
 
-		uint32_t AddTexture(Texture* texture, uint32_t textureId);
+		uint32_t AddTexture(Texture* texture);
+		uint32_t AddTexture( uint32_t textureId);
 		void RemoveTexture(uint32_t textureId);
 		ImageProperties& GetImageProperties(uint32_t id);
+
+		void SetDefaultTexture(Texture* texture);
 
 	private:
 		bool _changes;
@@ -116,6 +119,7 @@ namespace Soon
 		std::uint32_t m_TextureCounter = 0;
 		std::vector<uint32_t> m_FreeTextureId;
 		std::vector<TextureRenderer> m_Textures;
+		Texture*				m_DefaultTexture;
 
 		std::array<ShaderPipeline *, MAX_PIPELINES / 2> _graphicPipelines{};
 		std::array<ComputePipeline *, MAX_PIPELINES / 2> _computePipelines{};

@@ -9,6 +9,8 @@
 
 namespace Soon
 {
+	class GraphicsRenderer;
+
 	enum class EnumTextureFormat : uint8_t
 	{
 		UNDEFINED = 0,
@@ -22,6 +24,9 @@ namespace Soon
 	{
 	public:
 		EnumTextureFormat mFormat;
+		TextureFormat(EnumTextureFormat format);
+		TextureFormat(void);
+
 
 		uint32_t GetSize( void );
 
@@ -65,7 +70,10 @@ namespace Soon
 		uint32_t mWidth;
 		uint32_t mHeight;
 
+		Texture( uint32_t width, uint32_t height, EnumTextureFormat format, EnumTextureType type );
 		Texture( void );
+
+		void SetPixel( uint32_t x, uint32_t y);
 
 		void SetData(void* data, uint32_t width, uint32_t height, TextureFormat format);
 
@@ -80,5 +88,7 @@ namespace Soon
 		uint8_t GetArrayLayer( void );
 		EnumTextureType GetType( void );
 		uint32_t GetId( void );
+
+		friend GraphicsRenderer;
 	};
 } // namespace Soon

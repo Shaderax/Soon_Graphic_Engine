@@ -200,8 +200,7 @@ namespace Soon
 		bool ShouldClose(GLFWwindow *window);
 		void DestroySwapChain( void );
 
-		void GetPhysicalDeviceInfo(void);
-		void GetPhysicalDeviceInfo(VkPhysicalDevice device);
+		VkPhysicalDeviceProperties GetPhysicalDeviceInfo(VkPhysicalDevice device);
 		int GetQueueFamilyIndex(VkPhysicalDevice device, VkQueueFlagBits queue);
 		uint32_t GetNextIdImageToRender(void);
 		uint32_t GetSwapChainSize(void);

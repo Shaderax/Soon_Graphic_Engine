@@ -40,7 +40,7 @@ int main()
 	mesh->SetIndexBuffer(tab, 3);
 
 	mesh->Render();
-	mesh->GetMaterial().SetVec3("cou.bondour", vec3<float>(0.2f, 0.1f, 0.0f));
+	//mesh->GetMaterial().SetVec3("cou.bondour", vec3<float>(0.2f, 0.1f, 0.0f));
 	double lastTime = 0;
 	bool did = false;
 	double time = glfwGetTime();
@@ -48,7 +48,6 @@ int main()
 	std::cout << "Begin Loop" << std::endl;
 	while (!GraphicsInstance::GetInstance()->ShouldClose(GraphicsInstance::GetInstance()->GetWindow()))
 	{
-
 		lastTime = ShowFPS(lastTime);
 
 		if (glfwGetTime() - time > 5.0f)

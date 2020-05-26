@@ -84,7 +84,12 @@ namespace Soon
 		void AddLayoutBinding(VkDescriptorSetLayoutBinding ubo, uint32_t set);
 		std::vector<VkDescriptorSetLayout> CreateDescriptorSetLayout( void );
 		std::vector<VkDescriptorSetLayout> GetDescriptorSetLayout( void );
-		std::vector<Uniform>& GetNonUniqueUniforms( void );
+
+		std::vector<Uniform>& GetUniforms( void );
+		std::vector<Uniform>& GetUniqueUniforms( void );
+		std::vector<UniformTexture>& GetUniformsTexture( void );
+		std::vector<UniformTexture>& GetUniqueUniformsTexture( void );
+
 		std::vector<VkDescriptorSet>& GetDescriptorSet( uint32_t image );
 		void Free( uint32_t idMat );
 		void RecreateUniforms( std::unordered_map<uint32_t, uint32_t>& toDraw );

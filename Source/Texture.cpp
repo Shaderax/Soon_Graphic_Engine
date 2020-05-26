@@ -9,6 +9,16 @@
 
 namespace Soon
 {
+	TextureFormat::TextureFormat( EnumTextureFormat format )
+	{
+		mFormat = format;
+	}
+	
+	TextureFormat::TextureFormat( void )
+	{
+		mFormat = EnumTextureFormat::UNDEFINED;
+	}
+
 	uint32_t TextureFormat::GetSize( void )
 	{
 		return ((uint8_t)mFormat);
@@ -24,8 +34,24 @@ namespace Soon
 		return !(*this == rhs);
 	}
 
-	Texture::Texture( void ) : m_Data(nullptr), m_UniqueId(Soon::IdError)
+	Texture::Texture( void ) : m_Data(nullptr), m_UniqueId(Soon::IdError), m_AnisoLevel(1)
 	{
+	}
+
+	Texture::Texture( uint32_t width, uint32_t height, EnumTextureFormat format, EnumTextureType type ) : mWidth(width),
+																					mHeight(height),
+																					m_Format(format),
+																					m_UniqueId(Soon::IdError),
+																					m_Type(type),
+																					m_AnisoLevel(1)
+	{
+
+		m_Data = new uint8_t[width * height * m_Format.GetSize()];
+	}
+
+	void Texture::SetPixel( uint32_t x, uint32_t y)
+	{
+		m_Data[x + (mWidth * y)] = 127;
 	}
 
 	void Texture::SetData(void* data, uint32_t width, uint32_t height, TextureFormat format)
@@ -87,5 +113,4 @@ namespace Soon
 	{
 		return (m_UniqueId);
 	}
-
 } // namespace Soon

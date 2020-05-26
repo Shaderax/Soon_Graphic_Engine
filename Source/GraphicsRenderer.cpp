@@ -35,6 +35,14 @@ namespace Soon
 
 	void GraphicsRenderer::Initialize(void)
 	{
+		// TODO: FIRST : REACTIVATE
+		//m_DefaultTexture = new Texture(2, 2, EnumTextureFormat::RGBA, EnumTextureType::TEXTURE_2D);
+		//m_DefaultTexture->SetPixel(0, 0);
+		//m_DefaultTexture->SetPixel(0, 1);
+		//m_DefaultTexture->SetPixel(1, 0);
+		//m_DefaultTexture->SetPixel(1, 1);
+		//AddTexture(m_DefaultTexture);
+
 		for (ShaderPipeline *pip : _graphicPipelines)
 			pip = nullptr;
 		for (ComputePipeline *pip : _computePipelines)
@@ -62,6 +70,16 @@ namespace Soon
 				vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[index].bufferRenderer.vertex.buffer, _meshs[index].bufferRenderer.vertex.bufferMemory);
 				// INDICE
 				vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[index].bufferRenderer.indices.buffer, _meshs[index].bufferRenderer.indices.bufferMemory);
+			}
+		}
+		
+		for (uint32_t index = 0; index < m_Textures.size(); index++)
+		{
+			if (m_Textures[index].count > 0)
+			{
+				vmaDestroyImage(GraphicsInstance::GetInstance()->GetAllocator(), m_Textures[index].imageRenderer._textureImage, m_Textures[index].imageRenderer._textureImageMemory);
+				vkDestroySampler(GraphicsInstance::GetInstance()->GetDevice(), m_Textures[index].image._textureSampler, nullptr);
+				vkDestroyImageView(GraphicsInstance::GetInstance()->GetDevice(), m_Textures[index].image._imageView, nullptr);
 			}
 		}
 	}
@@ -266,19 +284,10 @@ namespace Soon
 	{
 		return (id < m_TextureCounter && m_Textures[id].count > 0);
 	}
-
-	uint32_t GraphicsRenderer::AddTexture(Texture* texture, uint32_t textureId)
+	
+	uint32_t GraphicsRenderer::AddTexture(Texture* texture)
 	{
-		if (textureId != Soon::IdError)
-		{
-			if (IsValidTextureId(textureId))
-			{
-				m_Textures[textureId].count += 1;
-				return (textureId);
-			}
-			// TODO: ERROR
-		}
-
+		uint32_t textureId;
 		if (!m_FreeTextureId.empty())
 		{
 			textureId = m_FreeTextureId.back();
@@ -292,11 +301,28 @@ namespace Soon
 		}
 
 		TextureRenderer mr;
-		mr.count = 0;
+		mr.count = 1;
 		mr.imageRenderer = GraphicsInstance::GetInstance()->CreateTextureImage(texture);
 		mr.image._imageView = GraphicsInstance::GetInstance()->CreateImageView(mr.imageRenderer._textureImage, TextureFormatToVkFormat(texture->GetFormat()), VK_IMAGE_ASPECT_COLOR_BIT, TextureTypeToVkImageType(texture->GetType()));
 		mr.image._textureSampler = GraphicsInstance::GetInstance()->CreateTextureSampler(texture);
 		m_Textures[textureId] = mr;
+
+		texture->m_UniqueId = textureId;
+
+		return (textureId);
+	}
+	
+	uint32_t GraphicsRenderer::AddTexture(uint32_t textureId)
+	{
+		if (textureId != Soon::IdError)
+		{
+			if (IsValidTextureId(textureId))
+			{
+				m_Textures[textureId].count += 1;
+				return (textureId);
+			}
+			// TODO: ERROR
+		}
 
 		return (textureId);
 	}
@@ -319,7 +345,14 @@ namespace Soon
 
 	ImageProperties& GraphicsRenderer::GetImageProperties(uint32_t id)
 	{
+		if (id == Soon::IdError)
+			return m_Textures[m_DefaultTexture->GetId()].image;
 		return (m_Textures[id].image);
+	}
+
+	void GraphicsRenderer::SetDefaultTexture(Texture* texture)
+	{
+
 	}
 
 	void GraphicsRenderer::HasChange(void)

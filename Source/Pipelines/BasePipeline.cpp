@@ -109,13 +109,41 @@ namespace Soon
 	void BasePipeline::BindCaller(VkCommandBuffer commandBuffer, uint32_t currentImage)
 	{
 		std::cout << "Bind Caller for the Current Image : " << currentImage << std::endl;
+		std::vector<Uniform>& uniqueUniforms = _mUbm.GetUniqueUniforms();
+		std::vector<Uniform>& uniforms = _mUbm.GetUniforms();
+		std::vector<UniformTexture>& uniqueUniformsTexture = _mUbm.GetUniqueUniformsTexture();
+		std::vector<UniformTexture>& uniformsTexture = _mUbm.GetUniformsTexture();
+
+		std::vector<VkDescriptorSet>& vecDescriptor = _mUbm.GetDescriptorSet(currentImage);
+
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _graphicPipeline);
+
+		for (uint32_t uniformId = 0; uniformId < uniqueUniforms.size(); uniformId++)
+		{
+			vkCmdBindDescriptorSets(commandBuffer,
+									VK_PIPELINE_BIND_POINT_GRAPHICS,
+									_pipelineLayout,
+									uniqueUniforms[uniformId]._set,
+									1,
+									&(vecDescriptor[uniformId]), 0, nullptr);
+		}
+
+		for (uint32_t uniformId = 0; uniformId < uniqueUniformsTexture.size(); uniformId++)
+		{
+			vkCmdBindDescriptorSets(commandBuffer,
+									VK_PIPELINE_BIND_POINT_GRAPHICS,
+									_pipelineLayout,
+									uniqueUniformsTexture[uniformId]._set,
+									1,
+									&vecDescriptor[uniqueUniforms.size()+ uniformId],
+									0,
+									nullptr);
+		}
 
 		VkDeviceSize offsets[] = {0};
 		uint32_t dynamicOffset = 0;
-
-		std::vector<Uniform>& uniforms = _mUbm.GetNonUniqueUniforms();
-		// TODO: UNIQUE / TEXTURE
+		uint32_t uniqueSize = uniqueUniforms.size() + uniqueUniformsTexture.size();
+		uint32_t nonUniqueSize = uniforms.size() + uniformsTexture.size();
 
 		for ( std::unordered_map<uint32_t, uint32_t>::iterator it = m_ToDraw.begin(); it != m_ToDraw.end(); ++it )
 		{
@@ -124,9 +152,30 @@ namespace Soon
 
 			vkCmdBindIndexBuffer(commandBuffer, bu.indices.buffer, 0, VK_INDEX_TYPE_UINT32);
 
-			// TODO: Here
 			for (uint32_t uniformId = 0; uniformId < uniforms.size(); uniformId++)
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipelineLayout, uniforms[uniformId]._set, 1, &(_mUbm.GetDescriptorSet(currentImage)[uniformId + (uniforms.size() * it->second)]), 0, nullptr);
+			{
+				std::cout << "Bind at Set : " << uniforms[uniformId]._set << " At binding : " << uniforms[uniformId]._binding << " the descriptor : " << vecDescriptor[uniqueSize + uniformId + (nonUniqueSize * it->second)] << std::endl;
+				vkCmdBindDescriptorSets(commandBuffer,
+										VK_PIPELINE_BIND_POINT_GRAPHICS,
+										_pipelineLayout,
+										uniforms[uniformId]._set,
+										1,
+										&(vecDescriptor[uniqueSize + uniformId + (nonUniqueSize * it->second)]),
+										0,
+										nullptr);
+			}
+
+			for (uint32_t uniformId = 0; uniformId < uniformsTexture.size(); uniformId++)
+			{
+				vkCmdBindDescriptorSets(commandBuffer,
+										VK_PIPELINE_BIND_POINT_GRAPHICS,
+										_pipelineLayout,
+										uniformsTexture[uniformId]._set,
+										1,
+										&(vecDescriptor[uniforms.size() + uniqueSize + uniformId + (nonUniqueSize * it->second)]),
+										0,
+										nullptr);
+			}
 
 			vkCmdDrawIndexed(commandBuffer, bu.indices.numIndices, 1, 0, 0, 0);
 		}
@@ -300,7 +349,8 @@ namespace Soon
 				uniform._name = bindings[index]->name;
 				uniform._binding = bindings[index]->binding;
 				uniform._set = bindings[index]->set;
-				uniform._size = bindings[index]->block.size;
+				uniform._size = bindings[index]->block.size + (bindings[index]->block.size % 32);
+
 				for (uint32_t indexMember = 0; indexMember < bindings[index]->block.member_count; indexMember++)
 				{
 					UniformVar uniVar;
@@ -334,7 +384,6 @@ namespace Soon
 			ubo.binding = bindings[index]->binding;
 			ubo.descriptorCount = (bindings[index]->array.dims_count != 0) ? bindings[index]->array.dims[0] : 1;
 			ubo.descriptorType = DescriptorTypeSpvToVk(bindings[index]->descriptor_type); //VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			std::cout << ubo.descriptorType << std::endl;
 			ubo.pImmutableSamplers = nullptr;
 			ubo.stageFlags = reflection.GetShaderModule().shader_stage;
 

@@ -166,26 +166,14 @@ namespace Soon
 		return (_windowAttribute);
 	}
 
-	void GraphicsInstance::GetPhysicalDeviceInfo(void)
-	{
-		VkPhysicalDeviceProperties deviceProperties;
-		vkGetPhysicalDeviceProperties(_physicalDevice, &deviceProperties);
-
-		std::cout << deviceProperties.deviceName << std::endl;
-
-		VkPhysicalDeviceFeatures deviceFeatures;
-		vkGetPhysicalDeviceFeatures(_physicalDevice, &deviceFeatures);
-	}
-
-	void GraphicsInstance::GetPhysicalDeviceInfo(VkPhysicalDevice device)
+	VkPhysicalDeviceProperties GraphicsInstance::GetPhysicalDeviceInfo(VkPhysicalDevice device)
 	{
 		VkPhysicalDeviceProperties deviceProperties;
 		vkGetPhysicalDeviceProperties(device, &deviceProperties);
 
-		std::cout << deviceProperties.deviceName << std::endl;
-
-		VkPhysicalDeviceFeatures deviceFeatures;
-		vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+		//VkPhysicalDeviceFeatures deviceFeatures;
+		//vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+		return (deviceProperties);
 	}
 
 	int GraphicsInstance::GetQueueFamilyIndex(VkPhysicalDevice device, VkQueueFlagBits queue)
@@ -274,7 +262,7 @@ namespace Soon
 
 			score = RateDeviceSuitable(device);
 			std::cout << "\tScore : " << score << " of Available device : ";
-			GetPhysicalDeviceInfo(device);
+			std::cout << GetPhysicalDeviceInfo(device).deviceName << std::endl;
 			scoreDevice.insert(std::make_pair(score, device));
 		}
 
@@ -287,7 +275,7 @@ namespace Soon
 			std::cout << "failed to find a suitable GPU!" << std::endl;
 
 		std::cout << "Device Chosen : ";
-		GetPhysicalDeviceInfo();
+		std::cout << GetPhysicalDeviceInfo(_physicalDevice).deviceName << std::endl;
 	}
 
 	void GraphicsInstance::CreateWindow(void)
@@ -1613,10 +1601,10 @@ namespace Soon
 	std::vector<VkDescriptorSetLayout> GraphicsInstance::CreateDescriptorSetLayout(std::vector<std::vector<VkDescriptorSetLayoutBinding>> uboLayoutBinding)
 	{
 		std::vector<VkDescriptorSetLayout> descriptorSetLayout;
-
 		std::vector<VkDescriptorSetLayoutCreateInfo> layoutInfo(uboLayoutBinding.size());
 
 		descriptorSetLayout.resize(uboLayoutBinding.size());
+
 		for (uint32_t index = 0; index < descriptorSetLayout.size(); index++)
 		{
 			layoutInfo[index].sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -1667,13 +1655,12 @@ namespace Soon
 	std::vector<VkDescriptorSet> GraphicsInstance::CreateImageDescriptorSets(VkImageView textureImageView, VkSampler textureSampler, VkDescriptorSetLayout layout, uint32_t binding)
 	{
 		std::vector<VkDescriptorSet> ds;
-
 		std::vector<VkDescriptorSetLayout> layouts(_swapChainImages.size(), layout);
 
 		VkDescriptorSetAllocateInfo allocInfo = {};
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		allocInfo.descriptorPool = _descriptorPool;
-		allocInfo.descriptorSetCount = static_cast<uint32_t>(_swapChainImages.size()); // number of descriptor sets to be allocated from the pool.
+		allocInfo.descriptorSetCount = _swapChainImages.size(); // number of descriptor sets to be allocated from the pool.
 		allocInfo.pSetLayouts = layouts.data();
 
 		ds.resize(_swapChainImages.size());
