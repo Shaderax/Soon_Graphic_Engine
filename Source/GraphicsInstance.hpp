@@ -11,6 +11,7 @@
 #include "VkMemoryAllocator/vk_mem_alloc.h"
 
 #include "Texture.hpp"
+#include "UniformsBufferManager.hpp"
 
 //Swap chain struct
 struct SwapChainSupportDetails
@@ -179,12 +180,13 @@ namespace Soon
 		UniformSets CreateUniform(size_t size, std::vector<VkDescriptorSetLayout> layoutArray, int dlayout);
 		IndiceBufferRenderer CreateIndexBuffer(uint32_t *indexData, uint32_t size);
 		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage, VkBuffer &buffer, VmaAllocation &allocation);
-		std::vector<VkDescriptorSet> CreateImageDescriptorSets(VkImageView textureImageView, VkSampler textureSampler, VkDescriptorSetLayout layout, uint32_t binding);
 		ImageRenderer CreateTextureImage(Texture* texture);
 		void CreateImage(VkExtent2D textureExtent, VkFormat format, uint32_t layer, VkImageTiling tiling, VkImageUsageFlags usage, VmaMemoryUsage properties, VkImage &image, VmaAllocation &imageMemory, VmaAllocationCreateFlags flag = 0);
-		std::vector<VkDescriptorSet> CreateDescriptorSets(size_t size, uint32_t binding, uint32_t offset, VkDescriptorSetLayout layout, VkBuffer *gpuBuffers, uint32_t bufferCount);
 		void DestroyDescriptorSet(VkDescriptorSet descriptor);
 		void CreateAllocator(void);
+		std::vector<VkDescriptorSet> AllocateDescriptorSet( VkDescriptorSetLayout layout );
+		void UpdateDescriptorSets(DescriptorSetDescription& description, uint32_t offset, VkDescriptorSet* descriptorSets, VkBuffer* gpuBuffers, uint32_t bufferCount);
+		void UpdateImageDescriptorSets(uint32_t* matIds, uint32_t count, DescriptorSetDescription description, VkDescriptorSet* descriptorSets);
 
 		void UpdateUniformBuffer(uint32_t currentImage);
 		VkCommandBuffer BeginSingleTimeCommands(void);

@@ -109,74 +109,44 @@ namespace Soon
 	void BasePipeline::BindCaller(VkCommandBuffer commandBuffer, uint32_t currentImage)
 	{
 		std::cout << "Bind Caller for the Current Image : " << currentImage << std::endl;
-		std::vector<Uniform>& uniqueUniforms = _mUbm.GetUniqueUniforms();
-		std::vector<Uniform>& uniforms = _mUbm.GetUniforms();
-		std::vector<UniformTexture>& uniqueUniformsTexture = _mUbm.GetUniqueUniformsTexture();
-		std::vector<UniformTexture>& uniformsTexture = _mUbm.GetUniformsTexture();
 
 		std::vector<VkDescriptorSet>& vecDescriptor = _mUbm.GetDescriptorSet(currentImage);
 
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _graphicPipeline);
 
-		for (uint32_t uniformId = 0; uniformId < uniqueUniforms.size(); uniformId++)
-		{
-			vkCmdBindDescriptorSets(commandBuffer,
-									VK_PIPELINE_BIND_POINT_GRAPHICS,
-									_pipelineLayout,
-									uniqueUniforms[uniformId]._set,
-									1,
-									&(vecDescriptor[uniformId]), 0, nullptr);
-		}
+		std::vector<DescriptorSetDescription>& sets = _mUbm.GetSets();
+		std::vector<DescriptorSetDescription>& uniqueSets = _mUbm.GetUniqueSets();
 
-		for (uint32_t uniformId = 0; uniformId < uniqueUniformsTexture.size(); uniformId++)
+		for (uint32_t uniqueId = 0 ; uniqueId < uniqueSets.size() ; uniqueId++)
 		{
 			vkCmdBindDescriptorSets(commandBuffer,
 									VK_PIPELINE_BIND_POINT_GRAPHICS,
 									_pipelineLayout,
-									uniqueUniformsTexture[uniformId]._set,
+									uniqueSets[uniqueId].set,
 									1,
-									&vecDescriptor[uniqueUniforms.size()+ uniformId],
-									0,
-									nullptr);
+									&(vecDescriptor[uniqueId]), 0, nullptr);
 		}
 
 		VkDeviceSize offsets[] = {0};
-		uint32_t dynamicOffset = 0;
-		uint32_t uniqueSize = uniqueUniforms.size() + uniqueUniformsTexture.size();
-		uint32_t nonUniqueSize = uniforms.size() + uniformsTexture.size();
-
 		for ( std::unordered_map<uint32_t, uint32_t>::iterator it = m_ToDraw.begin(); it != m_ToDraw.end(); ++it )
 		{
+			std::cout << "To Draw : " << it->second << std::endl;
 			MeshBufferRenderer &bu = GraphicsRenderer::GetInstance()->GetMesh(m_RenderData[it->second].meshId);
-			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &(bu.vertex.buffer), offsets);
 
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &(bu.vertex.buffer), offsets);
 			vkCmdBindIndexBuffer(commandBuffer, bu.indices.buffer, 0, VK_INDEX_TYPE_UINT32);
 
-			for (uint32_t uniformId = 0; uniformId < uniforms.size(); uniformId++)
-			{
-				std::cout << "Bind at Set : " << uniforms[uniformId]._set << " At binding : " << uniforms[uniformId]._binding << " the descriptor : " << vecDescriptor[uniqueSize + uniformId + (nonUniqueSize * it->second)] << std::endl;
-				vkCmdBindDescriptorSets(commandBuffer,
-										VK_PIPELINE_BIND_POINT_GRAPHICS,
-										_pipelineLayout,
-										uniforms[uniformId]._set,
-										1,
-										&(vecDescriptor[uniqueSize + uniformId + (nonUniqueSize * it->second)]),
-										0,
-										nullptr);
-			}
-
-			for (uint32_t uniformId = 0; uniformId < uniformsTexture.size(); uniformId++)
+			for (uint32_t setId = 0 ; setId < sets.size() ; setId++)
 			{
 				vkCmdBindDescriptorSets(commandBuffer,
 										VK_PIPELINE_BIND_POINT_GRAPHICS,
 										_pipelineLayout,
-										uniformsTexture[uniformId]._set,
+										sets[setId].set,
 										1,
-										&(vecDescriptor[uniforms.size() + uniqueSize + uniformId + (nonUniqueSize * it->second)]),
+										&(vecDescriptor[uniqueSets.size() + setId + (sets.size() * it->second)]),
 										0,
 										nullptr);
 			}
-
 			vkCmdDrawIndexed(commandBuffer, bu.indices.numIndices, 1, 0, 0, 0);
 		}
 	}
@@ -257,7 +227,9 @@ namespace Soon
 	}
 
 
-	/////////// GET SHADER DATA /////////////
+	/**
+	 * GET SHADER DATA
+	 */
 	
 	void BasePipeline::GetInputBindings( spv_reflect::ShaderModule& reflection )
 	{
@@ -357,6 +329,9 @@ namespace Soon
 					uniVar._name = bindings[index]->block.members[indexMember].name;
 					uniVar._offset = bindings[index]->block.members[indexMember].offset;
 					uniVar._size = bindings[index]->block.members[indexMember].size;
+					std::cout << uniVar._name << std::endl;
+					std::cout << uniVar._offset << std::endl;
+					std::cout << uniVar._size << std::endl;
 
 					uniVar._type = SpvTypeToVertexType(bindings[index]->block.members[indexMember].type_description);
 
@@ -378,7 +353,6 @@ namespace Soon
 				// IF UNIQUE ADD_UNIQUE_UNIFORM()
 				_mUbm.AddUniform(uniform);
 			}
-			// std::cout << "Size :: " << bindings[index]->block.size << std::endl;
 			// uboLayout
 			VkDescriptorSetLayoutBinding ubo;
 			ubo.binding = bindings[index]->binding;

@@ -35,7 +35,8 @@ const std::vector<const char *> deviceExtensions =
 //#ifdef NDEBUG
 //const bool enableValidationLayers = false;
 //#else
-const bool enableValidationLayers = true;
+//// Validation layer : 
+const bool enableValidationLayers = false;
 //#endif
 
 bool checkValidationLayerSupport(void)
@@ -1652,48 +1653,8 @@ namespace Soon
 			throw std::runtime_error("failed to create descriptor pool!");
 	}
 
-	std::vector<VkDescriptorSet> GraphicsInstance::CreateImageDescriptorSets(VkImageView textureImageView, VkSampler textureSampler, VkDescriptorSetLayout layout, uint32_t binding)
+	std::vector<VkDescriptorSet> GraphicsInstance::AllocateDescriptorSet( VkDescriptorSetLayout layout )
 	{
-		std::vector<VkDescriptorSet> ds;
-		std::vector<VkDescriptorSetLayout> layouts(_swapChainImages.size(), layout);
-
-		VkDescriptorSetAllocateInfo allocInfo = {};
-		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		allocInfo.descriptorPool = _descriptorPool;
-		allocInfo.descriptorSetCount = _swapChainImages.size(); // number of descriptor sets to be allocated from the pool.
-		allocInfo.pSetLayouts = layouts.data();
-
-		ds.resize(_swapChainImages.size());
-
-		if (vkAllocateDescriptorSets(_device, &allocInfo, ds.data()) != VK_SUCCESS)
-			throw std::runtime_error("failed to allocate descriptor sets!");
-
-		for (size_t i = 0; i < _swapChainImages.size(); i++)
-		{
-			VkDescriptorImageInfo imageInfo = {};
-			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			imageInfo.imageView = textureImageView;
-			imageInfo.sampler = textureSampler;
-
-			VkWriteDescriptorSet descriptorWrite = {};
-			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrite.dstSet = ds[i];
-			descriptorWrite.dstBinding = binding;
-			descriptorWrite.dstArrayElement = 0;
-			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			descriptorWrite.descriptorCount = 1;
-			descriptorWrite.pImageInfo = &imageInfo;
-
-			vkUpdateDescriptorSets(_device, 1, &descriptorWrite, 0, nullptr);
-		}
-
-		return (ds);
-	}
-
-	// TODO : MULTISET DYNAMIC
-	std::vector<VkDescriptorSet> GraphicsInstance::CreateDescriptorSets(size_t size, uint32_t offset, uint32_t binding, VkDescriptorSetLayout layout, VkBuffer* gpuBuffers, uint32_t bufferCount)
-	{
-		// TODO: bufferCount
 		std::vector<VkDescriptorSet> descriptorSets;
 		std::vector<VkDescriptorSetLayout> layouts(_swapChainImages.size(), layout);
 
@@ -1708,25 +1669,66 @@ namespace Soon
 		if (vkAllocateDescriptorSets(_device, &allocInfo, descriptorSets.data()) != VK_SUCCESS)
 			throw std::runtime_error("failed to allocate descriptor sets!");
 
-		for (size_t i = 0; i < _swapChainImages.size(); i++)
-		{
-			VkDescriptorBufferInfo bufferInfo = {};
-			bufferInfo.buffer = gpuBuffers[i];
-			bufferInfo.offset = offset;
-			bufferInfo.range = size;
-
-			VkWriteDescriptorSet descriptorWrite = {};
-			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrite.dstSet = descriptorSets[i];
-			descriptorWrite.dstBinding = binding;
-			descriptorWrite.dstArrayElement = 0;
-			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			descriptorWrite.descriptorCount = 1;
-			descriptorWrite.pBufferInfo = &bufferInfo;
-
-			vkUpdateDescriptorSets(_device, 1, &descriptorWrite, 0, nullptr);
-		}
 		return (descriptorSets);
+	}
+
+	void GraphicsInstance::UpdateImageDescriptorSets(uint32_t* matIds, uint32_t count, DescriptorSetDescription description, VkDescriptorSet* descriptorSets)
+	{
+		for (uint32_t index = 0 ; index < description.uniformsTexture.size() ; index++)
+		{
+			for (uint32_t countId = 0 ; countId < count ; countId++)
+			{
+				ImageProperties& image = GraphicsRenderer::GetInstance()->GetImageProperties(description.uniformsTexture[index]._textureId[matIds[countId]]);
+				for (size_t i = 0; i < _swapChainImages.size(); i++)
+				{
+					VkDescriptorImageInfo imageInfo = {};
+					imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+					imageInfo.imageView = image._imageView;
+					imageInfo.sampler = image._textureSampler;
+
+					VkWriteDescriptorSet descriptorWrite = {};
+					descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+					descriptorWrite.dstSet = descriptorSets[i];
+					descriptorWrite.dstBinding = description.uniformsTexture[index]._binding;
+					descriptorWrite.dstArrayElement = 0;
+					descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+					descriptorWrite.descriptorCount = 1;
+					descriptorWrite.pImageInfo = &imageInfo;
+
+					vkUpdateDescriptorSets(_device, 1, &descriptorWrite, 0, nullptr);
+				}
+			}
+		}
+	}
+
+	void GraphicsInstance::UpdateDescriptorSets(DescriptorSetDescription& description, uint32_t offset, VkDescriptorSet* descriptorSets, VkBuffer* gpuBuffers, uint32_t bufferCount)
+	{
+		std::cout << "UpdateSet : " << (int)description.set << std::endl;
+		// TODO: bufferCount
+		uint32_t offsetUniform = 0;
+		for (uint32_t index = 0 ; index < description.uniforms.size() ; index++)
+		{
+			std::cout << description.uniforms[index]._name << std::endl;
+			for (size_t i = 0; i < _swapChainImages.size(); i++)
+			{
+				VkDescriptorBufferInfo bufferInfo = {};
+				bufferInfo.buffer = gpuBuffers[i];
+				bufferInfo.offset = offset + offsetUniform;
+				bufferInfo.range = description.uniforms[index]._size;
+
+				VkWriteDescriptorSet descriptorWrite = {};
+				descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWrite.dstSet = descriptorSets[i];
+				descriptorWrite.dstBinding = description.uniforms[index]._binding;
+				descriptorWrite.dstArrayElement = 0;
+				descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+				descriptorWrite.descriptorCount = 1;
+				descriptorWrite.pBufferInfo = &bufferInfo;
+
+				vkUpdateDescriptorSets(_device, 1, &descriptorWrite, 0, nullptr);
+			}
+			offsetUniform = description.uniforms[index]._size;
+		}
 	}
 
 	void GraphicsInstance::DestroyDescriptorSet(VkDescriptorSet descriptor)

@@ -44,24 +44,37 @@ namespace Soon
 		std::function<void(int)> _updateFunct;
 	};
 
+	struct DescriptorSetDescription
+	{
+		uint8_t set;
+		uint32_t size;
+
+		std::vector<Uniform>		uniforms;
+		std::vector<UniformTexture>		uniformsTexture;
+	};
+
 	class UniformsBufferManager
 	{
 	private:
 		uint32_t		m_NumElements = 0;
 		uint32_t		m_MinElements = 100;
 		uint32_t		m_ActualResize = 0;
-		uint32_t		m_SizeUniqueUniformBlock = 0;
-		uint32_t		m_SizeUniformBlock = 0;
 
 		uint8_t*	m_CpuBuffer = nullptr;
 		std::vector<VmaAllocation>	m_GpuMemory;
 		std::vector<VkBuffer>		m_GpuBuffer; // TODO: Aligment in vulkan (16)
 
-		std::vector<Uniform>		m_Uniforms;
-		std::vector<Uniform>		m_UniqueUniforms;
+		//std::vector<Uniform>		m_Uniforms;
+		//std::vector<Uniform>		m_UniqueUniforms;
 
-		std::vector<UniformTexture>		m_UniformsTexture;
-		std::vector<UniformTexture>		m_UniqueUniformsTexture;
+		//std::vector<UniformTexture>		m_UniformsTexture;
+		//std::vector<UniformTexture>		m_UniqueUniformsTexture;
+
+		// HERE:
+		uint32_t m_UniqueSize = 0;
+		uint32_t m_NonUniqueSize = 0;
+		std::vector<DescriptorSetDescription> m_Sets;
+		std::vector<DescriptorSetDescription> m_UniqueSets;
 
 		std::vector<std::vector<VkDescriptorSet>> m_DescriptorSets;
 
@@ -85,10 +98,8 @@ namespace Soon
 		std::vector<VkDescriptorSetLayout> CreateDescriptorSetLayout( void );
 		std::vector<VkDescriptorSetLayout> GetDescriptorSetLayout( void );
 
-		std::vector<Uniform>& GetUniforms( void );
-		std::vector<Uniform>& GetUniqueUniforms( void );
-		std::vector<UniformTexture>& GetUniformsTexture( void );
-		std::vector<UniformTexture>& GetUniqueUniformsTexture( void );
+		std::vector<DescriptorSetDescription>& GetSets( void );
+		std::vector<DescriptorSetDescription>& GetUniqueSets( void );
 
 		std::vector<VkDescriptorSet>& GetDescriptorSet( uint32_t image );
 		void Free( uint32_t idMat );

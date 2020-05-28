@@ -36,12 +36,12 @@ namespace Soon
 	void GraphicsRenderer::Initialize(void)
 	{
 		// TODO: FIRST : REACTIVATE
-		//m_DefaultTexture = new Texture(2, 2, EnumTextureFormat::RGBA, EnumTextureType::TEXTURE_2D);
-		//m_DefaultTexture->SetPixel(0, 0);
-		//m_DefaultTexture->SetPixel(0, 1);
-		//m_DefaultTexture->SetPixel(1, 0);
-		//m_DefaultTexture->SetPixel(1, 1);
-		//AddTexture(m_DefaultTexture);
+		m_DefaultTexture = new Texture(2, 2, EnumTextureFormat::RGBA, EnumTextureType::TEXTURE_2D);
+		m_DefaultTexture->SetPixel(0, 0);
+		m_DefaultTexture->SetPixel(0, 1);
+		m_DefaultTexture->SetPixel(1, 0);
+		m_DefaultTexture->SetPixel(1, 1);
+		AddTexture(m_DefaultTexture);
 
 		for (ShaderPipeline *pip : _graphicPipelines)
 			pip = nullptr;

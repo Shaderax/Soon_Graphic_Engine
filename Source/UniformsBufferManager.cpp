@@ -22,84 +22,62 @@ namespace Soon
 		// Buffer Creation
 		VkBufferCreateInfo bufferInfo = {};
 		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		bufferInfo.size = m_SizeUniqueUniformBlock + (m_SizeUniformBlock * m_MinElements);
+		bufferInfo.size = m_UniqueSize + (m_NonUniqueSize * m_MinElements);
 		bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 
 		VmaAllocationCreateInfo allocInfo = {};
 		allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
  
 		for ( uint32_t index = 0 ; index < GraphicsInstance::GetInstance()->GetSwapChainSize() ; index++)
-			vmaCreateBuffer(GraphicsInstance::GetInstance()->GetAllocator(), &bufferInfo, &allocInfo, &m_GpuBuffer[index], &(m_GpuMemory[index]), nullptr);
+			vmaCreateBuffer(GraphicsInstance::GetInstance()->GetAllocator(), &bufferInfo, &allocInfo, &(m_GpuBuffer[index]), &(m_GpuMemory[index]), nullptr);
 
+		// UNIQUE
 		uint32_t offset = 0;
-		uint32_t uniqueUniformsSize = m_UniqueUniforms.size() + m_UniqueUniformsTexture.size();
-		uint32_t totalUniformsSize = m_UniformsTexture.size() + m_Uniforms.size();
-
-		for (uint32_t index = 0; index < m_UniqueUniforms.size(); index++)
+		for (uint32_t index = 0 ; index < m_UniqueSets.size() ; index++)
 		{
 			std::vector<VkDescriptorSet> descriptorSets;
-			descriptorSets = GraphicsInstance::GetInstance()->CreateDescriptorSets(m_UniqueUniforms[index]._size,
-																					offset,
-																					m_UniqueUniforms[index]._binding,
-																					_descriptorSetLayout[m_UniqueUniforms[index]._set],
-																					m_GpuBuffer.data(),
-																					0);				
+			descriptorSets = GraphicsInstance::GetInstance()->AllocateDescriptorSet(_descriptorSetLayout[m_Sets[index].set]);
 
-			for ( uint32_t descriptorId = 0 ; descriptorId < descriptorSets.size() ; descriptorId++ )
+			GraphicsInstance::GetInstance()->UpdateDescriptorSets(m_Sets[index],
+																	offset,
+																	descriptorSets.data(),
+																	m_GpuBuffer.data(),
+																	0);
+			uint32_t id = 0;
+			GraphicsInstance::GetInstance()->UpdateImageDescriptorSets(
+																	&id,
+																	1,
+																	m_Sets[index],
+																	descriptorSets.data());
+			for ( uint32_t descriptorId = 0 ; descriptorId < descriptorSets.size() ; descriptorId++)
 				m_DescriptorSets[descriptorId][index] = descriptorSets[descriptorId];
 
-			offset += m_Uniforms[index]._size;
+			offset += m_UniqueSets[index].size;
 		}
 
-		for (uint32_t index = 0; index < m_UniqueUniformsTexture.size(); index++)
-		{
-			std::vector<VkDescriptorSet> descriptorSets;
-
-			ImageProperties& imgProp = GraphicsRenderer::GetInstance()->GetImageProperties( m_UniqueUniformsTexture[index]._textureId[0] );
-
-			descriptorSets = GraphicsInstance::GetInstance()->CreateImageDescriptorSets(imgProp._imageView,
-																						imgProp._textureSampler,
-																						_descriptorSetLayout[m_UniqueUniformsTexture[index]._set],
-																						m_UniqueUniformsTexture[index]._binding);				
-
-			for ( uint32_t descriptorId = 0 ; descriptorId < descriptorSets.size() ; descriptorId++ )
-				m_DescriptorSets[descriptorId][m_UniqueUniforms.size() + index] = descriptorSets[descriptorId];
-		}
-
+		// NON UNIQUE
 		offset = 0;
-		for (uint32_t index = 0; index < m_Uniforms.size(); index++)
+		for (uint32_t index = 0 ; index < m_Sets.size() ; index++)
 		{
 			for ( auto it = toDraw.begin() ; it != toDraw.end() ; ++it )
 			{
 				std::vector<VkDescriptorSet> descriptorSets;
-				descriptorSets = GraphicsInstance::GetInstance()->CreateDescriptorSets(m_Uniforms[index]._size,
-																						offset + m_SizeUniqueUniformBlock + (m_SizeUniformBlock * it->second),
-																						m_Uniforms[index]._binding,
-																						_descriptorSetLayout[m_Uniforms[index]._set],
-																						m_GpuBuffer.data(),
-																						0);				
+				descriptorSets = GraphicsInstance::GetInstance()->AllocateDescriptorSet(_descriptorSetLayout[m_Sets[index].set]);
 
-				for ( uint32_t descriptorId = 0 ; descriptorId < descriptorSets.size() ; descriptorId++ )
-					m_DescriptorSets[descriptorId][uniqueUniformsSize + (totalUniformsSize * it->second) + index] = descriptorSets[descriptorId];
+				GraphicsInstance::GetInstance()->UpdateDescriptorSets(m_Sets[index],
+																		offset + m_UniqueSize + (it->second * m_NonUniqueSize),
+																		descriptorSets.data(),
+																		m_GpuBuffer.data(),
+																		0);
+				GraphicsInstance::GetInstance()->UpdateImageDescriptorSets(
+																		&it->second,
+																		1,
+																		m_Sets[index],
+																		descriptorSets.data());
+				for ( uint32_t descriptorId = 0 ; descriptorId < descriptorSets.size() ; descriptorId++)
+					m_DescriptorSets[descriptorId][m_UniqueSets.size() + (m_Sets.size() * it->second) + index] = descriptorSets[descriptorId];
 
-			}
-			offset += m_Uniforms[index]._size;
-		}
-
-		for (uint32_t index = 0; index < m_UniformsTexture.size(); index++)
-		{
-			for ( auto it = toDraw.begin() ; it != toDraw.end() ; ++it )
-			{
-				std::vector<VkDescriptorSet> descriptorSets;
-				ImageProperties& imgProp = GraphicsRenderer::GetInstance()->GetImageProperties( m_UniformsTexture[index]._textureId[it->second] );
-
-				descriptorSets = GraphicsInstance::GetInstance()->CreateImageDescriptorSets(imgProp._imageView,
-																							imgProp._textureSampler,
-																							_descriptorSetLayout[m_UniformsTexture[index]._set],
-																							m_UniformsTexture[index]._binding);
-
-				for ( uint32_t descriptorId = 0 ; descriptorId < descriptorSets.size() ; descriptorId++ )
-					m_DescriptorSets[descriptorId][uniqueUniformsSize + m_Uniforms.size() + (totalUniformsSize * it->second) + index] = descriptorSets[descriptorId];
+				offset += m_Sets[index].size;
 			}
 		}
 	}
@@ -108,9 +86,24 @@ namespace Soon
 	{
 		if (m_CpuBuffer != nullptr)
 			; // TODO: Error
-			
-		m_SizeUniformBlock += uniform._size;
-		m_Uniforms.push_back(uniform);
+		
+		m_NonUniqueSize += uniform._size;
+		for (uint32_t index = 0 ; index < m_Sets.size() ; index++)
+		{
+			if (uniform._set == m_Sets[index].set)
+			{
+				m_Sets[index].uniforms.push_back(uniform);
+				m_Sets[index].size += uniform._size;
+
+				return ;
+			}
+		}
+
+		DescriptorSetDescription description;
+		description.set = uniform._set;
+		description.size = uniform._size;
+		description.uniforms.push_back(uniform);
+		m_Sets.push_back(description);
 	}
 	
 	void UniformsBufferManager::AddUniform( UniformTexture uniform )
@@ -118,18 +111,57 @@ namespace Soon
 		if (m_CpuBuffer != nullptr)
 			; // TODO: Error
 
-		m_UniformsTexture.push_back(uniform);
+		for (uint32_t index = 0 ; index < m_Sets.size() ; index++)
+		{
+			if (uniform._set == m_Sets[index].set)
+			{
+				m_Sets[index].uniformsTexture.push_back(uniform);
+				return ;
+			}
+		}
+
+		DescriptorSetDescription description;
+		description.set = uniform._set;
+		description.uniformsTexture.push_back(uniform);
+		m_Sets.push_back(description);
 	}
 
 	void UniformsBufferManager::AddUniqueUniform( Uniform uniform )
 	{
-		m_SizeUniqueUniformBlock += uniform._size;
-		m_UniqueUniforms.push_back(uniform);
+		m_UniqueSize += uniform._size;
+		for (uint32_t index = 0 ; index < m_UniqueSets.size() ; index++)
+		{
+			if (uniform._set == m_UniqueSets[index].set)
+			{
+				m_UniqueSets[index].uniforms.push_back(uniform);
+				m_UniqueSets[index].size += uniform._size;
+
+				return ;
+			}
+		}
+
+		DescriptorSetDescription description;
+		description.set = uniform._set;
+		description.size = uniform._size;
+		description.uniforms.push_back(uniform);
+		m_UniqueSets.push_back(description);
 	}
 
 	void UniformsBufferManager::AddUniqueUniform( UniformTexture uniform )
 	{
-		m_UniqueUniformsTexture.push_back(uniform);
+		for (uint32_t index = 0 ; index < m_UniqueSets.size() ; index++)
+		{
+			if (uniform._set == m_UniqueSets[index].set)
+			{
+				m_UniqueSets[index].uniformsTexture.push_back(uniform);
+				return ;
+			}
+		}
+
+		DescriptorSetDescription description;
+		description.set = uniform._set;
+		description.uniformsTexture.push_back(uniform);
+		m_UniqueSets.push_back(description);
 	}
 
 	void UniformsBufferManager::InitBuffers(void)
@@ -140,23 +172,23 @@ namespace Soon
 		m_GpuMemory.resize(swapChainSize);
 		m_GpuBuffer.resize(swapChainSize);
 
-		m_CpuBuffer = new uint8_t[m_SizeUniqueUniformBlock + (m_SizeUniformBlock * m_MinElements)];
+		m_CpuBuffer = new uint8_t[m_UniqueSize + (m_NonUniqueSize * m_MinElements)]();
 
 		// Buffer Creation
 		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-		bufferInfo.size = m_SizeUniqueUniformBlock + (m_SizeUniformBlock * m_MinElements);
+		bufferInfo.size = m_UniqueSize + (m_NonUniqueSize * m_MinElements);
 		bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 		//
 		VmaAllocationCreateInfo allocInfo = {};
 		allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
- 
+
 		for ( uint32_t index = 0 ; index < swapChainSize ; index++)
-			vmaCreateBuffer(allocator, &bufferInfo, &allocInfo, &m_GpuBuffer[index], &(m_GpuMemory[index]), nullptr);
+			vmaCreateBuffer(allocator, &bufferInfo, &allocInfo, &(m_GpuBuffer[index]), &(m_GpuMemory[index]), nullptr);
 
 		m_DescriptorSets.resize(swapChainSize);
 
 		for ( auto& descriptor : m_DescriptorSets )
-			descriptor.resize(((m_UniformsTexture.size() + m_Uniforms.size()) * m_MinElements) + m_UniqueUniformsTexture.size() + m_UniqueUniforms.size());
+			descriptor.resize(m_UniqueSets.size() + (m_Sets.size() * m_MinElements));
 
 		m_ActualResize += 1;
 	}
@@ -170,21 +202,23 @@ namespace Soon
 		uint32_t currentImage = GraphicsInstance::GetInstance()->GetNextIdImageToRender();
 
 		uint32_t offset = 0;
-
 		void *data = nullptr;
-
 		size_t pos = name.find(".");
+
 		if (pos == std::string::npos)
 		{
-			for (uint32_t index = 0; index < m_Uniforms.size(); index++)
+			for (uint32_t setId = 0 ; setId < m_Sets.size() ; setId++)
 			{
-				std::cout << m_Uniforms[index]._name << std::endl;
-				if (m_Uniforms[index]._name == name)
+				for (uint32_t index = 0; index < m_Sets[setId].uniforms.size() ; index++)
 				{
-					memcpy(m_CpuBuffer + m_SizeUniqueUniformBlock + offset + (m_SizeUniformBlock * matId), value, m_Uniforms[index]._size);
-					return;
+					if (m_Sets[setId].uniforms[index]._name == name)
+					{
+						std::cout << m_Sets[setId].uniforms[index]._name << std::endl;
+						memcpy(m_CpuBuffer + m_UniqueSize + offset + (m_NonUniqueSize * matId), value, m_Sets[setId].uniforms[index]._size);
+						return;
+					}
+					offset += m_Sets[setId].uniforms[index]._size;
 				}
-				offset += m_Uniforms[index]._size;
 			}
 		}
 		else
@@ -192,36 +226,41 @@ namespace Soon
 			std::string varName;
 			varName = name.substr(pos + 1);
 
-			for (uint32_t index = 0; index < m_Uniforms.size(); index++)
+			for (uint32_t setId = 0 ; setId < m_Sets.size() ; setId++)
 			{
-				if (m_Uniforms[index]._name == name.substr(0, pos))
+				for (uint32_t index = 0; index < m_Sets[setId].uniforms.size() ; index++)
 				{
-					for (uint32_t member = 0; member < m_Uniforms[index]._members.size(); member++)
+					if (m_Sets[setId].uniforms[index]._name == name.substr(0, pos))
 					{
-						if (varName == m_Uniforms[index]._members[member]._name)
+						for (uint32_t member = 0; member < m_Sets[setId].uniforms[index]._members.size(); member++)
 						{
-							memcpy(m_CpuBuffer + m_SizeUniqueUniformBlock + offset + (m_SizeUniformBlock * matId), value, m_Uniforms[index]._size);
-							std::cout << "Found Uniform : " << name.substr(0, pos) + "." << varName << std::endl;
+							if (varName == m_Sets[setId].uniforms[index]._members[member]._name)
+							{
+								memcpy(m_CpuBuffer + m_UniqueSize + offset + (m_NonUniqueSize * matId), value, m_Sets[setId].uniforms[index]._members[member]._size);
+								std::cout << "Found Uniform : " << name.substr(0, pos) + "." << varName << std::endl;
+							}
+							offset += m_Sets[setId].uniforms[index]._members[member]._size;
 						}
-						offset += m_Uniforms[index]._members[member]._size;
+						return;
 					}
-					return;
 				}
-				offset += m_Uniforms[index]._size;
 			}
 		}
 	}
 
 	void UniformsBufferManager::SetTexture(std::string name, uint32_t idMat, uint32_t textureId)
 	{
-		for (uint32_t index = 0 ; index < m_UniformsTexture.size() ; index++)
+		for (uint32_t setId = 0 ; setId < m_Sets.size() ; setId++)
 		{
-			if (name == m_UniformsTexture[index]._name)
+			for (uint32_t index = 0 ; index < m_Sets[setId].uniformsTexture.size() ; index++)
 			{
-				if (m_UniformsTexture[index]._textureId[idMat] == Soon::IdError)
-					GraphicsRenderer::GetInstance()->RemoveTexture(m_UniformsTexture[index]._textureId[idMat]);
-				GraphicsRenderer::GetInstance()->AddTexture(textureId);
-				m_UniformsTexture[index]._textureId[idMat] = textureId;
+				if (name == m_Sets[setId].uniformsTexture[index]._name)
+				{
+					if (m_Sets[setId].uniformsTexture[index]._textureId[idMat] == Soon::IdError)
+						GraphicsRenderer::GetInstance()->RemoveTexture(m_Sets[setId].uniformsTexture[index]._textureId[idMat]);
+					GraphicsRenderer::GetInstance()->AddTexture(textureId);
+					m_Sets[setId].uniformsTexture[index]._textureId[idMat] = textureId;
+				}
 			}
 		}
 	}
@@ -243,7 +282,7 @@ namespace Soon
 		void* data = nullptr;
 
 		vmaMapMemory(allocator, m_GpuMemory[currentImg], &data);
-		memcpy(data, m_CpuBuffer, m_SizeUniqueUniformBlock + (m_SizeUniformBlock * m_NumElements));
+		memcpy(data, m_CpuBuffer, m_UniqueSize + (m_NonUniqueSize * m_NumElements));
 		vmaUnmapMemory(allocator, m_GpuMemory[currentImg]);
 	}
 
@@ -257,49 +296,40 @@ namespace Soon
 		CheckAndResize(m_NumElements + 1);
 
 		uint32_t offset = 0;
-		uint32_t uniqueUniformsSize = m_UniqueUniforms.size() + m_UniqueUniformsTexture.size();
-		uint32_t totalUniformsSize = m_UniformsTexture.size() + m_Uniforms.size();
-
-		for (uint32_t index = 0; index < m_Uniforms.size(); index++)
+		for (uint32_t index = 0 ; index < m_Sets.size() ; index++)
 		{
+			for (uint32_t uniTexId = 0 ; uniTexId < m_Sets[index].uniformsTexture.size() ; uniTexId++)
+			{
+				if (idMat >= m_Sets[index].uniformsTexture[uniTexId]._textureId.size())
+					m_Sets[index].uniformsTexture[uniTexId]._textureId.push_back(Soon::IdError);
+			}
 			std::vector<VkDescriptorSet> descriptorSets;
+			descriptorSets = GraphicsInstance::GetInstance()->AllocateDescriptorSet(_descriptorSetLayout[m_Sets[index].set]);
 
-			descriptorSets = GraphicsInstance::GetInstance()->CreateDescriptorSets(m_Uniforms[index]._size,
-																					offset + m_SizeUniqueUniformBlock + (m_SizeUniformBlock * idMat),
-																					m_Uniforms[index]._binding,
-																					_descriptorSetLayout[m_Uniforms[index]._set],
-																					m_GpuBuffer.data(),
-																					0);
+			GraphicsInstance::GetInstance()->UpdateDescriptorSets(m_Sets[index],
+																	m_UniqueSize + (idMat * m_NonUniqueSize) + offset,
+																	descriptorSets.data(),
+																	m_GpuBuffer.data(),
+																	0);
+
+			GraphicsInstance::GetInstance()->UpdateImageDescriptorSets(
+																	&idMat,
+																	1,
+																	m_Sets[index],
+																	descriptorSets.data());
 
 			for ( uint32_t descriptorId = 0 ; descriptorId < descriptorSets.size() ; descriptorId++)
-				m_DescriptorSets[descriptorId][uniqueUniformsSize + (totalUniformsSize * idMat) + index] = descriptorSets[descriptorId];
-
-			offset += m_Uniforms[index]._size;
+				m_DescriptorSets[descriptorId][m_UniqueSets.size() + (m_Sets.size() * idMat) + index] = descriptorSets[descriptorId];
+			offset += m_Sets[index].size;
 		}
-
-		for (uint32_t index = 0; index < m_UniformsTexture.size(); index++)
-		{
-			std::vector<VkDescriptorSet> descriptorSets;
-			if (idMat >= m_UniformsTexture[index]._textureId.size())
-				m_UniformsTexture[index]._textureId.push_back(Soon::IdError);
-			
-			std::cout << m_UniformsTexture[index]._textureId[idMat] << std::endl;
-			ImageProperties& imgProp = GraphicsRenderer::GetInstance()->GetImageProperties( m_UniformsTexture[index]._textureId[idMat] );
-
-			descriptorSets = GraphicsInstance::GetInstance()->CreateImageDescriptorSets(imgProp._imageView,
-																						imgProp._textureSampler,
-																						_descriptorSetLayout[m_UniformsTexture[index]._set],
-																						m_UniformsTexture[index]._binding);
-
-			for ( uint32_t descriptorId = 0 ; descriptorId < descriptorSets.size() ; descriptorId++ )
-				m_DescriptorSets[descriptorId][uniqueUniformsSize + totalUniformsSize * idMat + m_Uniforms.size() + index] = descriptorSets[descriptorId];
-		}
-
+		//
 		m_NumElements = (m_NumElements < idMat + 1) ? idMat + 1 : m_NumElements;
 	}
 
 	void UniformsBufferManager::Free( uint32_t idMat )
 	{
+		/*
+		// TODO:
 		uint32_t offset = 0;
 		uint32_t uniqueUniformsSize = m_UniqueUniforms.size() + m_UniqueUniformsTexture.size();
 		uint32_t totalUniformsSize = m_UniformsTexture.size() + m_Uniforms.size();
@@ -316,6 +346,7 @@ namespace Soon
 			for (uint32_t index = 0; index < m_UniformsTexture.size(); index++)
 				GraphicsInstance::GetInstance()->DestroyDescriptorSet(m_DescriptorSets[descriptorId][uniqueUniformsSize + totalUniformsSize * idMat + m_Uniforms.size() + index]);
 		}
+		*/
 	}
 
 	void UniformsBufferManager::AddLayoutBinding(VkDescriptorSetLayoutBinding ubo, uint32_t set)
@@ -345,23 +376,14 @@ namespace Soon
 		return _descriptorSetLayout;
 	}
 
-	std::vector<Uniform>& UniformsBufferManager::GetUniforms( void )
+	std::vector<DescriptorSetDescription>& UniformsBufferManager::GetSets( void )
 	{
-		return m_Uniforms;
-	}
-	std::vector<Uniform>& UniformsBufferManager::GetUniqueUniforms( void )
-	{
-		return (m_UniqueUniforms);
+		return m_Sets;
 	}
 
-	std::vector<UniformTexture>& UniformsBufferManager::GetUniformsTexture( void )
+	std::vector<DescriptorSetDescription>& UniformsBufferManager::GetUniqueSets( void )
 	{
-		return (m_UniformsTexture);
-	}
-
-	std::vector<UniformTexture>& UniformsBufferManager::GetUniqueUniformsTexture( void )
-	{
-		return (m_UniqueUniformsTexture);
+		return m_UniqueSets;
 	}
 
 	std::vector<VkDescriptorSet>& UniformsBufferManager::GetDescriptorSet( uint32_t image )
