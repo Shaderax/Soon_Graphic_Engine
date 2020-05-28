@@ -138,6 +138,8 @@ namespace Soon
 
 			for (uint32_t setId = 0 ; setId < sets.size() ; setId++)
 			{
+				for (uint32_t Id = 0 ; Id < sets[setId].uniformsTexture.size() ; Id++)
+					std::cout << sets[setId].uniformsTexture[Id]._textureId[it->second] << std::endl;
 				vkCmdBindDescriptorSets(commandBuffer,
 										VK_PIPELINE_BIND_POINT_GRAPHICS,
 										_pipelineLayout,

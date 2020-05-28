@@ -237,7 +237,7 @@ namespace Soon
 							if (varName == m_Sets[setId].uniforms[index]._members[member]._name)
 							{
 								memcpy(m_CpuBuffer + m_UniqueSize + offset + (m_NonUniqueSize * matId), value, m_Sets[setId].uniforms[index]._members[member]._size);
-								std::cout << "Found Uniform : " << name.substr(0, pos) + "." << varName << std::endl;
+								//std::cout << "Found Uniform : " << name.substr(0, pos) + "." << varName << std::endl;
 							}
 							offset += m_Sets[setId].uniforms[index]._members[member]._size;
 						}
@@ -256,9 +256,9 @@ namespace Soon
 			{
 				if (name == m_Sets[setId].uniformsTexture[index]._name)
 				{
-					if (m_Sets[setId].uniformsTexture[index]._textureId[idMat] == Soon::IdError)
+					if (m_Sets[setId].uniformsTexture[index]._textureId[idMat] != Soon::IdError)
 						GraphicsRenderer::GetInstance()->RemoveTexture(m_Sets[setId].uniformsTexture[index]._textureId[idMat]);
-					GraphicsRenderer::GetInstance()->AddTexture(textureId);
+					//GraphicsRenderer::GetInstance()->AddTexture(textureId);
 					m_Sets[setId].uniformsTexture[index]._textureId[idMat] = textureId;
 				}
 			}

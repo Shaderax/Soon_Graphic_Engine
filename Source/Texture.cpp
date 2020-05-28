@@ -34,7 +34,7 @@ namespace Soon
 		return !(*this == rhs);
 	}
 
-	Texture::Texture( void ) : m_Data(nullptr), m_UniqueId(Soon::IdError), m_AnisoLevel(1)
+	Texture::Texture( void ) : m_Data(nullptr), m_UniqueId(Soon::IdError), m_AnisoLevel(1), m_Type(EnumTextureType::TEXTURE_2D)
 	{
 	}
 
@@ -46,12 +46,12 @@ namespace Soon
 																					m_AnisoLevel(1)
 	{
 
-		m_Data = new uint8_t[width * height * m_Format.GetSize()];
+		m_Data = new uint8_t[width * height * m_Format.GetSize()]();
 	}
 
 	void Texture::SetPixel( uint32_t x, uint32_t y)
 	{
-		m_Data[x + (mWidth * y)] = 127;
+		((uint32_t*)m_Data)[x + (mWidth * y)] = 1;
 	}
 
 	void Texture::SetData(void* data, uint32_t width, uint32_t height, TextureFormat format)
@@ -62,7 +62,9 @@ namespace Soon
 
 		if (m_Data != nullptr)
 			delete m_Data;
-			
+		
+		m_Data = new uint8_t[mWidth * mHeight * m_Format.GetSize()]();
+
 		memcpy(m_Data, data, mWidth * mHeight * m_Format.GetSize());
 	}
 

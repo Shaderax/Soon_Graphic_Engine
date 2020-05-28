@@ -19,7 +19,7 @@ namespace Soon
 			uint32_t	m_UniqueId = IdError;
 
 		public:
-			uint8_t*	mVertexData;
+			uint8_t*	mVertexData = nullptr;
 			uint32_t*	mIndices;
 			uint32_t	mNumIndices;
 			uint32_t	mNumVertex;

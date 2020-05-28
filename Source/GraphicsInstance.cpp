@@ -1307,21 +1307,21 @@ namespace Soon
 
 	ImageRenderer GraphicsInstance::CreateTextureImage(Texture* texture)
 	{
+		std::cout << "width " << texture->mWidth <<  " " << "Height : " << texture->mHeight << "Format : " << texture->GetFormat().GetSize() << std::endl;
 		ImageRenderer ir;
 		size_t imageSize = texture->GetArrayLayer() * texture->mWidth * texture->mHeight * texture->GetFormat().GetSize();
 
 		VkBuffer stagingBuffer;
 		VmaAllocation staginAlloc;
-		//VkDeviceMemory stagingBufferMemory;
 
 		std::cout << "ImageSize BUFFER CREATION : " << imageSize << std::endl;
-		//std::cout << "width " << texture->_width <<  " " << "Height : " << texture->_height << "Format : " << texture->_format << std::endl;
 
 		CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, stagingBuffer, staginAlloc);
 
-		void *data;
+
+		void *data = nullptr;
 		vmaMapMemory(m_Allocator, staginAlloc, &data);
-		memcpy(data, texture->GetData(), static_cast<size_t>(imageSize));
+		memcpy(data, texture->GetData(), imageSize);
 		vmaUnmapMemory(m_Allocator, staginAlloc);
 
 		CreateImage({texture->mWidth, texture->mHeight}, TextureFormatToVkFormat(texture->GetFormat()), texture->GetArrayLayer(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VMA_MEMORY_USAGE_GPU_ONLY, ir._textureImage, ir._textureImageMemory);

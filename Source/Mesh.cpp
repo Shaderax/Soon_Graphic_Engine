@@ -28,17 +28,21 @@ void Mesh::SetVertexElement( uint8_t *data, uint32_t size, VertexElement elem )
 {
 	assert((m_VertexDescription.HasElement(elem.sementic) && "Has Element"));
 
+	if (!mVertexData)
+	{
+		mNumVertex = size;
+		mVertexTotalSize = mNumVertex * m_VertexDescription.GetVertexStrideSize();
+		mVertexData = new uint8_t[mVertexTotalSize]();
+	}
+	std::cout << std::endl << "Elem : " << (int)elem.sementic << std::endl;
 	uint32_t elementSize = elem.type.GetTypeSize(); // element size, 12
-	//std::cout << "elementSize : " << elementSize << std::endl;
-	mNumVertex = size;
-	mVertexTotalSize = mNumVertex * m_VertexDescription.GetVertexStrideSize();
-	//std::cout << "_numVertx : " << _numVertex << std::endl;
-	mVertexData = new uint8_t[mVertexTotalSize];
-	//std::cout << "Allocate Size : " << _numVertex * elem.type.row * elem.type.column << std::endl;
+	std::cout << "elementSize : " << elementSize << std::endl;
+	std::cout << "_numVertx : " << mNumVertex << std::endl;
+	std::cout << "Allocate Size : " << mNumVertex * elem.type.row * elem.type.column << std::endl;
 	uint32_t offset = m_VertexDescription.GetElementOffset(elem.sementic); // offset of element in stride, Ex : 0
-	//std::cout << "offset : " << offset << std::endl;
+	std::cout << "offset : " << offset << std::endl;
 	uint32_t strideSize = m_VertexDescription.GetVertexStrideSize(); // Ex : 12oct
-	//std::cout << "strideSize : " << strideSize << std::endl;
+	std::cout << "strideSize : " << strideSize << std::endl;
 
 	for (uint32_t index = 0; index < size; index++)
 		memcpy(mVertexData + (index * strideSize) + offset, data + (index * elementSize), elementSize);

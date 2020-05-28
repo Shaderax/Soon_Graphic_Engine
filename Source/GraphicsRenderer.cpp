@@ -42,6 +42,7 @@ namespace Soon
 		m_DefaultTexture->SetPixel(1, 0);
 		m_DefaultTexture->SetPixel(1, 1);
 		AddTexture(m_DefaultTexture);
+		std::cout << "Default Texture Id : " << m_DefaultTexture->GetId() << std::endl;
 
 		for (ShaderPipeline *pip : _graphicPipelines)
 			pip = nullptr;
@@ -54,13 +55,45 @@ namespace Soon
 		//_instance = this;
 	}
 
+	void GraphicsRenderer::DestroyInvalids( void )
+	{
+		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
+		vkDeviceWaitIdle(device);
+
+		for (uint32_t index = 0 ; index < m_MeshToSupress.size() ; index++)
+		{
+			// TODO: DEGUEU le idle
+			//VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
+			//vkDeviceWaitIdle(device);
+
+			uint32_t meshId = m_MeshToSupress.back();
+			m_MeshToSupress.pop_back();
+
+			vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[meshId].bufferRenderer.vertex.buffer, _meshs[meshId].bufferRenderer.vertex.bufferMemory);
+			vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[meshId].bufferRenderer.indices.buffer, _meshs[meshId].bufferRenderer.indices.bufferMemory);
+
+			_freeId.push_back(meshId);
+		}
+		for (uint32_t index = 0 ; index < m_TextureToSupress.size() ; index++)
+		{
+			uint32_t textureId = m_TextureToSupress.back();
+			m_TextureToSupress.pop_back();
+
+			vmaDestroyImage(GraphicsInstance::GetInstance()->GetAllocator(), m_Textures[textureId].imageRenderer._textureImage, m_Textures[textureId].imageRenderer._textureImageMemory);
+			vkDestroySampler(GraphicsInstance::GetInstance()->GetDevice(), m_Textures[textureId].image._textureSampler, nullptr);
+			vkDestroyImageView(GraphicsInstance::GetInstance()->GetDevice(), m_Textures[textureId].image._imageView, nullptr);
+
+			m_FreeTextureId.push_back(textureId);	
+		}
+	}
+
 	GraphicsRenderer::~GraphicsRenderer(void)
 	{
 		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
 		vkDeviceWaitIdle(device);
 		RemoveAllPipelines();
 
-		DestroyInvalidMeshs();
+		DestroyInvalids();
 
 		for (uint32_t index = 0; index < _meshs.size(); index++)
 		{
@@ -242,29 +275,6 @@ namespace Soon
 		return (meshId);
 	}
 
-	void GraphicsRenderer::DestroyInvalidMeshs( void )
-	{
-		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
-		vkDeviceWaitIdle(device);
-
-		for (uint32_t index = 0 ; index < m_MeshToSupress.size() ; index++)
-		{
-			// TODO: DEGUEU
-			//VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
-			//vkDeviceWaitIdle(device);
-
-			uint32_t meshId = m_MeshToSupress.back();
-			m_MeshToSupress.pop_back();
-
-			// VERTEX
-			vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[meshId].bufferRenderer.vertex.buffer, _meshs[meshId].bufferRenderer.vertex.bufferMemory);
-			// INDICE
-			vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[meshId].bufferRenderer.indices.buffer, _meshs[meshId].bufferRenderer.indices.bufferMemory);
-
-			_freeId.push_back(meshId);
-		}
-	}
-
 	void GraphicsRenderer::RemoveMesh(uint32_t meshId)
 	{
 		if (meshId == Soon::IdError || !IsValidMeshId(meshId))
@@ -287,6 +297,9 @@ namespace Soon
 	
 	uint32_t GraphicsRenderer::AddTexture(Texture* texture)
 	{
+		if (texture->GetId() != Soon::IdError)
+			return AddTexture(texture->GetId());
+
 		uint32_t textureId;
 		if (!m_FreeTextureId.empty())
 		{
@@ -334,13 +347,7 @@ namespace Soon
 
 		m_Textures[textureId].count -= 1;
 		if (m_Textures[textureId].count == 0)
-		{
-			vmaDestroyImage(GraphicsInstance::GetInstance()->GetAllocator(), m_Textures[textureId].imageRenderer._textureImage, m_Textures[textureId].imageRenderer._textureImageMemory);
-			vkDestroySampler(GraphicsInstance::GetInstance()->GetDevice(), m_Textures[textureId].image._textureSampler, nullptr);
-			vkDestroyImageView(GraphicsInstance::GetInstance()->GetDevice(), m_Textures[textureId].image._imageView, nullptr);
-
-			_freeId.push_back(textureId);
-		}
+			m_TextureToSupress.push_back(textureId);
 	}
 
 	ImageProperties& GraphicsRenderer::GetImageProperties(uint32_t id)
