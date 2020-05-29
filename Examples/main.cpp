@@ -14,6 +14,9 @@
 #include <chrono>
 #include <ctime>
 
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -54,6 +57,12 @@ int main()
 	texture.SetData(data, width,height, TextureFormat(EnumTextureFormat::RGBA));
 	//GraphicsRenderer::GetInstance()->AddTexture(&texture);
 	stbi_image_free(data);
+
+
+	std::ifstream i("/home/shaderax/Documents/Project/Soon_Graphic_Engine/Examples/test.json");
+	json j;
+	i >> j;
+	std::cout << j["pi"] << std::endl;
 
 	VertexDescription vd;
 	//vd.AddVertexElement(VertexElement(EnumVertexElementSementic::POSITION, VertexElementType(EnumVertexElementType::FLOAT, 1, 3)));

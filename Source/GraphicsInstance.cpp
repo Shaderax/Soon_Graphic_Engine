@@ -1001,6 +1001,8 @@ namespace Soon
 		}
 	}
 
+	#include "Utilities/ShowFps.hpp"
+
 	void GraphicsInstance::DrawFrame(void)
 	{
 		vkWaitForFences(_device, 1, &_inFlightFences[_currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
