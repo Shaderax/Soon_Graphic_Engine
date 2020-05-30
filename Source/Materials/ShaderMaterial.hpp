@@ -1,16 +1,16 @@
 #pragma once
 
-#include "Renderer/Pipelines/ShaderPipeline.hpp"
+#include "Pipelines/ShaderPipeline.hpp"
 #include "Materials/Material.hpp"
 
-#include "Renderer/Vulkan/GraphicsRenderer.hpp"
+#include "GraphicsRenderer.hpp"
 
 namespace Soon
 {
 	class ShaderMaterial : public Material
 	{
 	public:
-		ShaderPipeline *_shaderPipeline;
+		ShaderPipeline* _shaderPipeline;
 
 		ShaderMaterial(void);
 		~ShaderMaterial(void);
@@ -23,35 +23,19 @@ namespace Soon
 			_shaderPipeline = GraphicsRenderer::GetInstance()->AddPipeline<T>();
 		}
 
+/*
 		void SetMesh(std::uint32_t meshId)
 		{
-			//if (_shaderPipeline)
-			//	_id = _shaderPipeline->SetMesh(_id, meshId);
-		}
-
-		void AddToPipeline(std::uint32_t meshId)
-		{
 			if (_shaderPipeline)
-				_id = _shaderPipeline->AddToPipeline(meshId);
+				_id = _shaderPipeline->SetMesh(_id, meshId);
 		}
+*/
 
-		void RemoveFromPipeline(std::uint32_t meshId)
-		{
-			//if (_shaderPipeline)
-			//	_id = _shaderPipeline->RemoveFromPipeline();
-		}
-
-		bool HasValidVertexDescription(VertexDescription meshVD)
-		{
-			if (_shaderPipeline == nullptr)
-				return (false);
-			return (meshVD == _shaderPipeline->GetVertexDescription());
-		}
-
-		 void SetUniform( std::string name, void* data )
-		 {
-			 if (_shaderPipeline && _id != IdError)
-			 	_shaderPipeline->Set(name, data, _id);
-		 }
+		void Render( std::uint32_t meshId );
+		void UnRender( void );
+		void RemoveFromPipeline(std::uint32_t meshId);
+		bool HasValidVertexDescription(VertexDescription meshVD);
+		void SetUniform( std::string name, void* data );
+		void SetTexture(std::string name, Texture& texture);
 	};
 } // namespace Soon

@@ -2,4 +2,8 @@
 mkdir Build
 cd Build
 cmake ..
-make -j 2
+
+os=$(uname)
+numCore=$(grep -c ^processor /proc/cpuinfo)
+
+make -j $numCore

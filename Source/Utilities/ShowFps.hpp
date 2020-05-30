@@ -1,4 +1,5 @@
 #include <GLFW/glfw3.h>
+#include <iostream>
 
 double ShowFPS( double lastTime )
 {
@@ -13,5 +14,5 @@ double ShowFPS( double lastTime )
 	}
 	nbFrames++;
 
-     return lastTime;
+    return lastTime;
 }

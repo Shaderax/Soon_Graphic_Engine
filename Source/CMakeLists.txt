@@ -1,26 +1,38 @@
 cmake_minimum_required (VERSION 3.10)
 
-add_compile_options(-Wall -Wextra -g3)
+# Set default compile flags for GCC
+if(CMAKE_COMPILER_IS_GNUCXX)
+    message(STATUS "GCC detected, adding compile flags")
+     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++98 -pedantic -Wall -Wextra")
+	add_compile_options(-Wextra -Wshadow -Wnon-virtual-dtor) 
+endif(CMAKE_COMPILER_IS_GNUCXX)
+add_compile_options(-Wall -g3 -pedantic)
 
 set(SRC 
 	Materials/ShaderMaterial.cpp
 
-	Renderer/Vulkan/GraphicsInstance.cpp
-	Renderer/Vulkan/GraphicsRenderer.cpp
-	Renderer/Vulkan/PipelineConf.cpp
+	GraphicsInstance.cpp
+	GraphicsRenderer.cpp
+	PipelineConf.cpp
 
-	Renderer/GLFW/Init.cpp
-	Renderer/GLFW/Hints.cpp
-	Renderer/GLFW/Callback.cpp
+	GLFWInit/Init.cpp
+	GLFWInit/Hints.cpp
+	GLFWInit/Callback.cpp
 
-	Renderer/Pipelines/BasePipeline.cpp
+	Pipelines/BasePipeline.cpp
 
-	Renderer/Mesh.cpp
+	Mesh.cpp
 
-	Utilities/Vertex.cpp
+	Vertex.cpp
 	Utilities/ReadFile.cpp
 
 	../Modules/SPIRV-Reflect/spirv_reflect.c
+
+	UniformsBufferManager.cpp
+
+	Texture.cpp
+
+	Pipelines/ShaderPipeline.cpp
 	)
 
 add_library(Source ${SRC})

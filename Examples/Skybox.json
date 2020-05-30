@@ -1,0 +1,4 @@
+{
+	"ShadersPath" : ["Ressources/Shaders/TestShaders/Skybox.vert.spv", "Ressources/Shaders/TestShaders/Skybox.frag.spv"],
+	"UniqueSets" : [0]
+}
