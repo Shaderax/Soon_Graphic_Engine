@@ -35,6 +35,7 @@ namespace Soon
 		m_Properties["CullMode"] = {&_conf.rasterizer.cullMode, sizeof(_conf.rasterizer.cullMode)};
 		m_Properties["Topology"] = {&_conf.inputAssembly.topology, sizeof(_conf.inputAssembly.topology)};
 		m_Properties["PolygoneMode"] = {&_conf.rasterizer.polygonMode, sizeof(_conf.rasterizer.polygonMode)};
+		m_Properties["FrontFace"] = {&_conf.rasterizer.frontFace, sizeof(_conf.rasterizer.frontFace)};
 	}
 
 	ShaderPipeline::~ShaderPipeline()
