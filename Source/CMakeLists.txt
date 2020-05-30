@@ -31,6 +31,8 @@ set(SRC
 	UniformsBufferManager.cpp
 
 	Texture.cpp
+
+	Pipelines/ShaderPipeline.cpp
 	)
 
 add_library(Source ${SRC})

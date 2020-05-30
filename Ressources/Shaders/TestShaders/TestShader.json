@@ -1,4 +1,0 @@
-{
-	"ShadersPath" : ["TestShader.vert.spv", "TestShader.frag.spv"],
-	"UniqueSets" : {}
-}

@@ -75,7 +75,7 @@ namespace Soon
 
 		void SetPixel( uint32_t x, uint32_t y);
 
-		void SetData(void* data, uint32_t width, uint32_t height, TextureFormat format);
+		void SetData(void* data, uint32_t width, uint32_t height, TextureFormat format, EnumTextureType type = EnumTextureType::TEXTURE_2D);
 
 		uint8_t* GetData( void ) const;
 

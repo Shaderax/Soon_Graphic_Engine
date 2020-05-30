@@ -104,6 +104,38 @@ Mesh* ObjLoader(void)
 	return mesh;
 }
 
+Texture* LoadTextureCubeMap( void )
+{
+	Texture* textureCubeMap = new Texture();
+	std::vector<std::string> paths = 
+	{
+		{"/home/shaderax/Documents/Project/Soon_Graphic_Engine/Ressources/Skybox/hw_lagoon/lagoon_bk.tga"},
+		{"/home/shaderax/Documents/Project/Soon_Graphic_Engine/Ressources/Skybox/hw_lagoon/lagoon_dn.tga"},
+		{"/home/shaderax/Documents/Project/Soon_Graphic_Engine/Ressources/Skybox/hw_lagoon/lagoon_ft.tga"},
+		{"/home/shaderax/Documents/Project/Soon_Graphic_Engine/Ressources/Skybox/hw_lagoon/lagoon_lf.tga"},
+		{"/home/shaderax/Documents/Project/Soon_Graphic_Engine/Ressources/Skybox/hw_lagoon/lagoon_rt.tga"},
+		{"/home/shaderax/Documents/Project/Soon_Graphic_Engine/Ressources/Skybox/hw_lagoon/lagoon_up.tga"}
+	};
+	int channel, width, height;
+	uint32_t offset = 0;
+	std::vector<uint8_t> imageData;
+	bool initVec = false;
+
+	for (uint32_t index = 0 ; index < 6 ; index++)
+	{
+		unsigned char *data = stbi_load(paths[index].c_str(), &width, &height, &channel, 4);
+		if (!initVec && (initVec = true))
+			imageData.resize(width * height * 4 * 6);
+		memcpy(imageData.data() + offset, data, width * height * 4);
+		stbi_image_free(data);
+		offset += width * height * 4;
+	}
+
+	textureCubeMap->SetData(imageData.data(), width, height, TextureFormat(EnumTextureFormat::RGBA), EnumTextureType::TEXTURE_CUBE);
+
+	return textureCubeMap;
+}
+
 int main()
 {
 	// Init
@@ -118,6 +150,13 @@ int main()
 	unsigned char *data = stbi_load("/home/shaderax/Pictures/Alex.png", &width, &height, &channel, 4);
 	texture.SetData(data, width, height, TextureFormat(EnumTextureFormat::RGBA));
 	stbi_image_free(data);
+
+	/**
+	 * TEXTURE CUBE MAP
+	 */
+	Texture* cubeMap = LoadTextureCubeMap();
+	/**
+	 */
 
 	/**
 	 * 	JSON

@@ -54,18 +54,19 @@ namespace Soon
 		((uint32_t*)m_Data)[x + (mWidth * y)] = 1;
 	}
 
-	void Texture::SetData(void* data, uint32_t width, uint32_t height, TextureFormat format)
+	void Texture::SetData(void* data, uint32_t width, uint32_t height, TextureFormat format, EnumTextureType type)
 	{
 		mWidth = width;
 		mHeight = height;
 		m_Format = format;
+		m_Type = type;
 
 		if (m_Data != nullptr)
 			delete m_Data;
 		
-		m_Data = new uint8_t[mWidth * mHeight * m_Format.GetSize()]();
+		m_Data = new uint8_t[mWidth * mHeight * m_Format.GetSize() * (uint8_t)type]();
 
-		memcpy(m_Data, data, mWidth * mHeight * m_Format.GetSize());
+		memcpy(m_Data, data, mWidth * mHeight * m_Format.GetSize() * (uint8_t)type);
 	}
 
 	uint8_t* Texture::GetData( void ) const
