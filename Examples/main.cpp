@@ -20,26 +20,89 @@ using json = nlohmann::json;
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-//std::vector<vec3<float>> triangle =
-	//{0.0, -0.500000, 0.000000},
-	//{0.500000, 0.500000, 0.000000},
-	//{-0.500000, 0.500000, 0.000000}
-
-std::vector<vec2<float>> triangle =
-{
-	{0.0, -0.500000},
-	{0.500000, 0.500000},
-	{-0.500000, 0.500000}
-};
-
-std::vector<vec2<float>> texCoord = 
-{
-	{0.0, -1.0},
-	{1.0, 1.0},
-	{-1.0, 1.0}
-};
+#define TINYOBJLOADER_IMPLEMENTATION // define this in only *one* .cc
+#include "ThirdParty/tinyobjloader/tiny_obj_loader.h"
 
 using namespace Soon;
+
+/**
+ * OBJ LOADER
+ */
+
+Mesh* ObjLoader(void)
+{
+	VertexDescription vd;
+	vd.AddVertexElement(VertexElement(EnumVertexElementSementic::POSITION, VertexElementType(EnumVertexElementType::FLOAT, 1, 3)));
+	vd.AddVertexElement(VertexElement(EnumVertexElementSementic::TEXCOORD, VertexElementType(EnumVertexElementType::FLOAT, 1, 2)));
+	vd.AddVertexElement(VertexElement(EnumVertexElementSementic::NORMAL, VertexElementType(EnumVertexElementType::FLOAT, 1, 3)));
+	Mesh* mesh = new Mesh(vd);
+
+	std::string inputfile = "./Examples/Cube.obj";
+	tinyobj::attrib_t attrib;
+	std::vector<tinyobj::shape_t> shapes;
+	std::vector<tinyobj::material_t> materials;
+
+	std::string warn;
+	std::string err;
+
+	bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, inputfile.c_str());
+	if (!warn.empty())
+	{
+		std::cout << warn << std::endl;
+	}
+
+	if (!err.empty())
+	{
+		std::cerr << err << std::endl;
+	}
+
+	if (!ret)
+	{
+		exit(1);
+	}
+	mesh->SetVertexElement((uint8_t*)attrib.vertices.data(), attrib.vertices.size() / 3, VertexElement(EnumVertexElementSementic::POSITION, VertexElementType(EnumVertexElementType::FLOAT, 1, 3)));
+	mesh->SetVertexElement((uint8_t*)attrib.texcoords.data(), attrib.texcoords.size() / 2, VertexElement(EnumVertexElementSementic::TEXCOORD, VertexElementType(EnumVertexElementType::FLOAT, 1, 2)));
+	mesh->SetVertexElement((uint8_t*)attrib.normals.data(), attrib.normals.size() / 3, VertexElement(EnumVertexElementSementic::NORMAL, VertexElementType(EnumVertexElementType::FLOAT, 1, 3)));
+
+	std::vector<uint32_t> indices;
+	for (uint32_t index = 0 ; index < shapes[0].mesh.indices.size() ; index++)
+		indices.push_back(shapes[0].mesh.indices[index].vertex_index);
+	mesh->SetIndexBuffer(indices.data(), indices.size());
+
+	// Loop over shapes
+	//for (size_t s = 0; s < shapes.size(); s++)
+	//{
+	//	// Loop over faces(polygon)
+	//	size_t index_offset = 0;
+	//	for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++)
+	//	{
+	//		int fv = shapes[s].mesh.num_face_vertices[f];
+	//		// Loop over vertices in the face.
+	//		for (size_t v = 0; v < fv; v++)
+	//		{
+	//			// access to vertex
+	//			tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
+	//			tinyobj::real_t vx = attrib.vertices[3 * idx.vertex_index + 0];
+	//			tinyobj::real_t vy = attrib.vertices[3 * idx.vertex_index + 1];
+	//			tinyobj::real_t vz = attrib.vertices[3 * idx.vertex_index + 2];
+	//			tinyobj::real_t nx = attrib.normals[3 * idx.normal_index + 0];
+	//			tinyobj::real_t ny = attrib.normals[3 * idx.normal_index + 1];
+	//			tinyobj::real_t nz = attrib.normals[3 * idx.normal_index + 2];
+	//			tinyobj::real_t tx = attrib.texcoords[2 * idx.texcoord_index + 0];
+	//			tinyobj::real_t ty = attrib.texcoords[2 * idx.texcoord_index + 1];
+	//			// Optional: vertex colors
+	//			// tinyobj::real_t red = attrib.colors[3*idx.vertex_index+0];
+	//			// tinyobj::real_t green = attrib.colors[3*idx.vertex_index+1];
+	//			// tinyobj::real_t blue = attrib.colors[3*idx.vertex_index+2];
+	//		}
+	//		index_offset += fv;
+//
+	//		// per-face material
+	//		shapes[s].mesh.material_ids[f];
+	//	}
+	//}
+	return mesh;
+}
 
 int main()
 {
@@ -52,42 +115,30 @@ int main()
 	 */
 	Texture texture;
 	int channel, width, height;
-	//unsigned char *data = stbi_load("/home/shaderax/Pictures/Alex.png", &width, &height, &channel, 4);
-	unsigned char *data = stbi_load("/home/shaderax/Pictures/Aude2.png", &width, &height, &channel, 4);
-	texture.SetData(data, width,height, TextureFormat(EnumTextureFormat::RGBA));
-	//GraphicsRenderer::GetInstance()->AddTexture(&texture);
+	unsigned char *data = stbi_load("/home/shaderax/Pictures/Alex.png", &width, &height, &channel, 4);
+	texture.SetData(data, width, height, TextureFormat(EnumTextureFormat::RGBA));
 	stbi_image_free(data);
 
-
+	/**
+	 * 	JSON
+	 */
 	std::ifstream i("/home/shaderax/Documents/Project/Soon_Graphic_Engine/Examples/test.json");
 	json j;
 	i >> j;
 	std::cout << j["pi"] << std::endl;
+	/**
+	 */
 
-	VertexDescription vd;
-	//vd.AddVertexElement(VertexElement(EnumVertexElementSementic::POSITION, VertexElementType(EnumVertexElementType::FLOAT, 1, 3)));
-	vd.AddVertexElement(VertexElement(EnumVertexElementSementic::POSITION, VertexElementType(EnumVertexElementType::FLOAT, 1, 2)));
-	vd.AddVertexElement(VertexElement(EnumVertexElementSementic::TEXCOORD, VertexElementType(EnumVertexElementType::FLOAT, 1, 2)));
-	Mesh* mesh = new Mesh(vd);
-	//mesh->SetVertexElement((uint8_t*)triangle.data(), triangle.size(),VertexElement(EnumVertexElementSementic::POSITION, VertexElementType(EnumVertexElementType::FLOAT, 1, 3)));
-	mesh->SetVertexElement((uint8_t*)triangle.data(),
-							triangle.size(),
-							VertexElement(EnumVertexElementSementic::POSITION,
-							VertexElementType(EnumVertexElementType::FLOAT, 1, 2)));
-
-	mesh->SetVertexElement((uint8_t*)texCoord.data(),
-							texCoord.size(),
-							VertexElement(EnumVertexElementSementic::TEXCOORD, VertexElementType(EnumVertexElementType::FLOAT, 1, 2)));
-	uint32_t* tab = new uint32_t[3];
-	tab[0] = 0;
-	tab[1] = 1;
-	tab[2] = 2;
-
-	mesh->SetIndexBuffer(tab, 3);
+	/**
+	 * MESH
+	 */
+	Mesh* mesh = ObjLoader();
 
 	mesh->Render();
+
 	mesh->GetMaterial().SetTexture("latexture", texture);
-	mesh->GetMaterial().SetVec3("cou.bondour", vec3<float>(0.2f, 0.1f, 0.0f));
+	//mesh->GetMaterial().SetVec3("cou.bondour", vec3<float>(0.2f, 0.1f, 0.0f));
+	// TODO: MESH VALID FOR HE PIPELINE
 	double lastTime = 0;
 	bool did = false;
 	double time = glfwGetTime();
@@ -98,8 +149,8 @@ int main()
 	while (!GraphicsInstance::GetInstance()->ShouldClose(GraphicsInstance::GetInstance()->GetWindow()))
 	{
 		lastTime = ShowFPS(lastTime);
-		glfwGetCursorPos(GraphicsInstance::GetInstance()->GetWindow(), &x, &y);
-		mesh->GetMaterial().SetVec3("cou.bondour", vec3<float>(((float)x / 1280) * 2 - 1, ((float)y / 720) * 2 - 1, 0.0f));
+		//glfwGetCursorPos(GraphicsInstance::GetInstance()->GetWindow(), &x, &y);
+		//mesh->GetMaterial().SetVec3("cou.bondour", vec3<float>(((float)x / 1280) * 2 - 1, ((float)y / 720) * 2 - 1, 0.0f));
 
 		if (glfwGetTime() - time > 5.0f)
 		{
@@ -125,9 +176,8 @@ int main()
 
 		GraphicsInstance::GetInstance()->PollEvent();
 		GraphicsInstance::GetInstance()->DrawFrame();
-
 	}
-	
+
 	delete mesh;
 
 	// Destroy

@@ -36,7 +36,7 @@ const std::vector<const char *> deviceExtensions =
 //const bool enableValidationLayers = false;
 //#else
 //// Validation layer : 
-const bool enableValidationLayers = false;
+const bool enableValidationLayers = true;
 //#endif
 
 bool checkValidationLayerSupport(void)

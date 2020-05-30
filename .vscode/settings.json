@@ -78,6 +78,9 @@
 		"random": "cpp",
 		"string_view": "cpp",
 		"cinttypes": "cpp",
-		"bit": "cpp"
+		"bit": "cpp",
+		"forward_list": "cpp",
+		"unordered_set": "cpp",
+		"valarray": "cpp"
 	}
 }

@@ -9,6 +9,8 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 endif(CMAKE_COMPILER_IS_GNUCXX)
 add_compile_options(-Wall)
 
+add_subdirectory(ThirdParty/tinyobjloader)
+
 add_executable(GraphicEngineTest main.cpp)
 
-target_link_libraries(GraphicEngineTest Source)
+target_link_libraries(GraphicEngineTest Source tinyobjloader)

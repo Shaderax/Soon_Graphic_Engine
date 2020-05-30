@@ -16,7 +16,7 @@ namespace Soon
 			ShaderMaterial		m_Material;
 			VertexDescription	m_VertexDescription;
 
-			uint32_t	m_UniqueId = IdError;
+			uint32_t	m_UniqueId = Soon::IdError;
 
 		public:
 			uint8_t*	mVertexData = nullptr;
@@ -27,6 +27,7 @@ namespace Soon
 
 			Mesh( VertexDescription v );
 			Mesh( const Mesh &other );
+			Mesh( const Mesh &&other );
 			~Mesh( void );
 			// Loader Free ?
 

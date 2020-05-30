@@ -228,11 +228,9 @@ namespace Soon
 		_mUbm.SetTexture(name, idMat, textureId);
 	}
 
-
 	/**
 	 * GET SHADER DATA
-	 */
-	
+	 */	
 	void BasePipeline::GetInputBindings( spv_reflect::ShaderModule& reflection )
 	{
 		std::vector<SpvReflectInterfaceVariable *> inputs;

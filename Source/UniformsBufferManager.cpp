@@ -19,17 +19,20 @@ namespace Soon
 
 	void UniformsBufferManager::RecreateUniforms( std::unordered_map<uint32_t, uint32_t>& toDraw )
 	{
-		// Buffer Creation
-		VkBufferCreateInfo bufferInfo = {};
-		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		bufferInfo.size = m_UniqueSize + (m_NonUniqueSize * m_MinElements);
-		bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+		if (m_UniqueSize + (m_NonUniqueSize * m_MinElements) != 0)
+		{
+			// Buffer Creation
+			VkBufferCreateInfo bufferInfo = {};
+			bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+			bufferInfo.size = m_UniqueSize + (m_NonUniqueSize * m_MinElements);
+			bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 
-		VmaAllocationCreateInfo allocInfo = {};
-		allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+			VmaAllocationCreateInfo allocInfo = {};
+			allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
  
-		for ( uint32_t index = 0 ; index < GraphicsInstance::GetInstance()->GetSwapChainSize() ; index++)
-			vmaCreateBuffer(GraphicsInstance::GetInstance()->GetAllocator(), &bufferInfo, &allocInfo, &(m_GpuBuffer[index]), &(m_GpuMemory[index]), nullptr);
+			for ( uint32_t index = 0 ; index < GraphicsInstance::GetInstance()->GetSwapChainSize() ; index++)
+				vmaCreateBuffer(GraphicsInstance::GetInstance()->GetAllocator(), &bufferInfo, &allocInfo, &(m_GpuBuffer[index]), &(m_GpuMemory[index]), nullptr);
+		}
 
 		// UNIQUE
 		uint32_t offset = 0;
@@ -169,21 +172,24 @@ namespace Soon
 		uint32_t swapChainSize = GraphicsInstance::GetInstance()->GetSwapChainSize();
 		VmaAllocator& allocator = GraphicsInstance::GetInstance()->GetAllocator();
 
-		m_GpuMemory.resize(swapChainSize);
-		m_GpuBuffer.resize(swapChainSize);
+		if (m_UniqueSize + (m_NonUniqueSize * m_MinElements) != 0)
+		{
+			m_GpuMemory.resize(swapChainSize);
+			m_GpuBuffer.resize(swapChainSize);
 
-		m_CpuBuffer = new uint8_t[m_UniqueSize + (m_NonUniqueSize * m_MinElements)]();
+			m_CpuBuffer = new uint8_t[m_UniqueSize + (m_NonUniqueSize * m_MinElements)]();
 
-		// Buffer Creation
-		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-		bufferInfo.size = m_UniqueSize + (m_NonUniqueSize * m_MinElements);
-		bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-		//
-		VmaAllocationCreateInfo allocInfo = {};
-		allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+			// Buffer Creation
+			VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+			bufferInfo.size = m_UniqueSize + (m_NonUniqueSize * m_MinElements);
+			bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+			//
+			VmaAllocationCreateInfo allocInfo = {};
+			allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
 
-		for ( uint32_t index = 0 ; index < swapChainSize ; index++)
-			vmaCreateBuffer(allocator, &bufferInfo, &allocInfo, &(m_GpuBuffer[index]), &(m_GpuMemory[index]), nullptr);
+			for ( uint32_t index = 0 ; index < swapChainSize ; index++)
+				VkResult ret = vmaCreateBuffer(allocator, &bufferInfo, &allocInfo, &(m_GpuBuffer[index]), &(m_GpuMemory[index]), nullptr);
+		}
 
 		m_DescriptorSets.resize(swapChainSize);
 
@@ -267,6 +273,9 @@ namespace Soon
 
 	void UniformsBufferManager::DestroyAllUniforms(void)
 	{
+		if (m_UniqueSize + (m_NonUniqueSize * m_MinElements) == 0)
+			return ;
+
 		// TODO: VkDescriptorSet
 		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
 
@@ -276,11 +285,15 @@ namespace Soon
 
 	void UniformsBufferManager::UpdateToGPU( uint32_t currentImg )
 	{
+		if (m_UniqueSize + (m_NonUniqueSize * m_MinElements) == 0)
+			return ;
+
 		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
 		VmaAllocator& allocator = GraphicsInstance::GetInstance()->GetAllocator();
 
 		void* data = nullptr;
 
+		std::cout << m_GpuMemory[1] << std::endl;
 		vmaMapMemory(allocator, m_GpuMemory[currentImg], &data);
 		memcpy(data, m_CpuBuffer, m_UniqueSize + (m_NonUniqueSize * m_NumElements));
 		vmaUnmapMemory(allocator, m_GpuMemory[currentImg]);

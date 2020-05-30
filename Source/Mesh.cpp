@@ -11,6 +11,11 @@ Mesh::Mesh( VertexDescription v )
 
 Mesh::Mesh( const Mesh &other )
 {
+
+}
+
+Mesh::Mesh( const Mesh&& other )
+{
 	//_vertices = other._vertices;
 	//_indices = other._indices;
 	// Set Vertex Description.
@@ -84,7 +89,8 @@ void Mesh::AllocGpu( void )
 
 void Mesh::FreeGpu( void )
 {
-	GraphicsRenderer::GetInstance()->RemoveMesh(m_UniqueId);
+	if (GraphicsRenderer::_instance != nullptr)
+		GraphicsRenderer::GetInstance()->RemoveMesh(m_UniqueId);
 	m_UniqueId = Soon::IdError;
 }
 
