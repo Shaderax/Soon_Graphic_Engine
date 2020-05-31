@@ -1819,7 +1819,7 @@ namespace Soon
 		InitGLFWHints();
 
 		if (!glfwVulkanSupported())
-			std::cout << "VULKAN Y VEUT PAS SANS DOUTE A CAUSE DE SE MOLTENVK DE MERDE" << std::endl;
+			std::cout << "VULKAN NOT SUPPORTED maybe because of MOLTENVK or bad icd, check your drivers" << std::endl;
 
 		CreateWindow();
 		CreateInstance();
