@@ -2,26 +2,6 @@
 
 namespace Soon
 {
-	VkCullModeFlagBits CullModeToVk(ECullMode cull)
-	{
-		switch (cull)
-		{
-		case ECullMode::NONE:
-			return VK_CULL_MODE_NONE;
-		case ECullMode::BACK:
-			return VK_CULL_MODE_BACK_BIT;
-		case ECullMode::FRONT:
-			return VK_CULL_MODE_FRONT_BIT;
-		case ECullMode::FRONT_AND_BACK:
-			return VK_CULL_MODE_FRONT_AND_BACK;
-		default:
-			return VK_CULL_MODE_NONE;
-		}
-		return VK_CULL_MODE_NONE;
-	}
-
-	//ShaderPipeline::_type = PipelineType::GRAPHIC;
-
 	void ShaderPipeline::SetShaderProperties(std::string name, void* data)
 	{
 		PropertiesIterator prop = m_Properties.find(name);

@@ -14,9 +14,6 @@
 #include <chrono>
 #include <ctime>
 
-#include <nlohmann/json.hpp>
-using json = nlohmann::json;
-
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -155,16 +152,6 @@ int main()
 	 * TEXTURE CUBE MAP
 	 */
 	Texture* cubeMap = LoadTextureCubeMap();
-	/**
-	 */
-
-	/**
-	 * 	JSON
-	 */
-	std::ifstream i("/home/shaderax/Documents/Project/Soon_Graphic_Engine/Examples/test.json");
-	json j;
-	i >> j;
-	std::cout << j["pi"] << std::endl;
 	/**
 	 */
 

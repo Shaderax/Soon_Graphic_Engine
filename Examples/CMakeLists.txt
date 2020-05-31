@@ -5,9 +5,11 @@ cmake_minimum_required (VERSION 3.10)
 # Set default compile flags for GCC
 if(CMAKE_COMPILER_IS_GNUCXX)
 	message(STATUS "GCC detected, adding compile flags")
-	add_compile_options(-Wextra) 
+	#add_compile_options(-Wextra) 
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wextra")
 endif(CMAKE_COMPILER_IS_GNUCXX)
-add_compile_options(-Wall)
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall")
+#add_compile_options(-Wall)
 
 add_subdirectory(ThirdParty/tinyobjloader)
 

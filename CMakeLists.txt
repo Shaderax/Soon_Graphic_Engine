@@ -16,6 +16,9 @@ if (Vulkan_FOUND)
 	message(${Vulkan_LIBRARY})
 endif()
 
+message(${CMAKE_CXX_FLAGS_DEBUG})
+message(${CMAKE_CXX_FLAGS_RELEASE})
+
 #set(ENV{VK_ICD_FILENAMES} "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/MoltenVK/macOS/MoltenVK_icd.json")
 #set(ENV{VK_LAYER_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/vulkan/Validation_Layer/explicit_layer.d/macos/")
 

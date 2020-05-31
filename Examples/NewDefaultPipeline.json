@@ -1,4 +1,107 @@
 {
-	"ShadersPath" : ["Ressources/Shaders/TestShaders/TestShader.vert.spv", "Ressources/Shaders/TestShaders/TestShader.frag.spv"],
-	"UniqueSets" : [0]
+	"Pipelines": {
+		"Classic": {
+			"Type": "Graphic",
+			"ShaderPaths": {
+				"vertexPath": "Ressources/Shaders/TestShaders/TestShader.vert.spv",
+				"fragmentPath": "Ressources/Shaders/TestShaders/TestShader.frag.spv"
+			},
+			"UniqueSets": [
+				0
+			]
+		},
+		"Blur": {
+			"Type": "Graphic",
+			"ShaderPaths": {
+				"vertexPath": "Ressources/Shaders/TestShaders/TestShader.vert.spv",
+				"fragmentPath": "Ressources/Shaders/TestShaders/TestShader.frag.spv"
+			},
+			"UniqueSets": [
+				0
+			]
+		}
+	}
 }
+// Si 2 graphic alors 2 framebuffer == 2 renderPass
+// Si vertex puis tesselation puis fragment alors 3 shaderStage et le tout pour un framebuffer
+{
+	"Type": "Compute",
+	"ShaderPaths": {
+		"computePath": "Ressources/Shaders/TestShaders/TestShader.comp.spv",
+	},
+	"UniqueSets": [
+		0
+	]
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Default
+{
+	"Pipelines": {
+		"Classic": {
+			"Type": "Graphic",
+			"ShaderPaths": {
+				"vertexPath": "Ressources/Shaders/TestShaders/TestShader.vert.spv",
+				"fragmentPath": "Ressources/Shaders/TestShaders/TestShader.frag.spv"
+			},
+			"UniqueSets": [
+				0
+			]
+		},
+		"Blur": {
+			"Type": "Graphic",
+			"ShaderPaths": {
+				"vertexPath": "Ressources/Shaders/TestShaders/TestShader.vert.spv",
+				"fragmentPath": "Ressources/Shaders/TestShaders/TestShader.frag.spv"
+			},
+			"UniqueSets": [
+				0
+			]
+		}
+	}
+}
+// Skybox
+{
+	"Pipelines": {
+		"Classic": {
+			"Type": "Graphic",
+			"ShaderPaths": {
+				"vertexPath": "Ressources/Shaders/Skybox/Skybox.vert.spv",
+				"fragmentPath": "Ressources/Shaders/Skybox/Skybox.frag.spv"
+			},
+			"UniqueSets": [
+				0
+			]
+		}
+	}
+}
+
+// Load CubeMesh
+// Load CubeTextureMine
+// CubeMesh->GetMaterial().SetPipeline("Default.json");
+// CubeMesh->GetMaterial()->SetTexture(CubeTextureMine);
+
+// Load CubeMesh
+// Load CubeTexture
+// CubeMesh->GetMaterial().SetPipeline("Skybox.json");
+// CubeMesh->GetMaterial()->SetTexture(CubeTexture);
+
+/**
+ * POST-PROCESSING
+ */
+ // Le post process s'applique sur toute l'image, mais dans le cas du bloom ya des liaison de framebufferdonc pas toute l'image.
+
+ // Le mieux serait de pouvoir enlever le post process au runtime, genre chaque pipeline a un post process en vector et on peut ajouter dedans ou pas.
