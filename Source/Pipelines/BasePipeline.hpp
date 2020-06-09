@@ -17,12 +17,6 @@
 
 namespace Soon
 {
-	enum struct PipelineType : uint32_t
-	{
-		GRAPHIC = 0,
-		COMPUTE = 1
-	};
-
 	struct DefaultMemberStruct
 	{
 		std::string name;
@@ -39,30 +33,18 @@ namespace Soon
 		//std::function<void(int)> updateFunc;
 	};
 
-	struct IdRender
-	{
-		uint32_t matId;
-		uint32_t meshId;
-		bool	cached;
-	};
-
 	class BasePipeline
 	{
 	protected:
-		VkPipeline _graphicPipeline;
 		VkPipelineLayout _pipelineLayout;
-		//std::vector<VkDescriptorSetLayout> _descriptorSetLayout;
 		std::vector<std::vector<VkDescriptorSetLayoutBinding>> uboLayoutBinding;
 		UniformsBufferManager _mUbm;
 
 	private:
-		std::vector<IdRender> m_RenderData;
 		std::unordered_map<uint32_t, uint32_t> m_ToDraw;
 		std::vector<uint32_t> _freeId;
-		VertexDescription _vertexDescription;
 
 	public:
-		GraphicsPipelineConf _conf;
 		VkVertexInputBindingDescription _bindingDescription;
 		std::vector<VkVertexInputAttributeDescription> _attributeDescriptions;
 		std::vector<DefaultUniformStruct> _defaultUniform
@@ -97,6 +79,7 @@ namespace Soon
 		void DestroyAllUniforms(void);
 		void DestroyGraphicPipeline(void);
 
+		void* Get(std::string name, uint32_t id);
 		// Setter
 		void Set(std::string name, void *value, uint32_t id);
 		void SetTexture(std::string name, uint32_t idMat, uint32_t textureId);

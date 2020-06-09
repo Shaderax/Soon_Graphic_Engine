@@ -52,6 +52,13 @@ namespace Soon
 			_shaderPipeline->Set(name, data, _id);
 	}
 
+	void* ShaderMaterial::GetUniform(std::string name)
+	{
+		if (_shaderPipeline && _id != IdError)
+			_shaderPipeline->Get(name, data, _id);
+
+	}
+
 	void ShaderMaterial::SetTexture(std::string name, Texture& texture)
 	{
 		if (_shaderPipeline && _id != IdError)
@@ -61,5 +68,16 @@ namespace Soon
 			_shaderPipeline->SetTexture(name, _id, texture.GetId());
 		}
 	}
+	
+	const ShaderPipeline* ShaderMaterial::GetPipeline( void ) const
+	{
+		return (_shaderPipeline);
+	}
 
+	void ShaderMaterial::SetPipeline(std::string name);
+	{
+		if (_shaderPipeline)
+			_shaderPipeline->RemoveFromPipeline(_id);
+		_shaderPipeline = GraphicsRenderer::GetInstance()->AddPipeline<T>();
+	}
 } // namespace Soon

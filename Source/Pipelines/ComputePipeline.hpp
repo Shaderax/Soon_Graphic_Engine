@@ -4,16 +4,18 @@
 
 namespace Soon
 {
-	class Mesh;
-
 	class ComputePipeline : public BasePipeline
 	{
-		public:
-		static const PipelineType _type = PipelineType::COMPUTE;
-			ComputePipeline()
-			{
-			}
+	public:
+		std::string _computePath;
+		const PipelineType _type = PipelineType::COMPUTE;
 
-			virtual uint32_t AddToPipeline( Mesh* mesh ) = 0;
+		ComputePipeline();
+		~ComputePipeline();
+		void SetPipelineProperties(std::string name, void* data);
+		void Init( void );
+		// TODO: DESTROY _mUbm.CreateDescriptorSetLayout()
+		void RecreatePipeline(void);
+		void Dispatch( void );
 	};
 }

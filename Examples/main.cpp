@@ -170,6 +170,7 @@ int main()
 	double time = glfwGetTime();
 	double x = 0.0f;
 	double y = 0.0f;
+
 	// Loop
 	std::cout << "Begin Loop" << std::endl;
 	while (!GraphicsInstance::GetInstance()->ShouldClose(GraphicsInstance::GetInstance()->GetWindow()))

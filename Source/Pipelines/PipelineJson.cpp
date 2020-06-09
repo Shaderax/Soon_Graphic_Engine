@@ -30,19 +30,27 @@ namespace Soon
 		return VK_CULL_MODE_NONE;
 	}
 
-	GraphicPipelineConf ReadPipelineJson( std::string path )
+	PipelineConf* ReadPipelineJson( std::string path )
 	{
 		std::ifstream i(path);
 
 		if (!i.is_open())
 			std::runtime_error("Can't open Pipeline Json : " << path << std::endl;
 
+
 		json j;
 		i >> j;
 
-		if (!j.contains("Type"))
+		if (!j[0].contains("Type"))
 			std::runtime_error("Undefined Type in Pipeline Json : " << path << std::endl;
-		if (!j.contains("ShaderPaths"))
+		if (!j[0].contains("ShaderPaths"))
 			std::runtime_error("Undefined ShaderPaths in Pipeline Json : " << path << std::endl;
+
+		PipelineConf* conf = new GraphicPipelineConf();
+
+		if (j[0]["Type"] == "Graphic")
+			PipelineConf* conf = new GraphicPipelineConf();
+		else if (j[0]["Type"] == "Compute")
+			PipelineConf* conf = new ComputePipelineConf();
 	}
 }

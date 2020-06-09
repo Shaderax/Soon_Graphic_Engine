@@ -68,11 +68,6 @@ namespace Soon
 		return (0);
 	}
 
-	void BasePipeline::Set(std::string name, void *value, uint32_t id)
-	{
-		_mUbm.Set( name, value, id );
-	}
-
 	/**
 	 * PIPELINES
 	 */
@@ -219,6 +214,16 @@ namespace Soon
 
 		}
 	*/
+
+	void* BasePipeline::Get(std::string name, uint32_t id)
+	{
+		return _mUbm.Get(std::string name, uint32_t id);
+	}
+
+	void BasePipeline::Set(std::string name, void *value, uint32_t id)
+	{
+		_mUbm.Set( name, value, id );
+	}
 
 	/**
 	 * TEXTURE

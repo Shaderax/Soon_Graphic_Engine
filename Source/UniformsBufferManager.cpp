@@ -199,6 +199,10 @@ namespace Soon
 		m_ActualResize += 1;
 	}
 
+	void* UniformsBufferManager::Get( std::string name, uint32_t matId )
+	{
+	}
+
 	void UniformsBufferManager::Set(std::string name, void *value, uint32_t matId )
 	{
 		// TODO: If we exced _uniformDataSize

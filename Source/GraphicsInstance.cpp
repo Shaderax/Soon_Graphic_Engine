@@ -660,8 +660,6 @@ namespace Soon
 		computeShaderStageInfo.module = computeShaderModule;
 		computeShaderStageInfo.pName = "main";
 
-		//		VkPipelineShaderStageCreateInfo shaderStages[] = {computeShaderStageInfo};
-
 		VkComputePipelineCreateInfo computePipelineInfos = {};
 		computePipelineInfos.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
 		computePipelineInfos.stage = computeShaderStageInfo;

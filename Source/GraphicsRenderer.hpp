@@ -27,7 +27,6 @@ namespace Soon
 	{
 		ImageRenderer imageRenderer;
 		ImageProperties image;
-		//MeshBufferRenderer bufferRenderer;
 		uint32_t count;
 	};
 
@@ -38,7 +37,6 @@ namespace Soon
 	private:
 		static GraphicsRenderer* _instance;
 		bool _changes;
-		//std::bitset<MAX_PIPELINES> _createdPipeline;
 
 		std::uint32_t _meshCounter = 0;
 		std::vector<uint32_t> _freeId;
@@ -49,18 +47,15 @@ namespace Soon
 		std::vector<TextureRenderer> m_Textures;
 		Texture*				m_DefaultTexture;
 
-		//std::array<ShaderPipeline *, MAX_PIPELINES / 2> _graphicPipelines{};
-		//std::array<ComputePipeline *, MAX_PIPELINES / 2> _computePipelines{};
+		std::unordered_map<std::string, ComputePipeline*> _computePipelines;
+		std::unordered_map<std::string, GraphicPipeline*> _graphicPipelines;
 
-		std::unordered_map<std::string, ComputePipeline *> _computePipelines;
-		std::unordered_map<std::string, ShaderPipeline *> _graphicPipelines;
 		using ComputePipelinesIterator = std::unordered_map<std::string, ComputePipeline *>::iterator;
-		using GraphicPipelinesIterator = std::unordered_map<std::string, ShaderPipeline *>::iterator;
+		using GraphicPipelinesIterator = std::unordered_map<std::string, GraphicPipeline *>::iterator;
 
 		std::vector<uint32_t> m_MeshToSupress;
 		std::vector<uint32_t> m_TextureToSupress;
 	public:
-		//static constexpr const std::uint32_t MAX_PIPELINES = 32;
 		//static GraphicsRenderer* _instance;
 		GraphicsRenderer(void);
 		~GraphicsRenderer(void);
@@ -91,17 +86,28 @@ namespace Soon
 			if (computePip != _computePipelines.end())
 				return computePip->second;
 			
-			GraphicPipelineConf truc = ReadPipelineJson(name);
+			PipelineConf* conf = ReadPipelineJson(name);
 
-			T *pipeline;
+			BasePipeline* pipeline;
+			if (conf->m_PipelineType == EPipelineType::COMPUTE)
+			{
+				pipeline = new ComputePipeline(conf);
+				_computePipelines[name] = pipeline;
+
+			}
+			else if (conf->m_PipelineType == EPipelineType::GRAPHIC)
+			{
+				pipeline = new GraphicPipeline(conf);
+				_graphicPipelines[name] = pipeline;
+			}
+/*
 			pipeline = new T(std::forward<Args>(args)...);
 			if (T::_type == PipelineType::COMPUTE)
 				_computePipelines[ClassTypeId<BasePipeline>::GetId<T>()] = dynamic_cast<ComputePipeline *>(pipeline);
 			else if (T::_type == PipelineType::GRAPHIC)
 				_graphicPipelines[ClassTypeId<BasePipeline>::GetId<T>()] = dynamic_cast<ShaderPipeline *>(pipeline);
-
+*/
 			pipeline->Init();
-			_createdPipeline[ClassTypeId<BasePipeline>::GetId<T>()] = true;
 			_changes = true;
 
 			return (pipeline);

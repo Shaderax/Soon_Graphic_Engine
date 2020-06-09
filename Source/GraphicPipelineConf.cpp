@@ -2,11 +2,13 @@
 #include <GLFW/glfw3.h>
 
 #include "GraphicsInstance.hpp"
+#include "GraphicPipelineConf.hpp"
 
 namespace Soon
 {
 	GraphicPipelineConf::GraphicPipelineConf(void)
 	{
+		m_Properties
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
 		//vertexInputInfo.vertexBindingDescriptionCount = 1;

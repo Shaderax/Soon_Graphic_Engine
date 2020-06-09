@@ -9,19 +9,16 @@ namespace Soon
 {
 	class ShaderMaterial : public Material
 	{
-	public:
+	private:
 		ShaderPipeline* _shaderPipeline;
+	public:
 
 		ShaderMaterial(void);
 		~ShaderMaterial(void);
 
-		template <class T>
-		void SetPipeline(void)
-		{
-			if (_shaderPipeline)
-				_shaderPipeline->RemoveFromPipeline(_id);
-			_shaderPipeline = GraphicsRenderer::GetInstance()->AddPipeline<T>();
-		}
+		const ShaderPipeline* GetPipeline( void ) const;
+
+		void SetPipeline(std::string name);
 
 /*
 		void SetMesh(std::uint32_t meshId)
@@ -36,6 +33,7 @@ namespace Soon
 		void RemoveFromPipeline(std::uint32_t meshId);
 		bool HasValidVertexDescription(VertexDescription meshVD);
 		void SetUniform( std::string name, void* data );
+		void* GetUniform( std::string name );
 		void SetTexture(std::string name, Texture& texture);
 	};
 } // namespace Soon

@@ -44,7 +44,7 @@ namespace Soon
 		AddTexture(m_DefaultTexture);
 		std::cout << "Default Texture Id : " << m_DefaultTexture->GetId() << std::endl;
 
-		for (ShaderPipeline *pip : _graphicPipelines)
+		for (GraphicPipeline *pip : _graphicPipelines)
 			pip = nullptr;
 		for (ComputePipeline *pip : _computePipelines)
 			pip = nullptr;

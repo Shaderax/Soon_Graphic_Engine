@@ -15,6 +15,13 @@ namespace Soon
 {
 	struct IdRender;
 
+	enum class EUniformType : uint8_t
+	{
+		UNIFORM_BUFFER,
+		UNIFORM_TEXTURE,
+
+	};
+
 	struct UniformVar
 	{
 		std::string _name;
@@ -22,6 +29,11 @@ namespace Soon
 		uint32_t _size;
 		uint32_t _offset;
 	};
+
+	// Ke ke je fais pour les RuntimeArray ? Ils doivent avoit leurs propre VkBuffer
+	// Le reste de la struct y passe aussi car dans le meme binding
+	// Du coup quand je lis mes shaders et que je tombe sur un binding d'un set qui détient un RuntimeArray alors je le met dans ma liste d'uniform
+	//		Avec un bool pour dire s'il est De type special
 
 	struct Uniform
 	{
@@ -44,6 +56,28 @@ namespace Soon
 		std::function<void(int)> _updateFunct;
 	};
 
+	struct UniformRuntimeVar
+	{
+		std::string _name;
+		VertexElementType _type;
+		uint32_t _size;
+		uint32_t _offset;
+		std::vector<uint32_t> numInBuffer;
+	};
+
+	struct UniformRuntime
+	{
+		std::vector<BufferRenderer*> buffers; 
+		// Donc en théorie ya 3 buffer pour la swapchain
+		// le storage buffer y'en a qu'un
+		// Mais un RuntimeArray y'en a plusieurs car la ils sont pas writable
+		std::string _name;
+		VertexElementType _type;
+		uint32_t _size;
+		uint32_t _binding;
+		uint32_t _set;
+		std::vector<UniformRuntimeVar> _members;
+	};
 	struct DescriptorSetDescription
 	{
 		uint8_t set;
@@ -57,19 +91,12 @@ namespace Soon
 	{
 	private:
 		uint32_t		m_NumElements = 0;
-		// MY intel graphic is limited
 		uint32_t		m_MinElements = 10;
 		uint32_t		m_ActualResize = 0;
 
 		uint8_t*	m_CpuBuffer = nullptr;
 		std::vector<VmaAllocation>	m_GpuMemory;
 		std::vector<VkBuffer>		m_GpuBuffer; // TODO: Aligment in vulkan (16)
-
-		//std::vector<Uniform>		m_Uniforms;
-		//std::vector<Uniform>		m_UniqueUniforms;
-
-		//std::vector<UniformTexture>		m_UniformsTexture;
-		//std::vector<UniformTexture>		m_UniqueUniformsTexture;
 
 		// HERE:
 		uint32_t m_UniqueSize = 0;
@@ -89,9 +116,12 @@ namespace Soon
 		void DestroyAllUniforms( void );
 		void AddUniform( Uniform uniform );
 		void AddUniform( UniformTexture uniform );
+		void AddUniform( UniformRuntime uniform );
 		void AddUniqueUniform( Uniform uniform );
 		void AddUniqueUniform( UniformTexture uniform );
+		void AddUniqueUniform( UniformRuntime uniform );
 		void UpdateToGPU( uint32_t currentImg );
+		void* Get( std::string name, uint32_t matId );
 		void Set( std::string name, void* value, uint32_t matId );
 		void SetTexture(std::string name, uint32_t idMat, uint32_t textureId);
 		void Allocate( uint32_t idMat );
