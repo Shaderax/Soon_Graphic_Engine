@@ -1,25 +1,26 @@
-#include "Materials/ShaderMaterial.hpp"
+#include "Materials/GraphicMaterial.hpp"
 
-#include "Pipelines/NewDefaultPipeline.hpp"
+//#include "Pipelines/NewDefaultPipeline.hpp"
 
 #include "Utilities/Error.hpp"
 
 namespace Soon
 {
-	ShaderMaterial::ShaderMaterial(void)
+	GraphicMaterial::GraphicMaterial(void)
 	{
 		_id = TypeIdError;
 		_shaderPipeline = nullptr;
-		SetPipeline<NewDefaultPipeline>();
+		//SetPipeline<NewDefaultPipeline>();
+		SetPipeline("./Ressources/Shaders/TestShader/NewDefaultPipeline.json");
 	}
 
-	ShaderMaterial::~ShaderMaterial(void)
+	GraphicMaterial::~GraphicMaterial(void)
 	{
 		if (_shaderPipeline && _id != IdError)
 			_shaderPipeline->RemoveFromPipeline(_id);
 		_shaderPipeline = nullptr;
 	}
-	void ShaderMaterial::Render(std::uint32_t meshId)
+	void GraphicMaterial::Render(std::uint32_t meshId)
 	{
 		if (_shaderPipeline && _id != Soon::IdError)
 			_shaderPipeline->Render(_id);
@@ -27,39 +28,39 @@ namespace Soon
 			_id = _shaderPipeline->AddToPipeline(meshId);
 	}
 
-	void ShaderMaterial::UnRender(void)
+	void GraphicMaterial::UnRender(void)
 	{
 		if (_shaderPipeline && _id != Soon::IdError)
 			_shaderPipeline->UnRender(_id);
 	}
 
-	void ShaderMaterial::RemoveFromPipeline(std::uint32_t meshId)
+	void GraphicMaterial::RemoveFromPipeline(std::uint32_t meshId)
 	{
 		//if (_shaderPipeline)
 		//	_id = _shaderPipeline->RemoveFromPipeline();
 	}
 
-	bool ShaderMaterial::HasValidVertexDescription(VertexDescription meshVD)
+	bool GraphicMaterial::HasValidVertexDescription(VertexDescription meshVD)
 	{
 		if (_shaderPipeline == nullptr)
 			return (false);
 		return (meshVD == _shaderPipeline->GetVertexDescription());
 	}
 
-	void ShaderMaterial::SetUniform(std::string name, void *data)
+	void GraphicMaterial::SetUniform(std::string name, void *data)
 	{
 		if (_shaderPipeline && _id != IdError)
 			_shaderPipeline->Set(name, data, _id);
 	}
 
-	void* ShaderMaterial::GetUniform(std::string name)
+	void* GraphicMaterial::GetUniform(std::string name)
 	{
 		if (_shaderPipeline && _id != IdError)
 			_shaderPipeline->Get(name, data, _id);
 
 	}
 
-	void ShaderMaterial::SetTexture(std::string name, Texture& texture)
+	void GraphicMaterial::SetTexture(std::string name, Texture& texture)
 	{
 		if (_shaderPipeline && _id != IdError)
 		{
@@ -69,15 +70,22 @@ namespace Soon
 		}
 	}
 	
-	const ShaderPipeline* ShaderMaterial::GetPipeline( void ) const
+	const GraphicPipeline* GraphicMaterial::GetPipeline( void ) const
 	{
 		return (_shaderPipeline);
 	}
 
-	void ShaderMaterial::SetPipeline(std::string name);
+	void GraphicMaterial::SetPipeline(std::string name);
 	{
 		if (_shaderPipeline)
 			_shaderPipeline->RemoveFromPipeline(_id);
 		_shaderPipeline = GraphicsRenderer::GetInstance()->AddPipeline<T>();
 	}
+
+	void GraphicMaterial::SetMesh(std::uint32_t meshId)
+	{
+		if (_shaderPipeline)
+			_shaderPipeline->SetMesh(_id, meshId);
+	}
+
 } // namespace Soon

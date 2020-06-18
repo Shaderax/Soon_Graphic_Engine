@@ -1,32 +1,26 @@
 #pragma once
 
-#include "Pipelines/ShaderPipeline.hpp"
+#include "Pipelines/GraphicPipeline.hpp"
 #include "Materials/Material.hpp"
 
 #include "GraphicsRenderer.hpp"
 
 namespace Soon
 {
-	class ShaderMaterial : public Material
+	class GraphicMaterial : public Material
 	{
 	private:
-		ShaderPipeline* _shaderPipeline;
+		GraphicPipeline* _shaderPipeline;
 	public:
 
-		ShaderMaterial(void);
-		~ShaderMaterial(void);
+		GraphicMaterial(void);
+		~GraphicMaterial(void);
 
-		const ShaderPipeline* GetPipeline( void ) const;
+		const GraphicPipeline* GetPipeline( void ) const;
 
 		void SetPipeline(std::string name);
 
-/*
-		void SetMesh(std::uint32_t meshId)
-		{
-			if (_shaderPipeline)
-				_id = _shaderPipeline->SetMesh(_id, meshId);
-		}
-*/
+		void SetMesh(std::uint32_t meshId);
 
 		void Render( std::uint32_t meshId );
 		void UnRender( void );

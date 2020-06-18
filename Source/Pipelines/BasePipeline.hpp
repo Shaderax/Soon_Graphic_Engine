@@ -39,11 +39,10 @@ namespace Soon
 		VkPipelineLayout _pipelineLayout;
 		std::vector<std::vector<VkDescriptorSetLayoutBinding>> uboLayoutBinding;
 		UniformsBufferManager _mUbm;
-
-	private:
+		VkPipeline _pipeline;
+		PipelineConf* _conf; // TODO : DELETE
 		std::unordered_map<uint32_t, uint32_t> m_ToDraw;
 		std::vector<uint32_t> _freeId;
-
 	public:
 		VkVertexInputBindingDescription _bindingDescription;
 		std::vector<VkVertexInputAttributeDescription> _attributeDescriptions;
@@ -55,26 +54,23 @@ namespace Soon
 	*/
 		};
 
-		BasePipeline(void);
+		BasePipeline(PipelineConf* conf);
 		virtual ~BasePipeline();
 
 		virtual void Init() = 0;
 
 		// Getter
-		void GetBindingDescription(void);
 		void GetShaderData(std::string _path);
-		VertexDescription GetVertexDescription();
 
-		void BindCaller(VkCommandBuffer commandBuffer, uint32_t currentImage);
+		virtual void BindCaller(VkCommandBuffer commandBuffer, uint32_t currentImage) = 0;
 
 		void RecreateUniforms(void);
 		virtual void RecreatePipeline(void) = 0;
 
-		void Render(uint32_t id);
-		void UnRender(uint32_t id);
-
-		void RemoveFromPipeline(uint32_t id);
-		uint32_t AddToPipeline(std::uint32_t meshId);
+		virtual void Render(uint32_t id) = 0;
+		virtual void UnRender(uint32_t id) = 0;
+		virtual uint32_t CreateNewId( void ) = 0;
+		virtual void RemoveId(uint32_t id) = 0;
 
 		void DestroyAllUniforms(void);
 		void DestroyGraphicPipeline(void);
@@ -92,7 +88,7 @@ namespace Soon
 		int32_t IsDefaultUniform(std::string name);
 		int32_t IsValidDefaultUniform(SpvReflectDescriptorBinding *block, int32_t index);
 
-		void GetInputBindings( spv_reflect::ShaderModule& reflection );
+		virtual void GetInputBindings( spv_reflect::ShaderModule& reflection );
 		void GetDescriptorBindings( spv_reflect::ShaderModule& reflection );
 	};
 

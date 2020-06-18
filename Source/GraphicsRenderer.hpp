@@ -4,7 +4,7 @@
 #include <GLFW/glfw3.h>
 
 #include "Pipelines/BasePipeline.hpp"
-#include "Pipelines/ShaderPipeline.hpp"
+#include "Pipelines/GraphicPipeline.hpp"
 #include "Pipelines/ComputePipeline.hpp"
 
 #include "Modules/ClassTypeId.hpp"
@@ -59,6 +59,7 @@ namespace Soon
 		//static GraphicsRenderer* _instance;
 		GraphicsRenderer(void);
 		~GraphicsRenderer(void);
+		static GraphicsRenderer* GetInstanceOrNull(void);
 		static GraphicsRenderer *GetInstance(void);
 		static void ReleaseInstance(void);
 		void RemoveAllPipelines(void);
@@ -76,6 +77,7 @@ namespace Soon
 		bool IsValidTextureId(uint32_t id);
 
 		//NEW
+		// Max pipelines reach
 		template <typename... Args>
 		BasePipeline* AddPipeline(std::string name, Args... args)
 		{
@@ -93,56 +95,20 @@ namespace Soon
 			{
 				pipeline = new ComputePipeline(conf);
 				_computePipelines[name] = pipeline;
-
 			}
 			else if (conf->m_PipelineType == EPipelineType::GRAPHIC)
 			{
 				pipeline = new GraphicPipeline(conf);
 				_graphicPipelines[name] = pipeline;
 			}
-/*
-			pipeline = new T(std::forward<Args>(args)...);
-			if (T::_type == PipelineType::COMPUTE)
-				_computePipelines[ClassTypeId<BasePipeline>::GetId<T>()] = dynamic_cast<ComputePipeline *>(pipeline);
-			else if (T::_type == PipelineType::GRAPHIC)
-				_graphicPipelines[ClassTypeId<BasePipeline>::GetId<T>()] = dynamic_cast<ShaderPipeline *>(pipeline);
-*/
+
 			pipeline->Init();
 			_changes = true;
 
 			return (pipeline);
 		}
 
-		// TODO
-		// Max pipelines reach
-		/*
-		template <typename T, typename... Args>
-		T *AddPipeline(Args... args)
-		{
-			if (_createdPipeline[ClassTypeId<BasePipeline>::GetId<T>()] == true)
-			{
-				if (T::_type == PipelineType::COMPUTE)
-					return dynamic_cast<T *>(_computePipelines[ClassTypeId<BasePipeline>::GetId<T>()]);
-				else if (T::_type == PipelineType::GRAPHIC)
-					return dynamic_cast<T *>(_graphicPipelines[ClassTypeId<BasePipeline>::GetId<T>()]);
-			}
-			T *pipeline;
-			pipeline = new T(std::forward<Args>(args)...);
-			if (T::_type == PipelineType::COMPUTE)
-				_computePipelines[ClassTypeId<BasePipeline>::GetId<T>()] = dynamic_cast<ComputePipeline *>(pipeline);
-			else if (T::_type == PipelineType::GRAPHIC)
-				_graphicPipelines[ClassTypeId<BasePipeline>::GetId<T>()] = dynamic_cast<ShaderPipeline *>(pipeline);
-
-			pipeline->Init();
-			_createdPipeline[ClassTypeId<BasePipeline>::GetId<T>()] = true;
-			_changes = true;
-
-			return (pipeline);
-		}
-		*/
-
-		template <typename T>
-		void RemovePipeline(void);
+		void RemovePipeline(std::string pipeline);
 
 		// Add Mesh in tab
 		uint32_t AddMesh(Mesh *mesh, uint32_t meshId);

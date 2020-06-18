@@ -24,6 +24,10 @@
 #include "GLFWInit/Init.hpp"
 #include "GLFWInit/Hints.hpp"
 
+#include "Pipelines/PipelineConf.hpp"
+#include "Pipelines/GraphicPipelineConf.hpp"
+#include "Pipelines/ComputePipelineConf.hpp"
+
 const std::vector<const char *> validationLayers = {
 	"VK_LAYER_LUNARG_standard_validation"};
 
@@ -605,72 +609,48 @@ namespace Soon
 		return shaderModule;
 	}
 
-	VkPipeline GraphicsInstance::CreateGraphicsPipeline(
-		GraphicsPipelineConf &conf,
-		std::string pathVert,
-		std::string pathFrag)
+	VkPipeline GraphicsInstance::CreatePipeline(PipelineConf* conf)
 	{
-		VkPipeline graphicsPipeline;
+		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+		std::vector<VkShaderModule> shaderModules;
+		VkPipeline pipeline;
 
-		auto vertShaderCode = ReadFile(pathVert);
-		auto fragShaderCode = ReadFile(pathFrag);
+		for (PipelineStage stage : conf->GetStages())
+		{
+			auto shaderCode = ReadFile(stage.shaderPath);
+			shaderModules.push_back(CreateShaderModule(shaderCode));
 
-		VkShaderModule vertShaderModule = CreateShaderModule(vertShaderCode);
-		VkShaderModule fragShaderModule = CreateShaderModule(fragShaderCode);
+			VkPipelineShaderStageCreateInfo shaderStageInfo = {};
+			shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			shaderStageInfo.stage = PipelineStageToVk(stage.type);
+			shaderStageInfo.module = shaderModules.back();
+			shaderStageInfo.pName = "main";
 
-		VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
-		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-		vertShaderStageInfo.module = vertShaderModule;
-		vertShaderStageInfo.pName = "main";
+			shaderStages.push_back(shaderStageInfo);
+		}
 
-		VkPipelineShaderStageCreateInfo fragShaderStageInfo = {};
-		fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-		fragShaderStageInfo.module = fragShaderModule;
-		fragShaderStageInfo.pName = "main";
+		if (conf->GetType() == EPipelineType::GRAPHIC)
+		{
+			GraphicPipelineConf* graphicConf = reinterpret_cast<GraphicPipelineConf*>(conf);
+			graphicConf->pipelineInfo.stageCount = shaderStages.size();
+			graphicConf->pipelineInfo.pStages = shaderStages.data();
 
-		VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
+			if (vkCreateGraphicsPipelines(_device, VK_NULL_HANDLE, 1, &graphicConf->pipelineInfo, nullptr, &pipeline) != VK_SUCCESS)
+				throw std::runtime_error("failed to create graphics pipeline!");
+		}
+		else if (conf->GetType() == EPipelineType::COMPUTE)
+		{
+			ComputePipelineConf* computeConf = reinterpret_cast<ComputePipelineConf*>(conf);
+			computeConf->pipelineInfo.stage = shaderStages.back();
 
-		conf.pipelineInfo.stageCount = 2;
-		conf.pipelineInfo.pStages = shaderStages;
+			if (vkCreateComputePipelines(_device, VK_NULL_HANDLE, 1, &(computeConf->pipelineInfo), nullptr, &pipeline) != VK_SUCCESS)
+				throw std::runtime_error("failed to create compute pipeline!");
+		}
 
-		if (vkCreateGraphicsPipelines(_device, VK_NULL_HANDLE, 1, &conf.pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
-			throw std::runtime_error("failed to create graphics pipeline!");
+		for (VkShaderModule& shader : shaderModules)
+			vkDestroyShaderModule(_device, shader, nullptr);
 
-		vkDestroyShaderModule(_device, fragShaderModule, nullptr);
-		vkDestroyShaderModule(_device, vertShaderModule, nullptr);
-
-		return (graphicsPipeline);
-	}
-
-	VkPipeline GraphicsInstance::CreateComputePipeline(
-		VkPipelineLayout pipelineLayout,
-		std::string pathCompute)
-	{
-		VkPipeline computePipeline;
-
-		auto computeShaderCode = ReadFile(pathCompute);
-
-		VkShaderModule computeShaderModule = CreateShaderModule(computeShaderCode);
-
-		VkPipelineShaderStageCreateInfo computeShaderStageInfo = {};
-		computeShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		computeShaderStageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
-		computeShaderStageInfo.module = computeShaderModule;
-		computeShaderStageInfo.pName = "main";
-
-		VkComputePipelineCreateInfo computePipelineInfos = {};
-		computePipelineInfos.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
-		computePipelineInfos.stage = computeShaderStageInfo;
-		computePipelineInfos.layout = pipelineLayout;
-
-		if (vkCreateComputePipelines(_device, VK_NULL_HANDLE, 1, &computePipelineInfos, nullptr, &computePipeline) != VK_SUCCESS)
-			throw std::runtime_error("failed to create graphics pipeline!");
-
-		vkDestroyShaderModule(_device, computeShaderModule, nullptr);
-
-		return (computePipeline);
+		return (pipeline);
 	}
 
 	VkPipelineLayout GraphicsInstance::CreatePipelineLayout(std::vector<VkDescriptorSetLayout> descriptorSetLayout)

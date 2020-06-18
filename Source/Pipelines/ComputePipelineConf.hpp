@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Pipelines/PipelineJson.hpp"
+#include "Pipelines/PipelineConf.hpp"
+#include "vulkan/vulkan.h"
 
 namespace Soon
 {
@@ -8,5 +9,6 @@ namespace Soon
 	{
 	public:
 		ComputePipelineConf(void);
+		VkComputePipelineCreateInfo pipelineInfo;
 	};
 } // namespace Soon

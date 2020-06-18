@@ -5,9 +5,7 @@
 #include "GraphicsRenderer.hpp"
 
 #include "Mesh.hpp"
-#include "Materials/ShaderMaterial.hpp"
-
-#include "Pipelines/NewDefaultPipeline.hpp"
+#include "Materials/GraphicMaterial.hpp"
 
 #include "Utilities/ShowFps.hpp"
 

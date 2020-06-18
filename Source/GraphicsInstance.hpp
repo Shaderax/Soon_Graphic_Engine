@@ -6,8 +6,6 @@
 #include <vector>
 #include <string>
 
-#include "PipelineConf.hpp"
-
 #include "VkMemoryAllocator/vk_mem_alloc.h"
 
 #include "Texture.hpp"
@@ -67,6 +65,7 @@ struct UniformSets
 namespace Soon
 {
 	class Texture;
+	class PipelineConf;
 
 	class GraphicsInstance
 	{
@@ -147,13 +146,8 @@ namespace Soon
 		void CreateImageViews(void);
 		VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, VkImageViewType viewType);
 		std::vector<VkDescriptorSetLayout> CreateDescriptorSetLayout(std::vector<std::vector<VkDescriptorSetLayoutBinding>> uboLayoutBinding);
-		VkPipeline CreateGraphicsPipeline(
-			GraphicsPipelineConf &conf,
-			std::string FirstPath,
-			std::string SecondPath);
-		VkPipeline CreateComputePipeline(
-			VkPipelineLayout pipelineLayout,
-			std::string pathCompute);
+		VkPipeline CreatePipeline(PipelineConf* conf);
+
 		VkShaderModule CreateShaderModule(const std::vector<char> &code);
 		void DrawFrame(void);
 		void RecreateSwapChain(void);

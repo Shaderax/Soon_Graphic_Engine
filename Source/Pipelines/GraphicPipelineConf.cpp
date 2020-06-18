@@ -6,9 +6,11 @@
 
 namespace Soon
 {
-	GraphicPipelineConf::GraphicPipelineConf(void)
+	GraphicPipelineConf::GraphicPipelineConf(void) : PipelineConf(EPipelineType::GRAPHIC)
 	{
-		m_Properties
+		m_Properties["CullMode"] = {&CullModeToVk, &rasterizer.cullMode, sizeof(rasterizer.cullMode)};
+		m_Properties["FrontFace"] = {&FrontFaceToVk, &rasterizer.frontFace, sizeof(rasterizer.frontFace)};
+
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
 		//vertexInputInfo.vertexBindingDescriptionCount = 1;
@@ -86,8 +88,6 @@ namespace Soon
 		/////////// PIPELINE LAYOUT ////////////
 
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-		//pipelineInfo.stageCount = 2;
-		//	pipelineInfo.pStages = shaderStages;
 		pipelineInfo.pVertexInputState = &vertexInputInfo;
 		pipelineInfo.pInputAssemblyState = &inputAssembly;
 		pipelineInfo.pViewportState = &viewportState;

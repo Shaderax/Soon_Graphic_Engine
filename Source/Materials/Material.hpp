@@ -9,20 +9,19 @@ namespace Soon
 {
 	struct Material
 	{
-		Material( void )
-		{
+		uint32_t 		_id = Soon::IdError;
+		std::string		m_PipelineName;
+		BasePipeline*	m_Pipeline = nullptr;
 
+		Material(void)
+		{
 		}
 
-		virtual ~Material( void )
+		virtual ~Material(void)
 		{
-
 		}
 
-/*
-		void SetTexture( std::string name, Texture* texture )
-		Texture* GetTexture( std::string name )
-
+		/*
 		void SetFloat( std::string name, float value, uint32_t arrayId = 0 )
 		{
 			//_floats[name] = value;
@@ -38,28 +37,53 @@ namespace Soon
 		{
 			//_pipeline.Set<uint8_t*>(name, info, data);
 		}
-
-		float GetFloat( std::string name )
-		{
-			return 0.0f;//_floats[name]
-		}
 */
-		virtual void SetUniform( std::string name, void* data ) = 0;
-		virtual void* GetUniform( std::string name ) = 0;
-		
-		void SetVec3( std::string name, vec3<float> vec )
+		virtual void SetUniform(std::string name, void *data) = 0;
+		virtual void *GetUniform(std::string name) = 0;
+
+		void SetVec3(std::string name, vec3<float> vec)
 		{
 			SetUniform(name, &vec);
 		}
 
-		vec3<float> GetVec3( std::string name )
+		vec3<float> GetVec3(std::string name)
 		{
-			void* data = GetUniform(name);
-			return vec3<float>();//_vec3s[name];
+			void *data = GetUniform(name);
+			return vec3<float>(); //_vec3s[name];
 		}
 
-		uint32_t			_id = IdError;
-		std::string		m_PipelineName;
-		//BasePipeline* _pipeline;
+		void SetUniform(std::string name, void *data)
+		{
+			if (m_Pipeline && _id != IdError)
+				m_Pipeline->Set(name, data, _id);
+		}
+
+		void* GetUniform(std::string name)
+		{
+			if (m_Pipeline && _id != IdError)
+				return m_Pipeline->Get(name, _id);
+		}
+
+		void SetTexture(std::string name, Texture &texture)
+		{
+			if (m_Pipeline && _id != IdError)
+			{
+				GraphicsRenderer::GetInstance()->AddTexture(&texture);
+				std::cout << "Set Texture : " << texture.GetId() << std::endl;
+				m_Pipeline->SetTexture(name, _id, texture.GetId());
+			}
+		}
+
+		const BasePipeline* GetPipeline(void) const
+		{
+			return (m_Pipeline);
+		}
+
+		void SetPipeline(std::string name)
+		{
+			if (m_Pipeline)
+				m_Pipeline->RemoveId(_id);
+			m_Pipeline = GraphicsRenderer::GetInstance()->AddPipeline(name);
+		}
 	};
-}
+} // namespace Soon
