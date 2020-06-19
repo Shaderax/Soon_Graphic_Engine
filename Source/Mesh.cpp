@@ -76,6 +76,7 @@ namespace Soon
 			AllocGpu();
 		m_Material.Render(m_UniqueId);
 	}
+	//TODO SETMESH
 
 	void Mesh::UnRender(void)
 	{

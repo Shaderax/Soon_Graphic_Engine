@@ -9,8 +9,13 @@
 #include "VkMemoryAllocator/vk_mem_alloc.h"
 
 #include "Texture.hpp"
-#include "UniformsBufferManager.hpp"
 
+#include "Vertex.hpp"
+
+#include <functional>
+
+namespace Soon
+{
 //Swap chain struct
 struct SwapChainSupportDetails
 {
@@ -62,8 +67,71 @@ struct UniformSets
 	BufferRenderer _uniformRender;
 };
 
-namespace Soon
+struct UniformVar
 {
+	std::string _name;
+	VertexElementType _type;
+	uint32_t _size;
+	uint32_t _offset;
+};
+
+	// Ke ke je fais pour les RuntimeArray ? Ils doivent avoit leurs propre VkBuffer
+	// Le reste de la struct y passe aussi car dans le meme binding
+	// Du coup quand je lis mes shaders et que je tombe sur un binding d'un set qui détient un RuntimeArray alors je le met dans ma liste d'uniform
+	//		Avec un bool pour dire s'il est De type special
+
+struct Uniform
+{
+	std::string _name;
+	VertexElementType _type;
+	uint32_t _size;
+	uint32_t _binding;
+	uint32_t _set;
+	std::vector<UniformVar> _members;
+	std::function<void(int)> _updateFunct;
+};
+
+struct UniformTexture
+{
+	std::string _name;
+	VertexElementType _type;
+	uint32_t _binding;
+	uint32_t _set;
+	std::vector<uint32_t> _textureId;	// TODO: For uniqueTexture change vector
+	std::function<void(int)> _updateFunct;
+};
+
+struct UniformRuntimeVar
+{
+	std::string _name;
+	VertexElementType _type;
+	uint32_t _size;
+	uint32_t _offset;
+	std::vector<uint32_t> numInBuffer;
+};
+
+struct UniformRuntime
+{
+	std::vector<BufferRenderer*> buffers;
+	// Donc en théorie ya 3 buffer pour la swapchain
+	// le storage buffer y'en a qu'un
+	// Mais un RuntimeArray y'en a plusieurs car la ils sont pas writable
+	std::string _name;
+	VertexElementType _type;
+	uint32_t _size;
+	uint32_t _binding;
+	uint32_t _set;
+	std::vector<UniformRuntimeVar> _members;
+};
+
+struct DescriptorSetDescription
+{
+	uint8_t set;
+	uint32_t size;
+	std::vector<Uniform>		uniforms;
+	std::vector<UniformTexture>		uniformsTexture;
+};
+
 	class Texture;
 	class PipelineConf;
 

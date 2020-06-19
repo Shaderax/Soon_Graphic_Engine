@@ -27,7 +27,7 @@ namespace Soon
 
 		_pipelineLayout = GraphicsInstance::GetInstance()->CreatePipelineLayout(_mUbm.CreateDescriptorSetLayout());
 		graphicConf->pipelineInfo.layout = _pipelineLayout;
-		_pipeline = GraphicsInstance::GetInstance()->CreatePipeline(graphicConf);
+		_pipeline = GraphicsInstance::GetInstance()->CreatePipeline(dynamic_cast<PipelineConf*>(graphicConf));
 
 		_mUbm.InitBuffers();
 
@@ -191,13 +191,11 @@ namespace Soon
 				int indexDefault;
 
 				indexDefault = IsDefaultVertexInput(inputs[index]->name);
-				std::cout << inputs[index]->name << std::endl;
 
 				assert(indexDefault != -1 && "Is Not default Vertex");
 
 				input.sementic = DefaultVertexInput[indexDefault].type;
 				input.type = SpvTypeToVertexType(inputs[index]->type_description);
-				std::cout << "Base Type : " << (int)input.type.baseType << " Column : " << input.type.column << " Row : " << input.type.row << std::endl;
 
 				_vertexDescription.AddVertexElement(input);
 
@@ -210,11 +208,9 @@ namespace Soon
 				_attributeDescriptions.push_back(attributeDes);
 
 				offset += input.type.GetTypeSize();
-				/*
-        std::cout << inputs[index]->name << std::endl;
-        std::cout << inputs[index]->type_description->type_flags << std::endl;
-        std::cout << inputs[index]->format << std::endl;
-        */
+
+        		std::cout << std::endl << inputs[index]->name << std::endl;
+				std::cout << "Base Type : " << (int)input.type.baseType << " Column : " << input.type.column << " Row : " << input.type.row << std::endl;
 			}
 		}
 	}

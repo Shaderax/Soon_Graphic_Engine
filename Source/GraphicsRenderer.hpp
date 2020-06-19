@@ -15,6 +15,8 @@
 
 #include "VkMemoryAllocator/vk_mem_alloc.h"
 
+#include "Pipelines/PipelineJson.hpp"
+
 namespace Soon
 {
 	struct MeshRenderer
@@ -78,8 +80,8 @@ namespace Soon
 
 		//NEW
 		// Max pipelines reach
-		template <typename... Args>
-		BasePipeline* AddPipeline(std::string name, Args... args)
+		//template <typename... Args>
+		BasePipeline* AddPipeline(std::string name)/*, Args... args)*/
 		{
 			GraphicPipelinesIterator graphicPip = _graphicPipelines.find(name);
 			if (graphicPip != _graphicPipelines.end())
@@ -91,15 +93,15 @@ namespace Soon
 			PipelineConf* conf = ReadPipelineJson(name);
 
 			BasePipeline* pipeline;
-			if (conf->m_PipelineType == EPipelineType::COMPUTE)
+			if ((conf->GetType() == EPipelineType::COMPUTE))
 			{
-				pipeline = new ComputePipeline(conf);
-				_computePipelines[name] = pipeline;
+				pipeline = new ComputePipeline(reinterpret_cast<ComputePipelineConf*>(conf));
+				_computePipelines[name] = reinterpret_cast<ComputePipeline*>(pipeline);
 			}
-			else if (conf->m_PipelineType == EPipelineType::GRAPHIC)
+			else if ((conf->GetType() == EPipelineType::GRAPHIC))
 			{
-				pipeline = new GraphicPipeline(conf);
-				_graphicPipelines[name] = pipeline;
+				pipeline = new GraphicPipeline(reinterpret_cast<GraphicPipelineConf*>(conf));
+				_graphicPipelines[name] = reinterpret_cast<GraphicPipeline*>(pipeline);
 			}
 
 			pipeline->Init();

@@ -5,20 +5,18 @@
 
 #include "GraphicsRenderer.hpp"
 
+#define GRAPHICPIPELINE reinterpret_cast<GraphicPipeline*>(m_Pipeline)
+
 namespace Soon
 {
 	class GraphicMaterial : public Material
 	{
 	private:
-		GraphicPipeline* _shaderPipeline;
+		//using _shaderPipeline = (GraphicPipeline*)m_Pipeline;
+		//constexpr GraphicPipeline* _shaderPipeline = reinterpret_cast<GraphicPipeline*>(m_Pipeline);
 	public:
-
 		GraphicMaterial(void);
 		~GraphicMaterial(void);
-
-		const GraphicPipeline* GetPipeline( void ) const;
-
-		void SetPipeline(std::string name);
 
 		void SetMesh(std::uint32_t meshId);
 
@@ -26,8 +24,5 @@ namespace Soon
 		void UnRender( void );
 		void RemoveFromPipeline(std::uint32_t meshId);
 		bool HasValidVertexDescription(VertexDescription meshVD);
-		void SetUniform( std::string name, void* data );
-		void* GetUniform( std::string name );
-		void SetTexture(std::string name, Texture& texture);
 	};
 } // namespace Soon

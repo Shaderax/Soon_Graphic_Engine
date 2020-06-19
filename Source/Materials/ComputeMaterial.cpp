@@ -1,4 +1,4 @@
-#include "Materials/GraphicMaterial.hpp"
+#include "Materials/ComputeMaterial.hpp"
 
 //#include "Pipelines/NewDefaultPipeline.hpp"
 
@@ -6,86 +6,44 @@
 
 namespace Soon
 {
-	GraphicMaterial::GraphicMaterial(void)
+	ComputeMaterial::ComputeMaterial(void)
 	{
 		_id = TypeIdError;
-		_shaderPipeline = nullptr;
+		m_Pipeline = nullptr;
 		//SetPipeline<NewDefaultPipeline>();
 		SetPipeline("./Ressources/Shaders/TestShader/NewDefaultPipeline.json");
 	}
 
-	GraphicMaterial::~GraphicMaterial(void)
+	ComputeMaterial::~ComputeMaterial(void)
 	{
-		if (_shaderPipeline && _id != IdError)
-			_shaderPipeline->RemoveFromPipeline(_id);
-		_shaderPipeline = nullptr;
+		if (m_Pipeline && _id != IdError)
+			m_Pipeline->RemoveId(_id);
+		m_Pipeline = nullptr;
 	}
-	void GraphicMaterial::Render(std::uint32_t meshId)
+	void ComputeMaterial::Process()
 	{
-		if (_shaderPipeline && _id != Soon::IdError)
-			_shaderPipeline->Render(_id);
-		else if (_shaderPipeline && _id == Soon::IdError)
-			_id = _shaderPipeline->AddToPipeline(meshId);
-	}
-
-	void GraphicMaterial::UnRender(void)
-	{
-		if (_shaderPipeline && _id != Soon::IdError)
-			_shaderPipeline->UnRender(_id);
+		if (m_Pipeline && _id != Soon::IdError)
+			COMPUTEPIPELINE->Process(_id);
+		else if (m_Pipeline && _id == Soon::IdError)
+			_id = m_Pipeline->CreateNewId();
 	}
 
-	void GraphicMaterial::RemoveFromPipeline(std::uint32_t meshId)
+	void ComputeMaterial::UnProcess(void)
+	{
+		if (m_Pipeline && _id != Soon::IdError)
+			COMPUTEPIPELINE->UnProcess(_id);
+	}
+
+	void ComputeMaterial::RemoveFromPipeline(std::uint32_t meshId)
 	{
 		//if (_shaderPipeline)
 		//	_id = _shaderPipeline->RemoveFromPipeline();
 	}
 
-	bool GraphicMaterial::HasValidVertexDescription(VertexDescription meshVD)
+	void ComputeMaterial::SetWorkGroup(uint32_t x, uint32_t y, uint32_t z)
 	{
-		if (_shaderPipeline == nullptr)
-			return (false);
-		return (meshVD == _shaderPipeline->GetVertexDescription());
-	}
-
-	void GraphicMaterial::SetUniform(std::string name, void *data)
-	{
-		if (_shaderPipeline && _id != IdError)
-			_shaderPipeline->Set(name, data, _id);
-	}
-
-	void* GraphicMaterial::GetUniform(std::string name)
-	{
-		if (_shaderPipeline && _id != IdError)
-			_shaderPipeline->Get(name, data, _id);
-
-	}
-
-	void GraphicMaterial::SetTexture(std::string name, Texture& texture)
-	{
-		if (_shaderPipeline && _id != IdError)
-		{
-			GraphicsRenderer::GetInstance()->AddTexture(&texture);
-			std::cout << texture.GetId() << std::endl;
-			_shaderPipeline->SetTexture(name, _id, texture.GetId());
-		}
-	}
-	
-	const GraphicPipeline* GraphicMaterial::GetPipeline( void ) const
-	{
-		return (_shaderPipeline);
-	}
-
-	void GraphicMaterial::SetPipeline(std::string name);
-	{
-		if (_shaderPipeline)
-			_shaderPipeline->RemoveFromPipeline(_id);
-		_shaderPipeline = GraphicsRenderer::GetInstance()->AddPipeline<T>();
-	}
-
-	void GraphicMaterial::SetMesh(std::uint32_t meshId)
-	{
-		if (_shaderPipeline)
-			_shaderPipeline->SetMesh(_id, meshId);
+		if (m_Pipeline && _id != Soon::IdError)
+			COMPUTEPIPELINE->SetWorkGroup(_id, x, y, z);
 	}
 
 } // namespace Soon

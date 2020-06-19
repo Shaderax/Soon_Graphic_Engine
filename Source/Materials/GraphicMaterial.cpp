@@ -6,48 +6,51 @@ namespace Soon
 {
 	GraphicMaterial::GraphicMaterial(void)
 	{
-		_id = TypeIdError;
-		_shaderPipeline = nullptr;
-		SetPipeline("./Ressources/Shaders/TestShader/NewDefaultPipeline.json");
+		_id = Soon::IdError;
+		m_Pipeline = nullptr;
+		SetPipeline("./Examples/NewDefaultPipeline.json");
 	}
 
 	GraphicMaterial::~GraphicMaterial(void)
 	{
-		if (_shaderPipeline && _id != IdError)
-			_shaderPipeline->RemoveId(_id);
-		_shaderPipeline = nullptr;
+		if (m_Pipeline && _id != IdError)
+			GRAPHICPIPELINE->RemoveId(_id);
+		m_Pipeline = nullptr;
 	}
 
 	void GraphicMaterial::Render(std::uint32_t meshId)
 	{
-		if (_shaderPipeline && _id != Soon::IdError)
-			_shaderPipeline->Render(_id);
-		else if (_shaderPipeline && _id == Soon::IdError)
-			_id = _shaderPipeline->CreateNewId();
+		if (m_Pipeline && _id == Soon::IdError)
+			_id = GRAPHICPIPELINE->CreateNewId();
+		if (m_Pipeline && _id != Soon::IdError)
+		{
+			GRAPHICPIPELINE->SetMeshId(_id, meshId);
+			GRAPHICPIPELINE->Render(_id);
+		}
 	}
 
 	void GraphicMaterial::UnRender(void)
 	{
-		if (_shaderPipeline && _id != Soon::IdError)
-			_shaderPipeline->UnRender(_id);
+		if (m_Pipeline && _id != Soon::IdError)
+			GRAPHICPIPELINE->UnRender(_id);
 	}
 
 	void GraphicMaterial::RemoveFromPipeline(std::uint32_t meshId)
 	{
-		//if (_shaderPipeline)
-		//	_id = _shaderPipeline->RemoveFromPipeline();
+		//if (GRAPHICPIPELINE)
+		//	_id = GRAPHICPIPELINE->RemoveFromPipeline();
 	}
 
 	bool GraphicMaterial::HasValidVertexDescription(VertexDescription meshVD)
 	{
-		if (_shaderPipeline == nullptr)
+		if (m_Pipeline == nullptr)
 			return (false);
-		return (meshVD == _shaderPipeline->GetVertexDescription());
+		return (meshVD == GRAPHICPIPELINE->GetVertexDescription());
 	}
 
 	void GraphicMaterial::SetMesh(std::uint32_t meshId)
 	{
-		if (_shaderPipeline)
-			_shaderPipeline->SetMeshId(_id, meshId);
+		if (m_Pipeline && _id != Soon::IdError)
+			GRAPHICPIPELINE->SetMeshId(_id, meshId);
 	}
 } // namespace Soon

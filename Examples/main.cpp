@@ -157,12 +157,15 @@ int main()
 	 * MESH
 	 */
 	Mesh* mesh = ObjLoader();
-
 	mesh->Render();
+
+	Mesh* meshCubeMap = ObjLoader();
+	meshCubeMap->GetMaterial().SetPipeline("./Examples/Skybox.json");
+	meshCubeMap->Render();
+	meshCubeMap->GetMaterial().SetTexture("texSampler", *cubeMap);
 
 	mesh->GetMaterial().SetTexture("latexture", texture);
 	//mesh->GetMaterial().SetVec3("cou.bondour", vec3<float>(0.2f, 0.1f, 0.0f));
-	// TODO: MESH VALID FOR HE PIPELINE
 	double lastTime = 0;
 	bool did = false;
 	double time = glfwGetTime();

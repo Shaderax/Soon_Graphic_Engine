@@ -1550,6 +1550,7 @@ namespace Soon
 
 	void GraphicsInstance::UpdateImageDescriptorSets(uint32_t* matIds, uint32_t count, DescriptorSetDescription description, VkDescriptorSet* descriptorSets)
 	{
+		std::cout << description.uniformsTexture.size() << std::endl;
 		for (uint32_t index = 0 ; index < description.uniformsTexture.size() ; index++)
 		{
 			for (uint32_t countId = 0 ; countId < count ; countId++)
@@ -1582,9 +1583,11 @@ namespace Soon
 		std::cout << "UpdateSet : " << (int)description.set << std::endl;
 		// TODO: bufferCount
 		uint32_t offsetUniform = 0;
+
 		for (uint32_t index = 0 ; index < description.uniforms.size() ; index++)
 		{
 			std::cout << description.uniforms[index]._name << std::endl;
+
 			for (size_t i = 0; i < _swapChainImages.size(); i++)
 			{
 				VkDescriptorBufferInfo bufferInfo = {};

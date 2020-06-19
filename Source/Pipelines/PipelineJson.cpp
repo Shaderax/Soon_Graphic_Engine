@@ -1,5 +1,3 @@
-#pragma once
-
 #include <stdint.h>
 #include <iostream>
 #include <fstream>
@@ -10,6 +8,7 @@ using json = nlohmann::json;
 
 #include "vulkan/vulkan.h"
 
+#include "Pipelines/PipelineConf.hpp"
 #include "Pipelines/GraphicPipelineConf.hpp"
 #include "Pipelines/ComputePipelineConf.hpp"
 
@@ -48,9 +47,10 @@ namespace Soon
 			else if (it.key() == "Properties")
 			{
 				for (json::iterator shaderP = it->begin(); shaderP != it->end(); ++shaderP)
+				{
 					conf.SetProperty(shaderP.key(), shaderP.value());
+				}
 			}
-			std::cout << *it << '\n';
 		}
 	}
 
@@ -59,15 +59,14 @@ namespace Soon
 		std::ifstream i(path);
 
 		if (!i.is_open())
-			std::runtime_error("Can't open Pipeline Json : " + path + "\n");
+			throw std::runtime_error("Can't open Pipeline Json : " + path + "\n");
 
-		json j;
-		i >> j;
+		json j = json::parse(i);
 
 		if (!j[0].contains("Type"))
-			std::runtime_error("Undefined Type in Pipeline Json : " + path + "\n");
+			throw std::runtime_error("Undefined Type in Pipeline Json : " + path + "\n");
 		if (!j[0].contains("ShaderPaths"))
-			std::runtime_error("Undefined ShaderPaths in Pipeline Json : " + path + "\n");
+			throw std::runtime_error("Undefined ShaderPaths in Pipeline Json : " + path + "\n");
 
 		PipelineConf* conf = nullptr;
 
@@ -77,6 +76,9 @@ namespace Soon
 			conf = new ComputePipelineConf();
 
 		ParseJson(j[0], *conf);
+
+		if (conf->GetStages().size() == 0)
+			throw std::runtime_error("No Valid Stage Found in Json");
 
 		return conf;
 	}

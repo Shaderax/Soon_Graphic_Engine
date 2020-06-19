@@ -5,21 +5,22 @@
 
 #include "Utilities/Error.hpp"
 
+#include "Texture.hpp"
+
 namespace Soon
 {
-	struct Material
+	class BasePipeline;
+
+	class Material
 	{
-		uint32_t 		_id = Soon::IdError;
+	protected:
 		std::string		m_PipelineName;
+		uint32_t 		_id = Soon::IdError;
 		BasePipeline*	m_Pipeline = nullptr;
+	public:
 
-		Material(void)
-		{
-		}
-
-		virtual ~Material(void)
-		{
-		}
+		Material(void);
+		virtual ~Material(void);
 
 		/*
 		void SetFloat( std::string name, float value, uint32_t arrayId = 0 )
@@ -38,52 +39,13 @@ namespace Soon
 			//_pipeline.Set<uint8_t*>(name, info, data);
 		}
 */
-		virtual void SetUniform(std::string name, void *data) = 0;
-		virtual void *GetUniform(std::string name) = 0;
-
-		void SetVec3(std::string name, vec3<float> vec)
-		{
-			SetUniform(name, &vec);
-		}
-
-		vec3<float> GetVec3(std::string name)
-		{
-			void *data = GetUniform(name);
-			return vec3<float>(); //_vec3s[name];
-		}
-
-		void SetUniform(std::string name, void *data)
-		{
-			if (m_Pipeline && _id != IdError)
-				m_Pipeline->Set(name, data, _id);
-		}
-
-		void* GetUniform(std::string name)
-		{
-			if (m_Pipeline && _id != IdError)
-				return m_Pipeline->Get(name, _id);
-		}
-
-		void SetTexture(std::string name, Texture &texture)
-		{
-			if (m_Pipeline && _id != IdError)
-			{
-				GraphicsRenderer::GetInstance()->AddTexture(&texture);
-				std::cout << "Set Texture : " << texture.GetId() << std::endl;
-				m_Pipeline->SetTexture(name, _id, texture.GetId());
-			}
-		}
-
-		const BasePipeline* GetPipeline(void) const
-		{
-			return (m_Pipeline);
-		}
-
-		void SetPipeline(std::string name)
-		{
-			if (m_Pipeline)
-				m_Pipeline->RemoveId(_id);
-			m_Pipeline = GraphicsRenderer::GetInstance()->AddPipeline(name);
-		}
+		void SetVec3(std::string name, vec3<float> vec);
+		vec3<float> GetVec3(std::string name);
+		void SetUniform(std::string name, void *data);
+		void* GetUniform(std::string name);
+		void SetTexture(std::string name, Texture &texture);
+		const BasePipeline* GetPipeline(void) const;
+		void SetPipeline(std::string name);
+		// TODO: Put All Desconstruct as virtual
 	};
 } // namespace Soon

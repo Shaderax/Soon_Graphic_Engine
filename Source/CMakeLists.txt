@@ -11,11 +11,13 @@ endif(CMAKE_COMPILER_IS_GNUCXX)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -g3 -pedantic")
 
 set(SRC 
-	Materials/ShaderMaterial.cpp
+	Materials/GraphicMaterial.cpp
 
 	GraphicsInstance.cpp
 	GraphicsRenderer.cpp
-	PipelineConf.cpp
+	Pipelines/PipelineConf.cpp
+	Pipelines/GraphicPipelineConf.cpp
+	Pipelines/ComputePipelineConf.cpp
 
 	GLFWInit/Init.cpp
 	GLFWInit/Hints.cpp
@@ -34,7 +36,12 @@ set(SRC
 
 	Texture.cpp
 
-	Pipelines/ShaderPipeline.cpp
+	Pipelines/GraphicPipeline.cpp
+	Pipelines/ComputePipeline.cpp
+
+	Materials/Material.cpp
+
+	Pipelines/PipelineJson.cpp
 	)
 
 add_library(Source ${SRC})

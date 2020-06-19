@@ -1,6 +1,6 @@
-#pragma once
-
 #include "Pipelines/PipelineConf.hpp"
+
+#include <cstring>
 
 namespace Soon
 {
@@ -29,4 +29,33 @@ namespace Soon
 			return true;
 		return false;
 	}
+
+	void PipelineConf::SetProperty(std::string name, std::string value)
+	{
+		if (m_Properties.find(name) == m_Properties.end())
+			return ; // TODO: Not FOUND
+		
+		memcpy(m_Properties[name].data, (m_Properties[name].funct(value)->GetData()), m_Properties[name].size);
+	}
+
+	VkShaderStageFlagBits PipelineStageToVk( EPipelineStage stage )
+	{
+		switch (stage)
+		{
+			case EPipelineStage::VERTEX:
+				return VK_SHADER_STAGE_VERTEX_BIT;
+			case EPipelineStage::FRAGMENT:
+				return VK_SHADER_STAGE_FRAGMENT_BIT;
+			case EPipelineStage::TESSELLATION:
+				return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+			case EPipelineStage::COMPUTE:
+				return VK_SHADER_STAGE_COMPUTE_BIT;
+			case EPipelineStage::GEOMETRY:
+				return VK_SHADER_STAGE_GEOMETRY_BIT;
+			default :
+				break;
+		};
+		return VK_SHADER_STAGE_VERTEX_BIT;
+	}
+
 } // namespace Soon

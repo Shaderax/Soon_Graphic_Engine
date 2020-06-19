@@ -1,8 +1,10 @@
 #pragma once
 
-#include "PipelineConf.hpp"
+#include <string>
 
 namespace Soon
 {
+	class PipelineConf;
+
 	PipelineConf* ReadPipelineJson( std::string path );
 }

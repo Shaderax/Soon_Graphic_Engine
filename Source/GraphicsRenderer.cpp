@@ -163,9 +163,10 @@ namespace Soon
 	void GraphicsRenderer::RecreateAllUniforms(void)
 	{
 		std::cout << "Renderer : Recreate All Uniforms" << std::endl;
+		std::cout << _graphicPipelines.size() << std::endl;
 
 		for( auto const& [key, val] : _graphicPipelines )
-				val->RecreateUniforms();
+			val->RecreateUniforms();
 		for( auto const& [key, val] : _computePipelines )
 				val->RecreateUniforms();
 	}

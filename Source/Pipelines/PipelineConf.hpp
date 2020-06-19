@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Pipelines/PipelineJson.hpp"
 #include <unordered_map>
+#include <functional>
 
- #include <functional>
+#include "vulkan/vulkan.h"
 
 namespace Soon
 {
@@ -22,25 +22,7 @@ namespace Soon
 		GEOMETRY = 16
 	};
 
-	VkShaderStageFlagBits PipelineStageToVk( EPipelineStage stage )
-	{
-		switch (stage)
-		{
-			case EPipelineStage::VERTEX:
-				return VK_SHADER_STAGE_VERTEX_BIT;
-			case EPipelineStage::FRAGMENT:
-				return VK_SHADER_STAGE_FRAGMENT_BIT;
-			case EPipelineStage::TESSELLATION:
-				return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-			case EPipelineStage::COMPUTE:
-				return VK_SHADER_STAGE_COMPUTE_BIT;
-			case EPipelineStage::GEOMETRY:
-				return VK_SHADER_STAGE_GEOMETRY_BIT;
-			default :
-				break;
-		};
-		return VK_SHADER_STAGE_VERTEX_BIT;
-	}
+	VkShaderStageFlagBits PipelineStageToVk( EPipelineStage stage );
 
 	struct PipelineStage
 	{
@@ -52,9 +34,8 @@ namespace Soon
 	 */
 	class GenericProperty
 	{
-	private:
+	protected:
 		void* m_DataPtr = nullptr;
-		uint32_t m_Size = 0;
 	public:
 		void* GetData( void )
 		{
@@ -101,16 +82,13 @@ namespace Soon
 	public:
 		using PropertiesIterator = std::unordered_map<std::string, PipelineProperty>::iterator;
 
-		PipelineConf( EPipelineType type ) : m_PipelineType(type)
-		{
-
-		}
+		PipelineConf( EPipelineType type );
 
 		EPipelineType GetType( void )
 		{
 			return m_PipelineType;
 		}
-
+/*
 		template<typename T>
 		void SetProperty(std::string name, T value)
 		{
@@ -119,15 +97,8 @@ namespace Soon
 			
 			memcpy(m_Properties[name].data, &value, m_Properties[name].size);
 		}
-
-		template<>
-		void SetProperty(std::string name, std::string value)
-		{
-			if (m_Properties.find(name) == m_Properties.end())
-				return ; // TODO: Not FOUND
-			
-			memcpy(m_Properties[name].data, (m_Properties[name].funct(value)->GetData()), m_Properties[name].size);
-		}
+		*/
+		void SetProperty(std::string name, std::string value);
 
 		void AddUniqueSet(uint32_t set);
 		void AddStageInfo( PipelineStage stage );

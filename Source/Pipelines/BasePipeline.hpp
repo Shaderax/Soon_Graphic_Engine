@@ -67,8 +67,6 @@ namespace Soon
 		void RecreateUniforms(void);
 		virtual void RecreatePipeline(void) = 0;
 
-		virtual void Render(uint32_t id) = 0;
-		virtual void UnRender(uint32_t id) = 0;
 		virtual uint32_t CreateNewId( void ) = 0;
 		virtual void RemoveId(uint32_t id) = 0;
 
