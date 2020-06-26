@@ -129,7 +129,8 @@ struct DescriptorSetDescription
 	uint8_t set;
 	uint32_t size;
 	std::vector<Uniform>		uniforms;
-	std::vector<UniformTexture>		uniformsTexture;
+	std::vector<UniformTexture>	uniformsTexture;
+	//std::vector<UniformRuntime>	uniformsRuntime;
 };
 
 	class Texture;

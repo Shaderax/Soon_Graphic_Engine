@@ -419,6 +419,7 @@ namespace Soon
 
 	std::vector<VkDescriptorSetLayout> UniformsBufferManager::CreateDescriptorSetLayout( void )
 	{
+		/*
 		for (uint32_t index = 0 ; index < uboLayoutBinding.size() ; index++)
 		{
 			std::cout << "Set : " << index << std::endl;
@@ -428,6 +429,7 @@ namespace Soon
 				std::cout << "descriptorCount : " << uboLayoutBinding[index][index2].descriptorCount << std::endl;
 			}
 		}
+		*/
 		_descriptorSetLayout = GraphicsInstance::GetInstance()->CreateDescriptorSetLayout(uboLayoutBinding);
 		return _descriptorSetLayout;
 	}

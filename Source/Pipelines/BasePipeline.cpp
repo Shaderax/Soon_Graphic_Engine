@@ -93,16 +93,6 @@ namespace Soon
 		return (-1);
 	}
 
-	/**
-	 * MESH
-	 */
-	/*
-		void BasePipeline::SetMesh( uint32_t matId, uint32_t meshId )
-		{
-
-		}
-	*/
-
 	void* BasePipeline::Get(std::string name, uint32_t id)
 	{
 		return _mUbm.Get(name, id);
@@ -152,6 +142,8 @@ namespace Soon
 				texture._name = bindings[index]->name;
 				texture._type = SpvTypeToVertexType(bindings[index]->type_description);
 
+				std::cout << "UniformTexture Name : " << texture._name << std::endl;
+
 				int32_t indexDefault = IsDefaultUniform(bindings[index]->name);
 				//texture.isTexture = true;
 				// TODO: Unique
@@ -170,15 +162,25 @@ namespace Soon
 				uniform._set = bindings[index]->set;
 				uniform._size = bindings[index]->block.size + (bindings[index]->block.size % 32);
 
+				std::cout << "Uniform Name : " << uniform._name << ", Set : " << uniform._set << ", Binding: " << uniform._binding << std::endl;
+				if (bindings[index]->type_description->traits.array.dims_count > 0)
+					std::cout << "Dim: " << bindings[index]->type_description->traits.array.dims[0] << std::endl;
+				std::cout << "Op: " << bindings[index]->type_description->op << std::endl;
+
 				for (uint32_t indexMember = 0; indexMember < bindings[index]->block.member_count; indexMember++)
 				{
 					UniformVar uniVar;
 					uniVar._name = bindings[index]->block.members[indexMember].name;
 					uniVar._offset = bindings[index]->block.members[indexMember].offset;
 					uniVar._size = bindings[index]->block.members[indexMember].size;
-					std::cout << uniVar._name << std::endl;
-					std::cout << uniVar._offset << std::endl;
-					std::cout << uniVar._size << std::endl;
+
+					std::cout << "\t UniformVar Name : " << uniVar._name << std::endl;
+					std::cout << "\t UniformVar Offset : " << uniVar._offset << std::endl;
+					std::cout << "\t UniformVar Size : " << uniVar._size << std::endl;
+					std::cout << "\t UniformVar SpvOp: " << bindings[index]->block.members[indexMember].type_description->op << std::endl;
+
+					if (bindings[index]->block.members[indexMember].type_description->traits.array.dims_count > 0)
+						std::cout << "Dim: " << bindings[index]->block.members[indexMember].type_description->traits.array.dims[0] << std::endl;
 
 					uniVar._type = SpvTypeToVertexType(bindings[index]->block.members[indexMember].type_description);
 

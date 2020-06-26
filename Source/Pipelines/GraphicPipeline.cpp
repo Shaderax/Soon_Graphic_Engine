@@ -1,6 +1,8 @@
 #include "Pipelines/GraphicPipeline.hpp"
 #include "GraphicsRenderer.hpp"
 
+#include <stdexcept>
+
 namespace Soon
 {
 	GraphicPipeline::GraphicPipeline(GraphicPipelineConf* conf) : BasePipeline(conf), graphicConf(conf)
@@ -192,7 +194,8 @@ namespace Soon
 
 				indexDefault = IsDefaultVertexInput(inputs[index]->name);
 
-				assert(indexDefault != -1 && "Is Not default Vertex");
+				if (indexDefault == -1)
+					throw std::runtime_error("Is Not default Vertex");
 
 				input.sementic = DefaultVertexInput[indexDefault].type;
 				input.type = SpvTypeToVertexType(inputs[index]->type_description);
@@ -201,6 +204,7 @@ namespace Soon
 
 				VkVertexInputAttributeDescription attributeDes;
 				attributeDes.binding = 0;
+				std::cout << "Location: " << inputs[index]->location << std::endl;
 				attributeDes.format = VertexTypeToVkFormat(SpvTypeToVertexType(inputs[index]->type_description));
 				attributeDes.location = inputs[index]->location;
 				attributeDes.offset = offset;
