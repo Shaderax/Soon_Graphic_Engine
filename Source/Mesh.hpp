@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <limits>
 
-#include "Materials/ShaderMaterial.hpp"
+#include "Materials/GraphicMaterial.hpp"
 
 #include "Utilities/Error.hpp"
 
@@ -13,7 +13,7 @@ namespace Soon
 	class Mesh
 	{
 		private:
-			ShaderMaterial		m_Material;
+			GraphicMaterial		m_Material;
 			VertexDescription	m_VertexDescription;
 
 			uint32_t	m_UniqueId = Soon::IdError;
@@ -34,8 +34,8 @@ namespace Soon
 			void	SetVertexElement( uint8_t* data, uint32_t size, VertexElement elem );
 			void	SetIndexBuffer( uint32_t* indexData, uint32_t size );
 			// Material Handle
-			void	SetMaterial( ShaderMaterial& material );
-			ShaderMaterial&	GetMaterial( void );
+			void	SetMaterial( GraphicMaterial& material );
+			GraphicMaterial&	GetMaterial( void );
 			void	Render( void );
 			void	UnRender( void );
 			void	AllocGpu( void );

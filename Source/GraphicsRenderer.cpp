@@ -4,7 +4,7 @@
 #include "Modules/ClassTypeId.hpp"
 
 #include "Pipelines/BasePipeline.hpp"
-#include "Pipelines/ShaderPipeline.hpp"
+#include "Pipelines/GraphicPipeline.hpp"
 #include "Pipelines/ComputePipeline.hpp"
 
 #include <iostream>
@@ -24,6 +24,11 @@ namespace Soon
 		return (_instance);
 	}
 
+	GraphicsRenderer* GraphicsRenderer::GetInstanceOrNull(void)
+	{
+		return (_instance);
+	}
+
 	void GraphicsRenderer::ReleaseInstance(void)
 	{
 		if (_instance)
@@ -35,7 +40,6 @@ namespace Soon
 
 	void GraphicsRenderer::Initialize(void)
 	{
-		// TODO: FIRST : REACTIVATE
 		m_DefaultTexture = new Texture(2, 2, EnumTextureFormat::RGBA, EnumTextureType::TEXTURE_2D);
 		m_DefaultTexture->SetPixel(0, 0);
 		m_DefaultTexture->SetPixel(0, 1);
@@ -43,11 +47,6 @@ namespace Soon
 		m_DefaultTexture->SetPixel(1, 1);
 		AddTexture(m_DefaultTexture);
 		std::cout << "Default Texture Id : " << m_DefaultTexture->GetId() << std::endl;
-
-		for (ShaderPipeline *pip : _graphicPipelines)
-			pip = nullptr;
-		for (ComputePipeline *pip : _computePipelines)
-			pip = nullptr;
 	}
 
 	GraphicsRenderer::GraphicsRenderer(void) : _changes(false)
@@ -121,106 +120,92 @@ namespace Soon
 	{
 		std::cout << "Renderer : Destroy All Graphics Pipelines" << std::endl;
 
-		for (ShaderPipeline *bp : _graphicPipelines)
+		for( auto const& [key, val] : _graphicPipelines )
 		{
-			if (bp)
-				bp->DestroyGraphicPipeline();
+			if (val)
+				val->DestroyGraphicPipeline();
 		}
-		for (ComputePipeline *bp : _computePipelines)
+		for( auto const& [key, val] : _computePipelines )
 		{
-			if (bp)
-				bp->DestroyGraphicPipeline();
+			if (val)
+				val->DestroyGraphicPipeline();
 		}
 	}
 
-	template <typename T>
-	void GraphicsRenderer::RemovePipeline(void)
+	void GraphicsRenderer::RemovePipeline(std::string pipeline)
 	{
-		_createdPipeline[ClassTypeId<BasePipeline>::GetId<T>()] = false;
-		delete _graphicPipelines[ClassTypeId<BasePipeline>::GetId<T>()];
-
-		_graphicPipelines[ClassTypeId<BasePipeline>::GetId<T>()] = nullptr;
+		if (_graphicPipelines.find(pipeline) != _graphicPipelines.end())
+		{
+			delete _graphicPipelines[pipeline];
+			_graphicPipelines.erase(pipeline);
+		}
+		else if (_computePipelines.find(pipeline) != _computePipelines.end())
+		{
+			delete _computePipelines[pipeline];
+			_computePipelines.erase(pipeline);
+		}
+		// TODO: HERE
 	}
 
 	void GraphicsRenderer::RemoveAllPipelines(void)
 	{
 		std::cout << "Renderer : Remove All Pipelines" << std::endl;
 
-		for (ShaderPipeline *bp : _graphicPipelines)
-		{
-			if (bp)
-			{
-				delete bp;
-				bp = nullptr;
-			}
-		}
-		for (ComputePipeline *bp : _computePipelines)
-		{
-			if (bp)
-			{
-				delete bp;
-				bp = nullptr;
-			}
-		}
+		for( auto const& [key, val] : _graphicPipelines )
+			delete val;
+		for( auto const& [key, val] : _computePipelines )
+			delete val;
+
+		_graphicPipelines.clear();
+		_computePipelines.clear();
 	}
 
 	void GraphicsRenderer::RecreateAllUniforms(void)
 	{
 		std::cout << "Renderer : Recreate All Uniforms" << std::endl;
+		std::cout << _graphicPipelines.size() << std::endl;
 
-		for (ShaderPipeline *bp : _graphicPipelines)
-			if (bp)
-				bp->RecreateUniforms();
-		for (ComputePipeline *bp : _computePipelines)
-			if (bp)
-				bp->RecreateUniforms();
+		for( auto const& [key, val] : _graphicPipelines )
+			val->RecreateUniforms();
+		for( auto const& [key, val] : _computePipelines )
+				val->RecreateUniforms();
 	}
 
 	void GraphicsRenderer::RecreateAllPipelines(void)
 	{
 		std::cout << "Renderer : Recreate All Pipelines" << std::endl;
 
-		for (ShaderPipeline *bp : _graphicPipelines)
-			if (bp)
-				bp->RecreatePipeline();
-		for (ComputePipeline *bp : _computePipelines)
-			if (bp)
-				bp->RecreatePipeline();
+		for( auto const& [key, val] : _graphicPipelines )
+				val->RecreatePipeline();
+		for( auto const& [key, val] : _computePipelines )
+				val->RecreatePipeline();
 	}
 
 	void GraphicsRenderer::UpdateAllDatas(uint32_t imageIndex)
 	{
 		//std::cout << "Renderer : Update All Datas" << std::endl;
-		for (ShaderPipeline *bp : _graphicPipelines)
-			if (bp)
-				bp->UpdateData(imageIndex);
-		for (ComputePipeline *bp : _computePipelines)
-			if (bp)
-				bp->UpdateData(imageIndex);
+		for( auto const& [key, val] : _graphicPipelines )
+				val->UpdateData(imageIndex);
+		for( auto const& [key, val] : _computePipelines )
+				val->UpdateData(imageIndex);
 	}
 
 	void GraphicsRenderer::GraphicPipelinesBindCaller(VkCommandBuffer commandBuffer, uint32_t index)
 	{
-		for (ShaderPipeline *bp : _graphicPipelines)
+		for( auto const& [key, val] : _graphicPipelines )
 		{
-			if (bp != nullptr)
-			{
-				std::cout << "Graphic Bind Caller" << std::endl;
-				bp->BindCaller(commandBuffer, index);
-			}
+			std::cout << "Graphic Bind Caller" << std::endl;
+			val->BindCaller(commandBuffer, index);
 		}
 		std::cout << std::endl;
 	}
 
 	void GraphicsRenderer::ComputePipelinesBindCaller(VkCommandBuffer commandBuffer, uint32_t index)
 	{
-		for (ComputePipeline *bp : _computePipelines)
+		for( auto const& [key, val] : _computePipelines )
 		{
-			if (bp)
-			{
-				std::cout << "Compute Bind Caller" << std::endl;
-				bp->BindCaller(commandBuffer, index);
-			}
+			std::cout << "Compute Bind Caller" << std::endl;
+			val->BindCaller(commandBuffer, index);
 		}
 		std::cout << std::endl;
 	}
@@ -228,12 +213,10 @@ namespace Soon
 	void GraphicsRenderer::DestroyAllUniforms(void)
 	{
 		std::cout << "Renderer : Destroy All Uniforms" << std::endl;
-		for (ShaderPipeline *bp : _graphicPipelines)
-			if (bp)
-				bp->DestroyAllUniforms();
-		for (ComputePipeline *bp : _computePipelines)
-			if (bp)
-				bp->DestroyAllUniforms();
+		for( auto const& [key, val] : _graphicPipelines )
+				val->DestroyAllUniforms();
+		for( auto const& [key, val] : _computePipelines )
+				val->DestroyAllUniforms();
 	}
 
 	bool GraphicsRenderer::IsValidMeshId(uint32_t id)

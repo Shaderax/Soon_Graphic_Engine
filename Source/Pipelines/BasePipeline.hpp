@@ -17,12 +17,6 @@
 
 namespace Soon
 {
-	enum struct PipelineType : uint32_t
-	{
-		GRAPHIC = 0,
-		COMPUTE = 1
-	};
-
 	struct DefaultMemberStruct
 	{
 		std::string name;
@@ -39,30 +33,17 @@ namespace Soon
 		//std::function<void(int)> updateFunc;
 	};
 
-	struct IdRender
-	{
-		uint32_t matId;
-		uint32_t meshId;
-		bool	cached;
-	};
-
 	class BasePipeline
 	{
 	protected:
-		VkPipeline _graphicPipeline;
 		VkPipelineLayout _pipelineLayout;
-		//std::vector<VkDescriptorSetLayout> _descriptorSetLayout;
 		std::vector<std::vector<VkDescriptorSetLayoutBinding>> uboLayoutBinding;
 		UniformsBufferManager _mUbm;
-
-	private:
-		std::vector<IdRender> m_RenderData;
+		VkPipeline _pipeline;
+		PipelineConf* _conf; // TODO : DELETE
 		std::unordered_map<uint32_t, uint32_t> m_ToDraw;
 		std::vector<uint32_t> _freeId;
-		VertexDescription _vertexDescription;
-
 	public:
-		GraphicsPipelineConf _conf;
 		VkVertexInputBindingDescription _bindingDescription;
 		std::vector<VkVertexInputAttributeDescription> _attributeDescriptions;
 		std::vector<DefaultUniformStruct> _defaultUniform
@@ -73,30 +54,26 @@ namespace Soon
 	*/
 		};
 
-		BasePipeline(void);
+		BasePipeline(PipelineConf* conf);
 		virtual ~BasePipeline();
 
 		virtual void Init() = 0;
 
 		// Getter
-		void GetBindingDescription(void);
 		void GetShaderData(std::string _path);
-		VertexDescription GetVertexDescription();
 
-		void BindCaller(VkCommandBuffer commandBuffer, uint32_t currentImage);
+		virtual void BindCaller(VkCommandBuffer commandBuffer, uint32_t currentImage) = 0;
 
 		void RecreateUniforms(void);
 		virtual void RecreatePipeline(void) = 0;
 
-		void Render(uint32_t id);
-		void UnRender(uint32_t id);
-
-		void RemoveFromPipeline(uint32_t id);
-		uint32_t AddToPipeline(std::uint32_t meshId);
+		virtual uint32_t CreateNewId( void ) = 0;
+		virtual void RemoveId(uint32_t id) = 0;
 
 		void DestroyAllUniforms(void);
 		void DestroyGraphicPipeline(void);
 
+		void* Get(std::string name, uint32_t id);
 		// Setter
 		void Set(std::string name, void *value, uint32_t id);
 		void SetTexture(std::string name, uint32_t idMat, uint32_t textureId);
@@ -109,7 +86,7 @@ namespace Soon
 		int32_t IsDefaultUniform(std::string name);
 		int32_t IsValidDefaultUniform(SpvReflectDescriptorBinding *block, int32_t index);
 
-		void GetInputBindings( spv_reflect::ShaderModule& reflection );
+		virtual void GetInputBindings( spv_reflect::ShaderModule& reflection );
 		void GetDescriptorBindings( spv_reflect::ShaderModule& reflection );
 	};
 

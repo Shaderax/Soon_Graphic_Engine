@@ -2,23 +2,20 @@
 #include <GLFW/glfw3.h>
 
 #include "GraphicsInstance.hpp"
+#include "GraphicPipelineConf.hpp"
 
 namespace Soon
 {
-	GraphicsPipelineConf::GraphicsPipelineConf(void)
+	GraphicPipelineConf::GraphicPipelineConf(void) : PipelineConf(EPipelineType::GRAPHIC)
 	{
-		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+		m_Properties["CullMode"] = {&CullModeToVk, &rasterizer.cullMode, sizeof(rasterizer.cullMode)};
+		m_Properties["FrontFace"] = {&FrontFaceToVk, &rasterizer.frontFace, sizeof(rasterizer.frontFace)};
 
-		//vertexInputInfo.vertexBindingDescriptionCount = 1;
-		//vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
-		//vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
-		//vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
 		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 
-		//				if (sType == GraphicsInstance::ShaderType::VERTEX_FRAGMENT)
 		inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-		//				else
 		//					inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
 
 		inputAssembly.primitiveRestartEnable = VK_FALSE;
@@ -84,8 +81,6 @@ namespace Soon
 		/////////// PIPELINE LAYOUT ////////////
 
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-		//pipelineInfo.stageCount = 2;
-		//	pipelineInfo.pStages = shaderStages;
 		pipelineInfo.pVertexInputState = &vertexInputInfo;
 		pipelineInfo.pInputAssemblyState = &inputAssembly;
 		pipelineInfo.pViewportState = &viewportState;
@@ -99,4 +94,37 @@ namespace Soon
 
 		//		pipelineInfo.layout = pipelineLayout;
 	}
+
+	GenericProperty* CullModeToVk(std::string name)
+	{
+		static std::unordered_map<std::string, VkCullModeFlagBits> cullModeMap = 
+		{
+			{"NONE", VK_CULL_MODE_NONE},
+			{"BACK", VK_CULL_MODE_BACK_BIT},
+			{"FRONT", VK_CULL_MODE_FRONT_BIT},
+			{"FRONT_AND_BACK", VK_CULL_MODE_FRONT_AND_BACK}
+		};
+
+		PropertyWrapper<VkCullModeFlagBits>* prop = new PropertyWrapper<VkCullModeFlagBits>();
+
+		prop->Set(cullModeMap.at(name));
+
+		return (dynamic_cast<GenericProperty*>(prop));
+	}
+
+	GenericProperty* FrontFaceToVk(std::string name)
+	{
+		static std::unordered_map<std::string, VkFrontFace> frontFaceMap = 
+		{
+			{"COUNTER_CLOCKWISE", VK_FRONT_FACE_COUNTER_CLOCKWISE},
+			{"CLOCKWISE", VK_FRONT_FACE_CLOCKWISE}
+		};
+
+		PropertyWrapper<VkFrontFace>* prop = new PropertyWrapper<VkFrontFace>();
+
+		prop->Set(frontFaceMap.at(name));
+
+		return (dynamic_cast<GenericProperty*>(prop));
+	}
+
 } // namespace Soon

@@ -1,4 +1,16 @@
-{
-	"ShadersPath" : ["Ressources/Shaders/TestShaders/Skybox.vert.spv", "Ressources/Shaders/TestShaders/Skybox.frag.spv"],
-	"UniqueSets" : [0]
-}
+[
+	{
+		"Name":"Skybox",
+		"Type":"Graphic",
+		"ShaderPaths": {
+			"Vertex":"Ressources/Shaders/TestShaders/SkyboxShader.vert.spv",
+			"Fragment":"Ressources/Shaders/TestShaders/SkyboxShader.frag.spv"
+		},
+		"UniqueSets": [
+			0
+		],
+		"Properties": {
+			"FrontFace": "CLOCKWISE"
+		}
+	}
+]

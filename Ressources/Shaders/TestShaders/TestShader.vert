@@ -1,6 +1,29 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
+struct Particle
+{
+	float x;
+	float y;
+};
+
+layout(set = 0, binding = 1) buffer Bu
+{
+	Particle particles[];
+};
+
+layout(set = 0, binding = 2) uniform Truc
+{
+	int prout;
+	//float ok[];
+	float ok[10];
+};
+
+layout(set = 0, binding = 3) uniform Wallah
+{
+	float nique;	
+} ko[];
+
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 inTexCoord;
 layout(location = 2) in vec3 inNormal;
@@ -10,7 +33,7 @@ layout(location = 1) out vec3 outNormal;
 
 void main()
 {
-	gl_Position = vec4(inPosition.x - 0.5f, inPosition.y - 0.5f, inPosition.z - 0.2f, 1.0);;
+	gl_Position = vec4(inPosition.x, inPosition.y, inPosition.z - 0.5f, 1.0);;
 	outCoord = inTexCoord;
 	outNormal = inNormal;
 }

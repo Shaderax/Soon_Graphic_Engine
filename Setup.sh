@@ -1,7 +1,8 @@
 #rm -rf Build
 mkdir Build
 cd Build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
+#cmake -DCMAKE_BUILD_TYPE=Debug ..
 
 os=$(uname)
 numCore=$(grep -c ^processor /proc/cpuinfo)

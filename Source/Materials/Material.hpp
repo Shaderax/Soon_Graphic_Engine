@@ -3,49 +3,26 @@
 #include "Math/vec3.hpp"
 #include <string>
 
-/*
-#include <unordered_map>
-
-#include "Renderer/Texture.hpp"
-#include "Renderer/Pipelines/BasePipeline.hpp"
-
-#include "Renderer/Vulkan/GraphicsRenderer.hpp"
-*/
 #include "Utilities/Error.hpp"
+
+#include "Texture.hpp"
 
 namespace Soon
 {
-	struct Material
+	class BasePipeline;
+
+	class Material
 	{
-		Material( void )
-		{
+	protected:
+		std::string		m_PipelineName;
+		uint32_t 		_id = Soon::IdError;
+		BasePipeline*	m_Pipeline = nullptr;
+	public:
 
-		}
+		Material(void);
+		virtual ~Material(void);
 
-		virtual ~Material( void )
-		{
-
-		}
-/*
-		void SetTexture( std::string name, Texture* texture )
-		{
-			//_pipeline->Set<Texture*>();
-			//_textures[name] = texture;
-		}
-
-		Texture* GetTexture( std::string name )
-		{
-			Texture* tt = nullptr;
-			try
-			{
-				//tt = _textures.at(name);
-			}
-			catch (const std::out_of_range& oor) {
-				std::cerr << "For " << name << " Out of Range Get Texture error: " << oor.what() << '\n';
-			}
-			return tt;
-		}
-
+		/*
 		void SetFloat( std::string name, float value, uint32_t arrayId = 0 )
 		{
 			//_floats[name] = value;
@@ -61,40 +38,14 @@ namespace Soon
 		{
 			//_pipeline.Set<uint8_t*>(name, info, data);
 		}
-
-		float GetFloat( std::string name )
-		{
-			return 0.0f;//_floats[name]
-		}
-
-		void SetVec3( std::string name, vec3<float> vec )
-		{
-			//_vec3s[name] = vec;
-		}
 */
-		virtual void SetUniform( std::string name, void* data ) = 0;
-		
-		void SetVec3( std::string name, vec3<float> vec )
-		{
-			SetUniform(name, &vec);
-		}
-
-/*
-		vec3<float>& GetVec3( std::string name )
-		{
-			return vec3<float>();//_vec3s[name];
-		}
-		*/
-		// Maybe not and use shaderpipeline
-		//	template<class T>
-		//		void SetPipeline( void )
-		//		{
-		//			if (_pipeline)
-		//				_pipeline->RemoveFromPipeline(_id);
-		//			_pipeline = GraphicsRenderer::GetInstance()->AddPipeline<T>();
-		//		}
-
-		uint32_t			_id = IdError;
-		//BasePipeline* _pipeline;
+		void SetVec3(std::string name, vec3<float> vec);
+		vec3<float> GetVec3(std::string name);
+		void SetUniform(std::string name, void *data);
+		void* GetUniform(std::string name);
+		void SetTexture(std::string name, Texture &texture);
+		const BasePipeline* GetPipeline(void) const;
+		void SetPipeline(std::string name);
+		// TODO: Put All Desconstruct as virtual
 	};
-}
+} // namespace Soon

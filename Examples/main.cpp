@@ -5,17 +5,12 @@
 #include "GraphicsRenderer.hpp"
 
 #include "Mesh.hpp"
-#include "Materials/ShaderMaterial.hpp"
-
-#include "Pipelines/NewDefaultPipeline.hpp"
+#include "Materials/GraphicMaterial.hpp"
 
 #include "Utilities/ShowFps.hpp"
 
 #include <chrono>
 #include <ctime>
-
-#include <nlohmann/json.hpp>
-using json = nlohmann::json;
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -159,30 +154,24 @@ int main()
 	 */
 
 	/**
-	 * 	JSON
-	 */
-	std::ifstream i("/home/shaderax/Documents/Project/Soon_Graphic_Engine/Examples/test.json");
-	json j;
-	i >> j;
-	std::cout << j["pi"] << std::endl;
-	/**
-	 */
-
-	/**
 	 * MESH
 	 */
 	Mesh* mesh = ObjLoader();
-
 	mesh->Render();
+
+	Mesh* meshCubeMap = ObjLoader();
+	meshCubeMap->GetMaterial().SetPipeline("./Examples/Skybox.json");
+	meshCubeMap->Render();
+	meshCubeMap->GetMaterial().SetTexture("texSampler", *cubeMap);
 
 	mesh->GetMaterial().SetTexture("latexture", texture);
 	//mesh->GetMaterial().SetVec3("cou.bondour", vec3<float>(0.2f, 0.1f, 0.0f));
-	// TODO: MESH VALID FOR HE PIPELINE
 	double lastTime = 0;
 	bool did = false;
 	double time = glfwGetTime();
 	double x = 0.0f;
 	double y = 0.0f;
+
 	// Loop
 	std::cout << "Begin Loop" << std::endl;
 	while (!GraphicsInstance::GetInstance()->ShouldClose(GraphicsInstance::GetInstance()->GetWindow()))

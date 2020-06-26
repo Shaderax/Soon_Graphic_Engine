@@ -24,6 +24,10 @@
 #include "GLFWInit/Init.hpp"
 #include "GLFWInit/Hints.hpp"
 
+#include "Pipelines/PipelineConf.hpp"
+#include "Pipelines/GraphicPipelineConf.hpp"
+#include "Pipelines/ComputePipelineConf.hpp"
+
 const std::vector<const char *> validationLayers = {
 	"VK_LAYER_LUNARG_standard_validation"};
 
@@ -31,13 +35,12 @@ const std::vector<const char *> deviceExtensions =
 	{
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
-#define NDEBUG 1
-//#ifdef NDEBUG
-//const bool enableValidationLayers = false;
-//#else
-//// Validation layer : 
-const bool enableValidationLayers = true;
-//#endif
+#ifdef NDEBUG
+	const bool enableValidationLayers = false;
+#else
+// Validation layer : 
+	const bool enableValidationLayers = true;
+#endif
 
 bool checkValidationLayerSupport(void)
 {
@@ -606,177 +609,48 @@ namespace Soon
 		return shaderModule;
 	}
 
-	VkPipeline GraphicsInstance::CreateGraphicsPipeline(
-		GraphicsPipelineConf &conf,
-		std::string pathVert,
-		std::string pathFrag)
+	VkPipeline GraphicsInstance::CreatePipeline(PipelineConf* conf)
 	{
-		VkPipeline graphicsPipeline;
+		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+		std::vector<VkShaderModule> shaderModules;
+		VkPipeline pipeline;
 
-		auto vertShaderCode = ReadFile(pathVert);
-		auto fragShaderCode = ReadFile(pathFrag);
+		for (PipelineStage stage : conf->GetStages())
+		{
+			auto shaderCode = ReadFile(stage.shaderPath);
+			shaderModules.push_back(CreateShaderModule(shaderCode));
 
-		VkShaderModule vertShaderModule = CreateShaderModule(vertShaderCode);
-		VkShaderModule fragShaderModule = CreateShaderModule(fragShaderCode);
+			VkPipelineShaderStageCreateInfo shaderStageInfo = {};
+			shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			shaderStageInfo.stage = PipelineStageToVk(stage.type);
+			shaderStageInfo.module = shaderModules.back();
+			shaderStageInfo.pName = "main";
 
-		VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
-		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-		vertShaderStageInfo.module = vertShaderModule;
-		vertShaderStageInfo.pName = "main";
+			shaderStages.push_back(shaderStageInfo);
+		}
 
-		VkPipelineShaderStageCreateInfo fragShaderStageInfo = {};
-		fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-		fragShaderStageInfo.module = fragShaderModule;
-		fragShaderStageInfo.pName = "main";
+		if (conf->GetType() == EPipelineType::GRAPHIC)
+		{
+			GraphicPipelineConf* graphicConf = reinterpret_cast<GraphicPipelineConf*>(conf);
+			graphicConf->pipelineInfo.stageCount = shaderStages.size();
+			graphicConf->pipelineInfo.pStages = shaderStages.data();
 
-		VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
+			if (vkCreateGraphicsPipelines(_device, VK_NULL_HANDLE, 1, &graphicConf->pipelineInfo, nullptr, &pipeline) != VK_SUCCESS)
+				throw std::runtime_error("failed to create graphics pipeline!");
+		}
+		else if (conf->GetType() == EPipelineType::COMPUTE)
+		{
+			ComputePipelineConf* computeConf = reinterpret_cast<ComputePipelineConf*>(conf);
+			computeConf->pipelineInfo.stage = shaderStages.back();
 
-		conf.pipelineInfo.stageCount = 2;
+			if (vkCreateComputePipelines(_device, VK_NULL_HANDLE, 1, &(computeConf->pipelineInfo), nullptr, &pipeline) != VK_SUCCESS)
+				throw std::runtime_error("failed to create compute pipeline!");
+		}
 
-		//
-		/*
-		VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
-		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+		for (VkShaderModule& shader : shaderModules)
+			vkDestroyShaderModule(_device, shader, nullptr);
 
-		vertexInputInfo.vertexBindingDescriptionCount = 1;
-		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
-		vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
-		vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
-
-		VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
-		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-
-		if (sType == GraphicsInstance::ShaderType::VERTEX_FRAGMENT)
-			inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-		else
-			inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
-    
-		inputAssembly.primitiveRestartEnable = VK_FALSE;
-
-		VkViewport viewport = {};
-		viewport.x = 0.0f;
-		viewport.y = 0.0f;
-		viewport.width = (float) _swapChainExtent.width;
-		viewport.height = (float) _swapChainExtent.height;
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-
-		VkRect2D scissor = {};
-		scissor.offset = {0, 0};
-		scissor.extent = _swapChainExtent;
-
-		VkPipelineViewportStateCreateInfo viewportState = {};
-		viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-		viewportState.viewportCount = 1;
-		viewportState.pViewports = &viewport;
-		viewportState.scissorCount = 1;
-		viewportState.pScissors = &scissor;
-
-		VkPipelineRasterizationStateCreateInfo rasterizer = {};
-		rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-		rasterizer.depthClampEnable = VK_FALSE;
-		rasterizer.rasterizerDiscardEnable = VK_FALSE;
-
-		if (sType == GraphicsInstance::ShaderType::VERTEX_FRAGMENT)
-			rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-		else
-			rasterizer.polygonMode = VK_POLYGON_MODE_POINT;
-		rasterizer.lineWidth = 1.0f;
-		rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-		rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;// VK_FRONT_FACE_CLOCKWISE;
-		rasterizer.depthBiasEnable = VK_FALSE;
-
-		VkPipelineMultisampleStateCreateInfo multisampling = {};
-		multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-		multisampling.sampleShadingEnable = VK_FALSE;
-		multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-
-		VkPipelineDepthStencilStateCreateInfo depthStencil = {};
-		depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-		depthStencil.depthTestEnable = VK_TRUE;
-		depthStencil.depthWriteEnable = VK_TRUE;
-		depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
-		depthStencil.depthBoundsTestEnable = VK_FALSE;
-		//		depthStencil.minDepthBounds = 0.0f; // Optional
-		//		depthStencil.maxDepthBounds = 1.0f; // Optional
-		depthStencil.stencilTestEnable = VK_FALSE;
-		//		depthStencil.front = {}; // Optional
-		//		depthStencil.back = {}; // Optional
-
-		VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
-		colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-		colorBlendAttachment.blendEnable = VK_FALSE;
-
-		VkPipelineColorBlendStateCreateInfo colorBlending = {};
-		colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-		colorBlending.logicOpEnable = VK_FALSE;
-		colorBlending.logicOp = VK_LOGIC_OP_COPY;
-		colorBlending.attachmentCount = 1;
-		colorBlending.pAttachments = &colorBlendAttachment;
-		colorBlending.blendConstants[0] = 0.0f;
-		colorBlending.blendConstants[1] = 0.0f;
-		colorBlending.blendConstants[2] = 0.0f;
-		colorBlending.blendConstants[3] = 0.0f;
-
-		/////////// PIPELINE LAYOUT ////////////
-
-		VkGraphicsPipelineCreateInfo pipelineInfo = {};
-*/
-		//	conf.pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-		conf.pipelineInfo.stageCount = 2;
-		conf.pipelineInfo.pStages = shaderStages;
-		//	conf.pipelineInfo.pVertexInputState = &vertexInputInfo;
-		//	conf.pipelineInfo.pInputAssemblyState = &inputAssembly;
-		//	conf.pipelineInfo.pViewportState = &viewportState;
-		//	conf.pipelineInfo.pRasterizationState = &rasterizer;
-		//	conf.pipelineInfo.pMultisampleState = &multisampling;
-		//	conf.pipelineInfo.pColorBlendState = &colorBlending;
-		//	conf.pipelineInfo.pDepthStencilState = &depthStencil;
-		//	conf.pipelineInfo.layout = pipelineLayout;
-		//	conf.pipelineInfo.renderPass = _renderPass;
-		//	conf.pipelineInfo.subpass = 0;
-		//	conf.pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
-
-		if (vkCreateGraphicsPipelines(_device, VK_NULL_HANDLE, 1, &conf.pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
-			throw std::runtime_error("failed to create graphics pipeline!");
-
-		vkDestroyShaderModule(_device, fragShaderModule, nullptr);
-		vkDestroyShaderModule(_device, vertShaderModule, nullptr);
-
-		return (graphicsPipeline);
-	}
-
-	VkPipeline GraphicsInstance::CreateComputePipeline(
-		VkPipelineLayout pipelineLayout,
-		std::string pathCompute)
-	{
-		VkPipeline computePipeline;
-
-		auto computeShaderCode = ReadFile(pathCompute);
-
-		VkShaderModule computeShaderModule = CreateShaderModule(computeShaderCode);
-
-		VkPipelineShaderStageCreateInfo computeShaderStageInfo = {};
-		computeShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		computeShaderStageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
-		computeShaderStageInfo.module = computeShaderModule;
-		computeShaderStageInfo.pName = "main";
-
-		//		VkPipelineShaderStageCreateInfo shaderStages[] = {computeShaderStageInfo};
-
-		VkComputePipelineCreateInfo computePipelineInfos = {};
-		computePipelineInfos.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
-		computePipelineInfos.stage = computeShaderStageInfo;
-		computePipelineInfos.layout = pipelineLayout;
-
-		if (vkCreateComputePipelines(_device, VK_NULL_HANDLE, 1, &computePipelineInfos, nullptr, &computePipeline) != VK_SUCCESS)
-			throw std::runtime_error("failed to create graphics pipeline!");
-
-		vkDestroyShaderModule(_device, computeShaderModule, nullptr);
-
-		return (computePipeline);
+		return (pipeline);
 	}
 
 	VkPipelineLayout GraphicsInstance::CreatePipelineLayout(std::vector<VkDescriptorSetLayout> descriptorSetLayout)
@@ -1676,6 +1550,7 @@ namespace Soon
 
 	void GraphicsInstance::UpdateImageDescriptorSets(uint32_t* matIds, uint32_t count, DescriptorSetDescription description, VkDescriptorSet* descriptorSets)
 	{
+		std::cout << description.uniformsTexture.size() << std::endl;
 		for (uint32_t index = 0 ; index < description.uniformsTexture.size() ; index++)
 		{
 			for (uint32_t countId = 0 ; countId < count ; countId++)
@@ -1708,9 +1583,11 @@ namespace Soon
 		std::cout << "UpdateSet : " << (int)description.set << std::endl;
 		// TODO: bufferCount
 		uint32_t offsetUniform = 0;
+
 		for (uint32_t index = 0 ; index < description.uniforms.size() ; index++)
 		{
 			std::cout << description.uniforms[index]._name << std::endl;
+
 			for (size_t i = 0; i < _swapChainImages.size(); i++)
 			{
 				VkDescriptorBufferInfo bufferInfo = {};
