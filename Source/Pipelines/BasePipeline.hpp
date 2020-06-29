@@ -43,6 +43,11 @@ namespace Soon
 		PipelineConf* _conf; // TODO : DELETE
 		std::unordered_map<uint32_t, uint32_t> m_ToDraw;
 		std::vector<uint32_t> _freeId;
+
+		void GetUniform(SpvReflectDescriptorBinding* binding);
+		void GetTextureUniform(SpvReflectDescriptorBinding* binding);
+		void GetRuntimeUniform(SpvReflectDescriptorBinding* binding);
+
 	public:
 		VkVertexInputBindingDescription _bindingDescription;
 		std::vector<VkVertexInputAttributeDescription> _attributeDescriptions;

@@ -3,6 +3,13 @@
 
 layout(set = 0, binding = 0) uniform sampler2D latexture;
 
+layout(set = 0, binding = 1) buffer Bu
+{
+	float arr[][10];
+} ba[40];
+
+//layout(set = 0, binding = 1) uniform sampler2DArray jkjkatexture;
+
 layout(location = 0) in vec2 inCoord;
 layout(location = 1) in vec2 inNormal;
 

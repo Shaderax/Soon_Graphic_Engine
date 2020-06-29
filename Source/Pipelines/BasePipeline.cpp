@@ -114,8 +114,183 @@ namespace Soon
 	/**
 	 * GET SHADER DATA
 	 */	
+
+	bool IsRuntimeUniform(SpvReflectDescriptorBinding* binding)
+	{
+		for (uint32_t indexMember = 0; indexMember < binding->block.member_count; indexMember++)
+		{
+			if (binding->block.members[indexMember].type_description->op == SpvOpTypeRuntimeArray)
+				return true;
+		}
+		return false;
+	}
+
 	void BasePipeline::GetInputBindings( spv_reflect::ShaderModule& reflection )
 	{
+	}
+
+	void BasePipeline::GetUniform(SpvReflectDescriptorBinding* binding)
+	{
+		Uniform uniform;
+		uniform._name = binding->name;
+		uniform._binding = binding->binding;
+		uniform._set = binding->set;
+		uniform._size = binding->block.size + (binding->block.size % 32);
+
+		std::cout << "Uniform Name : " << uniform._name << ", Set : " << uniform._set << ", Binding: " << uniform._binding << std::endl;
+
+		uniform.dimCount = binding->type_description->traits.array.dims_count;
+
+		if (uniform.dimCount > 0)
+			uniform.dim = new uint32_t[uniform.dimCount];
+
+		for (uint32_t index = 0 ; index < binding->type_description->traits.array.dims_count ; index++)
+		{
+			uniform.dim[index] = binding->type_description->traits.array.dims[index];
+			std::cout << "Dim: " << binding->type_description->traits.array.dims[index] << std::endl;
+		}
+
+		std::cout << "Op: " << binding->type_description->op << std::endl;
+
+		for (uint32_t indexMember = 0; indexMember < binding->block.member_count; indexMember++)
+		{
+			UniformVar uniVar;
+			uniVar.name = binding->block.members[indexMember].name;
+			uniVar.offset = binding->block.members[indexMember].offset;
+			uniVar.size = binding->block.members[indexMember].size;
+
+			std::cout << "\t UniformVar Name : " << uniVar.name << std::endl;
+			std::cout << "\t UniformVar Offset : " << uniVar.offset << std::endl;
+			std::cout << "\t UniformVar Size : " << uniVar.size << std::endl;
+			std::cout << "\t UniformVar SpvOp: " << binding->block.members[indexMember].type_description->op << std::endl;
+
+			if (binding->block.members[indexMember].type_description->traits.array.dims_count > 0)
+				std::cout << "\t UniformVar Dim: " << binding->block.members[indexMember].type_description->traits.array.dims[0] << std::endl;
+
+			uniVar.type = SpvTypeToVertexType(binding->block.members[indexMember].type_description);
+
+			uniform._members.push_back(uniVar);
+		}
+				/*
+				Comment je fais pour coller une fonction d'update a mes uniform ?
+				Pour que ma camera soit update auto
+				Genre mes models sont par id, comment le mec fait pour dire la pos pour le model ? Faudrait que la mesh connaisse son entity owner et nous passe son id.
+				void funct( void )
+				{
+					mat4 mat .... operation {entity.GetComponent<Transform>()};
+					memcpy(um, mat);
+				}
+				Mesh.GetMaterial().GetPipeline()->SetUpdateFunction("um", &funct);
+				*/
+		if (_conf->IsUniqueSet(binding->set))
+			_mUbm.AddUniqueUniform(uniform);
+		else
+			_mUbm.AddUniform(uniform);
+	}
+
+	void BasePipeline::GetTextureUniform(SpvReflectDescriptorBinding* binding)
+	{
+		UniformTexture texture;
+		texture._binding = binding->binding;
+		texture._set = binding->set;
+		texture._name = binding->name;
+		texture._type = SpvTypeToVertexType(binding->type_description);
+
+		std::cout << "UniformTexture Name: " << texture._name << std::endl;
+		std::cout << "UniformTexture Op: " << binding->type_description->op << std::endl;
+
+		texture.dimCount = binding->type_description->traits.array.dims_count;
+		if (texture.dimCount > 0)
+			texture.dim = new uint32_t[texture.dimCount];
+		for (uint32_t index = 0 ; index < binding->type_description->traits.array.dims_count ; index++)
+		{
+			texture.dim[index] = binding->type_description->traits.array.dims[index];
+			std::cout << "Dim: " << binding->type_description->traits.array.dims[index] << std::endl;
+		}
+
+		int32_t indexDefault = IsDefaultUniform(binding->name);
+		//texture.isTexture = true;
+		// TODO: Unique
+		texture._updateFunct = nullptr;
+		if (_conf->IsUniqueSet(binding->set))
+			_mUbm.AddUniqueUniform(texture);
+		else
+			_mUbm.AddUniform(texture);
+		//_uniformsTexture.push_back(texture);
+	}
+
+	void BasePipeline::GetRuntimeUniform(SpvReflectDescriptorBinding* binding)
+	{
+		UniformRuntime uniform;
+		uniform._name = binding->name;
+		uniform._binding = binding->binding;
+		uniform._set = binding->set;
+		uniform._size = binding->block.size + (binding->block.size % 32);
+
+		std::cout << "UniformRuntime Name : " << uniform._name << ", Set : " << uniform._set << ", Binding: " << uniform._binding << std::endl;
+
+		//TODO: DIM MEMBER
+
+		uniform.dimCount = binding->type_description->traits.array.dims_count;
+
+		if (uniform.dimCount > 0)
+			uniform.dim = new uint32_t[uniform.dimCount];
+
+		for (uint32_t index = 0 ; index < binding->type_description->traits.array.dims_count ; index++)
+		{
+			uniform.dim[index] = binding->type_description->traits.array.dims[index];
+			std::cout << "UniformRuntime Dim: " << binding->type_description->traits.array.dims[index] << std::endl;
+		}
+
+		std::cout << "UniformRuntime Op: " << binding->type_description->op << std::endl;
+
+		for (uint32_t indexMember = 0; indexMember < binding->block.member_count; indexMember++)
+		{
+			UniformRuntimeVar uniVar;
+			uniVar._name = binding->block.members[indexMember].name;
+			uniVar._offset = binding->block.members[indexMember].offset;
+			uniVar._size = binding->block.members[indexMember].size;
+
+			std::cout << "\t UniformRuntimeVar Name : " << uniVar._name << std::endl;
+			std::cout << "\t UniformRuntimeVar Offset : " << uniVar._offset << std::endl;
+			std::cout << "\t UniformRuntimeVar Size : " << uniVar._size << std::endl;
+			std::cout << "\t UniformRuntimeVar SpvOp: " << binding->block.members[indexMember].type_description->op << std::endl;
+
+			uniVar.dimCount = binding->block.members[indexMember].type_description->traits.array.dims_count;
+
+			if (uniVar.dimCount > 0)
+				uniVar.dim = new uint32_t[uniVar.dimCount];
+
+			for (uint32_t index = 0 ; index < uniVar.dimCount ; index++)
+			{
+				uniVar.dim[index] = binding->block.members[indexMember].type_description->traits.array.dims[index];
+				std::cout << "UniformRuntime Dim: " << uniVar.dim[index] << std::endl;
+			}
+
+			uniVar._type = SpvTypeToVertexType(binding->block.members[indexMember].type_description);
+
+			if (binding->block.members[indexMember].type_description->op == SpvOpTypeRuntimeArray)
+				uniVar.isRuntime = true;
+			else
+				uniVar.isRuntime = false;
+
+			uniform._members.push_back(uniVar);
+		}
+				/*
+				Comment je fais pour coller une fonction d'update a mes uniform ?
+				Pour que ma camera soit update auto
+				Genre mes models sont par id, comment le mec fait pour dire la pos pour le model ? Faudrait que la mesh connaisse son entity owner et nous passe son id.
+				void funct( void )
+				{
+					mat4 mat .... operation {entity.GetComponent<Transform>()};
+					memcpy(um, mat);
+				}
+				Mesh.GetMaterial().GetPipeline()->SetUpdateFunction("um", &funct);
+				*/
+		if (_conf->IsUniqueSet(binding->set))
+			_mUbm.AddUniqueUniform(uniform);
+		else
+			_mUbm.AddUniform(uniform);
 	}
 
 	void BasePipeline::GetDescriptorBindings( spv_reflect::ShaderModule& reflection )
@@ -135,73 +310,12 @@ namespace Soon
 		for (uint32_t index = 0; index < count; index++)
 		{
 			if (IsImageType(bindings[index]->type_description->type_flags))
-			{
-				UniformTexture texture;
-				texture._binding = bindings[index]->binding;
-				texture._set = bindings[index]->set;
-				texture._name = bindings[index]->name;
-				texture._type = SpvTypeToVertexType(bindings[index]->type_description);
-
-				std::cout << "UniformTexture Name : " << texture._name << std::endl;
-
-				int32_t indexDefault = IsDefaultUniform(bindings[index]->name);
-				//texture.isTexture = true;
-				// TODO: Unique
-				texture._updateFunct = nullptr;
-				if (_conf->IsUniqueSet(bindings[index]->set))
-					_mUbm.AddUniqueUniform(texture);
-				else
-					_mUbm.AddUniform(texture);
-				//_uniformsTexture.push_back(texture);
-			}
+				GetTextureUniform(bindings[index]);
+			else if (IsRuntimeUniform(bindings[index]))
+				GetRuntimeUniform(bindings[index]);
 			else
-			{
-				Uniform uniform;
-				uniform._name = bindings[index]->name;
-				uniform._binding = bindings[index]->binding;
-				uniform._set = bindings[index]->set;
-				uniform._size = bindings[index]->block.size + (bindings[index]->block.size % 32);
+				GetUniform(bindings[index]);
 
-				std::cout << "Uniform Name : " << uniform._name << ", Set : " << uniform._set << ", Binding: " << uniform._binding << std::endl;
-				if (bindings[index]->type_description->traits.array.dims_count > 0)
-					std::cout << "Dim: " << bindings[index]->type_description->traits.array.dims[0] << std::endl;
-				std::cout << "Op: " << bindings[index]->type_description->op << std::endl;
-
-				for (uint32_t indexMember = 0; indexMember < bindings[index]->block.member_count; indexMember++)
-				{
-					UniformVar uniVar;
-					uniVar._name = bindings[index]->block.members[indexMember].name;
-					uniVar._offset = bindings[index]->block.members[indexMember].offset;
-					uniVar._size = bindings[index]->block.members[indexMember].size;
-
-					std::cout << "\t UniformVar Name : " << uniVar._name << std::endl;
-					std::cout << "\t UniformVar Offset : " << uniVar._offset << std::endl;
-					std::cout << "\t UniformVar Size : " << uniVar._size << std::endl;
-					std::cout << "\t UniformVar SpvOp: " << bindings[index]->block.members[indexMember].type_description->op << std::endl;
-
-					if (bindings[index]->block.members[indexMember].type_description->traits.array.dims_count > 0)
-						std::cout << "Dim: " << bindings[index]->block.members[indexMember].type_description->traits.array.dims[0] << std::endl;
-
-					uniVar._type = SpvTypeToVertexType(bindings[index]->block.members[indexMember].type_description);
-
-					uniform._members.push_back(uniVar);
-				}
-				/*
-				Comment je fais pour coller une fonction d'update a mes uniform ?
-				Pour que ma camera soit update auto
-				Genre mes models sont par id, comment le mec fait pour dire la pos pour le model ? Faudrait que la mesh connaisse son entity owner et nous passe son id.
-				void funct( void )
-				{
-					mat4 mat .... operation {entity.GetComponent<Transform>()};
-					memcpy(um, mat);
-				}
-				Mesh.GetMaterial().GetPipeline()->SetUpdateFunction("um", &funct);
-				*/
-				if (_conf->IsUniqueSet(bindings[index]->set))
-					_mUbm.AddUniqueUniform(uniform);
-				else
-					_mUbm.AddUniform(uniform);
-			}
 			// uboLayout
 			VkDescriptorSetLayoutBinding ubo;
 			ubo.binding = bindings[index]->binding;

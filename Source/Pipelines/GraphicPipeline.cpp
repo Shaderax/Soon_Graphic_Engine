@@ -204,7 +204,7 @@ namespace Soon
 
 				VkVertexInputAttributeDescription attributeDes;
 				attributeDes.binding = 0;
-				std::cout << "Location: " << inputs[index]->location << std::endl;
+				std::cout << std::endl << "Location: " << inputs[index]->location << std::endl;
 				attributeDes.format = VertexTypeToVkFormat(SpvTypeToVertexType(inputs[index]->type_description));
 				attributeDes.location = inputs[index]->location;
 				attributeDes.offset = offset;
@@ -213,7 +213,7 @@ namespace Soon
 
 				offset += input.type.GetTypeSize();
 
-        		std::cout << std::endl << inputs[index]->name << std::endl;
+        		std::cout << inputs[index]->name << std::endl;
 				std::cout << "Base Type : " << (int)input.type.baseType << " Column : " << input.type.column << " Row : " << input.type.row << std::endl;
 			}
 		}

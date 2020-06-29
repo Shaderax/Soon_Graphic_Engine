@@ -1,22 +1,3 @@
-// Skybox
-{
-	"Pipelines": {
-		"Classic": {
-			"Type": "Graphic",
-			"ShaderPaths": {
-				"vertexPath": "Ressources/Shaders/Skybox/Skybox.vert.spv",
-				"fragmentPath": "Ressources/Shaders/Skybox/Skybox.frag.spv"
-			},
-			"UniqueSets": [
-				0
-			],
-			"Properties": {
-				"CullMode": "FRONT"
-			}
-		}
-	}
-}
-
 // Load CubeMesh
 // Load CubeTextureMine
 // CubeMesh->GetMaterial().SetPipeline("Default.json");
@@ -94,8 +75,6 @@ Mesh BufferToMesh(BUFFER)
 //TODO: If user setCopute on graphicPipeline
 
 */
-
-
 
 /**
  * POST-PROCESSING

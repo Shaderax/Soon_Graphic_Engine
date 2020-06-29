@@ -85,6 +85,9 @@ namespace Soon
 		}
 	}
 
+	/**
+	 *  ADDUNIFORM
+	 */
 	void UniformsBufferManager::AddUniform(Uniform uniform)
 	{
 		if (m_CpuBuffer != nullptr)
@@ -167,6 +170,50 @@ namespace Soon
 		m_UniqueSets.push_back(description);
 	}
 
+		void UniformsBufferManager::AddUniform( UniformRuntime uniform )
+	{
+		if (m_CpuBuffer != nullptr)
+			; // TODO: Error
+
+		for (uint32_t index = 0 ; index < m_Sets.size() ; index++)
+		{
+			if (uniform._set == m_Sets[index].set)
+			{
+				m_Sets[index].uniformsRuntime.push_back(uniform);
+				return ;
+			}
+		}
+
+		DescriptorSetDescription description;
+		description.set = uniform._set;
+		description.uniformsRuntime.push_back(uniform);
+		m_Sets.push_back(description);
+	}
+
+	void UniformsBufferManager::AddUniqueUniform( UniformRuntime uniform )
+	{
+		m_UniqueSize += uniform._size;
+		for (uint32_t index = 0 ; index < m_UniqueSets.size() ; index++)
+		{
+			if (uniform._set == m_UniqueSets[index].set)
+			{
+				m_UniqueSets[index].uniformsRuntime.push_back(uniform);
+				m_UniqueSets[index].size += uniform._size;
+
+				return ;
+			}
+		}
+
+		DescriptorSetDescription description;
+		description.set = uniform._set;
+		description.size = uniform._size;
+		description.uniformsRuntime.push_back(uniform);
+		m_UniqueSets.push_back(description);
+	}
+
+	/**
+	 * INIT
+	 */
 	void UniformsBufferManager::InitBuffers(void)
 	{
 		uint32_t swapChainSize = GraphicsInstance::GetInstance()->GetSwapChainSize();
@@ -275,12 +322,12 @@ namespace Soon
 					{
 						for (uint32_t member = 0; member < m_Sets[setId].uniforms[index]._members.size(); member++)
 						{
-							if (varName == m_Sets[setId].uniforms[index]._members[member]._name)
+							if (varName == m_Sets[setId].uniforms[index]._members[member].name)
 							{
-								memcpy(m_CpuBuffer + m_UniqueSize + offset + (m_NonUniqueSize * matId), value, m_Sets[setId].uniforms[index]._members[member]._size);
+								memcpy(m_CpuBuffer + m_UniqueSize + offset + (m_NonUniqueSize * matId), value, m_Sets[setId].uniforms[index]._members[member].size);
 								//std::cout << "Found Uniform : " << name.substr(0, pos) + "." << varName << std::endl;
 							}
-							offset += m_Sets[setId].uniforms[index]._members[member]._size;
+							offset += m_Sets[setId].uniforms[index]._members[member].size;
 						}
 						return;
 					}
