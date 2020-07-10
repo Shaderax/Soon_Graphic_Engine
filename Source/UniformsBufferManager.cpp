@@ -553,6 +553,31 @@ namespace Soon
 		return m_DescriptorSets[image];
 	}
 
+	const UniformRuntime& UniformsBufferManager::GetUniformRuntime(std::string name) const
+	{
+		if (name.empty())
+			throw std::runtime_error("Name == 0");
+
+		for (uint32_t setId = 0; setId < m_Sets.size() ; setId++)
+		{
+			for (uint32_t index = 0; index < m_Sets[setId].uniformsRuntime.size() ; index++)
+			{
+				if (m_Sets[setId].uniformsRuntime[index].mName == name)
+					return m_Sets[setId].uniformsRuntime[index];
+			}
+		}
+		for (uint32_t setId = 0; setId < m_UniqueSets.size() ; setId++)
+		{
+			for (uint32_t index = 0; index < m_UniqueSets[setId].uniformsRuntime.size() ; index++)
+			{
+				if (m_UniqueSets[setId].uniformsRuntime[index].mName == name)
+				{
+					return m_UniqueSets[setId].uniformsRuntime[index];
+				}
+			}
+		}
+	}
+
 	void UniformsBufferManager::SetRuntimeVarAmount(UniformRuntime& var, std::string name, uint32_t amount, uint32_t idMat)
 	{
 		uint32_t offset = 0;

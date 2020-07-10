@@ -74,6 +74,12 @@ namespace Soon
 	{
 		_mUbm.SetRuntimeAmount(name, amount, idMat);
 	}
+
+	const UniformRuntime& BasePipeline::GetUniformRuntime(std::string name) const
+	{
+		return _mUbm.GetUniformRuntime(name);
+	}
+
 	/**
 	 * PIPELINES
 	 */
@@ -126,7 +132,41 @@ namespace Soon
 	{
 	}
 
-	void BasePipeline::GetUniform(SpvReflectDescriptorBinding* binding)
+	UniformVar BasePipeline::ParseUniformMembers(SpvReflectBlockVariable& block) const
+	{
+		UniformVar uniVar;
+		uniVar.name = block.name;
+		uniVar.offset = block.offset;
+		uniVar.size = block.size;
+
+		std::cout << "\t UniformVar Name : " << uniVar.name << std::endl;
+		std::cout << "\t UniformVar Offset : " << uniVar.offset << std::endl;
+		std::cout << "\t UniformVar Size : " << uniVar.size << std::endl;
+		std::cout << "\t UniformVar SpvOp: " << block.type_description->op << std::endl;
+
+		if (block.type_description->traits.array.dims_count > 0)
+			std::cout << "\t UniformVar Dim: " << block.type_description->traits.array.dims[0] << std::endl;
+
+		uniVar.dimCount = block.type_description->traits.array.dims_count;
+		std::cout << "\t UniformVar DimCount: " << uniVar.dimCount << std::endl;
+
+		if (uniVar.dimCount > 0)
+			uniVar.dim = new uint32_t[uniVar.dimCount];
+
+		for (uint32_t index = 0 ; index < uniVar.dimCount ; index++)
+		{
+			uniVar.dim[index] = block.type_description->traits.array.dims[index];
+			std::cout << "\t UniformVar Dim: " << uniVar.dim[index] << std::endl;
+		}
+
+		uniVar.type = SpvTypeToVertexType(block.type_description);
+
+		for (uint32_t indexMember = 0; indexMember < block.member_count; indexMember++)
+			uniVar.mMembers.push_back(ParseUniformMembers(block.members[indexMember]));
+		return uniVar;
+	}
+
+	void BasePipeline::ParseUniform(SpvReflectDescriptorBinding* binding)
 	{
 		Uniform uniform;
 		uniform._name = binding->name;
@@ -151,37 +191,9 @@ namespace Soon
 
 		for (uint32_t indexMember = 0; indexMember < binding->block.member_count; indexMember++)
 		{
-			UniformVar uniVar;
-			uniVar.name = binding->block.members[indexMember].name;
-			uniVar.offset = binding->block.members[indexMember].offset;
-			uniVar.size = binding->block.members[indexMember].size;
-
-			std::cout << "\t UniformVar Name : " << uniVar.name << std::endl;
-			std::cout << "\t UniformVar Offset : " << uniVar.offset << std::endl;
-			std::cout << "\t UniformVar Size : " << uniVar.size << std::endl;
-			std::cout << "\t UniformVar SpvOp: " << binding->block.members[indexMember].type_description->op << std::endl;
-
-			if (binding->block.members[indexMember].type_description->traits.array.dims_count > 0)
-				std::cout << "\t UniformVar Dim: " << binding->block.members[indexMember].type_description->traits.array.dims[0] << std::endl;
-
-			uniVar.dimCount = binding->block.members[indexMember].type_description->traits.array.dims_count;
-			std::cout << "\t UniformVar DimCount: " << uniVar.dimCount << std::endl;
-
-			if (uniVar.dimCount > 0)
-				uniVar.dim = new uint32_t[uniVar.dimCount];
-
-			for (uint32_t index = 0 ; index < uniVar.dimCount ; index++)
-			{
-				uniVar.dim[index] = binding->block.members[indexMember].type_description->traits.array.dims[index];
-				std::cout << "\t UniformVar Dim: " << uniVar.dim[index] << std::endl;
-			}
-
-			uniVar.type = SpvTypeToVertexType(binding->block.members[indexMember].type_description);
-
-			uniform._members.push_back(uniVar);
+			uniform._members.push_back(ParseUniformMembers(binding->block.members[indexMember]));
 		}
 				/*
-				Comment je fais pour coller une fonction d'update a mes uniform ?
 				Pour que ma camera soit update auto
 				Genre mes models sont par id, comment le mec fait pour dire la pos pour le model ? Faudrait que la mesh connaisse son entity owner et nous passe son id.
 				void funct( void )
@@ -197,7 +209,7 @@ namespace Soon
 			_mUbm.AddUniform(uniform);
 	}
 
-	void BasePipeline::GetTextureUniform(SpvReflectDescriptorBinding* binding)
+	void BasePipeline::ParseTextureUniform(SpvReflectDescriptorBinding* binding)
 	{
 		UniformTexture texture;
 		texture._binding = binding->binding;
@@ -229,7 +241,43 @@ namespace Soon
 		//_uniformsTexture.push_back(texture);
 	}
 
-	void BasePipeline::GetRuntimeUniform(SpvReflectDescriptorBinding* binding)
+	UniformRuntimeVar BasePipeline::ParseRuntimeUniformMembers(SpvReflectBlockVariable& block) const
+	{
+		UniformRuntimeVar uniVar;
+		uniVar._name = block.name;
+		uniVar._offset = block.offset;
+		uniVar._size = block.size;
+
+		std::cout << "\t UniformRuntimeVar Name : " << uniVar._name << std::endl;
+		std::cout << "\t UniformRuntimeVar Offset : " << uniVar._offset << std::endl;
+		std::cout << "\t UniformRuntimeVar Size : " << uniVar._size << std::endl;
+		std::cout << "\t UniformRuntimeVar SpvOp: " << block.type_description->op << std::endl;
+
+		uniVar.dimCount = block.type_description->traits.array.dims_count;
+		std::cout << "\t UniformRuntimeVar DimCount: " << uniVar.dimCount << std::endl;
+
+		if (uniVar.dimCount > 0)
+			uniVar.dim = new uint32_t[uniVar.dimCount];
+
+		for (uint32_t index = 0 ; index < uniVar.dimCount ; index++)
+		{
+			uniVar.dim[index] = block.type_description->traits.array.dims[index];
+			std::cout << "\t UniformRuntime Dim: " << uniVar.dim[index] << std::endl;
+		}
+
+		uniVar._type = SpvTypeToVertexType(block.type_description);
+
+		if (block.type_description->op == SpvOpTypeRuntimeArray)
+			uniVar.isRuntime = true;
+		else
+			uniVar.isRuntime = false;
+
+		for (uint32_t indexMember = 0; indexMember < block.member_count; indexMember++)
+			uniVar.mMembers.push_back(ParseRuntimeUniformMembers(block.members[indexMember]));
+		return uniVar;
+	}
+
+	void BasePipeline::ParseRuntimeUniform(SpvReflectDescriptorBinding* binding)
 	{
 		UniformRuntime uniform;
 		uniform.mName = binding->name;
@@ -256,38 +304,7 @@ namespace Soon
 		std::cout << "UniformRuntime Op: " << binding->type_description->op << std::endl;
 
 		for (uint32_t indexMember = 0; indexMember < binding->block.member_count; indexMember++)
-		{
-			UniformRuntimeVar uniVar;
-			uniVar._name = binding->block.members[indexMember].name;
-			uniVar._offset = binding->block.members[indexMember].offset;
-			uniVar._size = binding->block.members[indexMember].size;
-
-			std::cout << "\t UniformRuntimeVar Name : " << uniVar._name << std::endl;
-			std::cout << "\t UniformRuntimeVar Offset : " << uniVar._offset << std::endl;
-			std::cout << "\t UniformRuntimeVar Size : " << uniVar._size << std::endl;
-			std::cout << "\t UniformRuntimeVar SpvOp: " << binding->block.members[indexMember].type_description->op << std::endl;
-
-			uniVar.dimCount = binding->block.members[indexMember].type_description->traits.array.dims_count;
-			std::cout << "\t UniformRuntimeVar DimCount: " << uniVar.dimCount << std::endl;
-
-			if (uniVar.dimCount > 0)
-				uniVar.dim = new uint32_t[uniVar.dimCount];
-
-			for (uint32_t index = 0 ; index < uniVar.dimCount ; index++)
-			{
-				uniVar.dim[index] = binding->block.members[indexMember].type_description->traits.array.dims[index];
-				std::cout << "\t UniformRuntime Dim: " << uniVar.dim[index] << std::endl;
-			}
-
-			uniVar._type = SpvTypeToVertexType(binding->block.members[indexMember].type_description);
-
-			if (binding->block.members[indexMember].type_description->op == SpvOpTypeRuntimeArray)
-				uniVar.isRuntime = true;
-			else
-				uniVar.isRuntime = false;
-
-			uniform.mMembers.push_back(uniVar);
-		}
+			uniform.mMembers.push_back(ParseRuntimeUniformMembers(binding->block.members[indexMember]));
 
 		if (_conf->IsUniqueSet(binding->set))
 			_mUbm.AddUniqueUniform(uniform);
@@ -312,11 +329,11 @@ namespace Soon
 		for (uint32_t index = 0; index < count; index++)
 		{
 			if (IsImageType(bindings[index]->type_description->type_flags))
-				GetTextureUniform(bindings[index]);
+				ParseTextureUniform(bindings[index]);
 			else if (IsRuntimeUniform(bindings[index]))
-				GetRuntimeUniform(bindings[index]);
+				ParseRuntimeUniform(bindings[index]);
 			else
-				GetUniform(bindings[index]);
+				ParseUniform(bindings[index]);
 
 			// uboLayout
 			VkDescriptorSetLayoutBinding ubo;

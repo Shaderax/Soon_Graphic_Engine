@@ -123,7 +123,7 @@ namespace Soon
 		return size;
 	}
 
-	VertexDescription UniformRuntime::GetVertexDescription(std::vector<std::string> varNames)
+	VertexDescription UniformRuntime::GetVertexDescription(std::vector<std::string> varNames) const
 	{
 		VertexDescription description;
 		uint32_t lastOffset = 0;
@@ -1232,7 +1232,6 @@ namespace Soon
 
 	ImageRenderer GraphicsInstance::CreateTextureImage(Texture* texture)
 	{
-		std::cout << "width " << texture->mWidth <<  " " << "Height : " << texture->mHeight << "Format : " << texture->GetFormat().GetSize() << std::endl;
 		ImageRenderer ir;
 		size_t imageSize = texture->GetArrayLayer() * texture->mWidth * texture->mHeight * texture->GetFormat().GetSize();
 

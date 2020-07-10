@@ -63,6 +63,7 @@ struct UniformVar
 	VertexElementType type;
 	uint32_t size;
 	uint32_t offset;
+	std::vector<UniformVar> mMembers;
 	uint32_t dimCount;
 	uint32_t* dim;
 };
@@ -102,6 +103,7 @@ struct UniformRuntimeVar
 	uint32_t _offset;
 	bool isRuntime;
 	std::vector<uint32_t> numInBuffer;
+	std::vector<UniformRuntimeVar> mMembers;
 	uint32_t dimCount;
 	uint32_t* dim;
 };
@@ -118,7 +120,7 @@ struct UniformRuntime
 	uint32_t mDimCount;
 	uint32_t* mDims;
 
-	VertexDescription GetVertexDescription(std::vector<std::string> varNames);
+	VertexDescription GetVertexDescription(std::vector<std::string> varNames) const;
 };
 
 // TODO: DIM

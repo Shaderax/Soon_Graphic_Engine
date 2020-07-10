@@ -44,9 +44,12 @@ namespace Soon
 		std::unordered_map<uint32_t, uint32_t> m_ToDraw;
 		std::vector<uint32_t> _freeId;
 
-		void GetUniform(SpvReflectDescriptorBinding* binding);
-		void GetTextureUniform(SpvReflectDescriptorBinding* binding);
-		void GetRuntimeUniform(SpvReflectDescriptorBinding* binding);
+		void ParseUniform(SpvReflectDescriptorBinding* binding);
+		void ParseTextureUniform(SpvReflectDescriptorBinding* binding);
+		void ParseRuntimeUniform(SpvReflectDescriptorBinding* binding);
+
+		UniformVar ParseUniformMembers(SpvReflectBlockVariable& block) const;
+		UniformRuntimeVar ParseRuntimeUniformMembers(SpvReflectBlockVariable& block) const;
 
 	public:
 		std::vector<DefaultUniformStruct> _defaultUniform
@@ -92,6 +95,8 @@ namespace Soon
 		void GetDescriptorBindings( spv_reflect::ShaderModule& reflection );
 
 		void SetRuntimeAmount(std::string name, uint32_t amount, uint32_t idMat);
+
+		const UniformRuntime& GetUniformRuntime(std::string name) const;
 	};
 
 	VkFormat VertexTypeToVkFormat(VertexElementType vt);

@@ -361,7 +361,6 @@ namespace Soon
 		mr.count = 1;
 		mr.imageRenderer = GraphicsInstance::GetInstance()->CreateTextureImage(texture);
 		mr.image._imageView = GraphicsInstance::GetInstance()->CreateImageView(mr.imageRenderer._textureImage, TextureFormatToVkFormat(texture->GetFormat()), VK_IMAGE_ASPECT_COLOR_BIT, TextureTypeToVkImageType(texture->GetType()));
-		std::cout << "Texture Type: " << TextureTypeToVkImageType(texture->GetType()) << std::endl;
 		mr.image._textureSampler = GraphicsInstance::GetInstance()->CreateTextureSampler(texture);
 		m_Textures[textureId] = mr;
 

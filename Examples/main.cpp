@@ -171,6 +171,9 @@ int main()
 	 *  COMPUTE
 	 */
 	ComputePipeline* pip = (ComputePipeline*)GraphicsRenderer::GetInstance()->AddPipeline("./Examples/TestParticle.json");
+	const UniformRuntime& uniform = pip->GetUniformRuntime("Particles");
+	VertexDescription description = uniform.GetVertexDescription({"position"});
+	exit(0);
 
 	double lastTime = 0;
 	bool did = false;
