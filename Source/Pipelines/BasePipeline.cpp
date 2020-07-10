@@ -18,6 +18,8 @@ namespace Soon
 		vkDestroyPipeline(device, _pipeline, nullptr);
 		vkDestroyPipelineLayout(device, _pipelineLayout, nullptr);
 
+		delete _conf;
+
 		DestroyAllUniforms();
 	}
 
@@ -67,6 +69,11 @@ namespace Soon
 		//}
 		return (0);
 	}
+
+	void BasePipeline::SetRuntimeAmount(std::string name, uint32_t amount, uint32_t idMat)
+	{
+		_mUbm.SetRuntimeAmount(name, amount, idMat);
+	}
 	/**
 	 * PIPELINES
 	 */
@@ -81,16 +88,6 @@ namespace Soon
 	void BasePipeline::UpdateData( int currentImg )
 	{
 		_mUbm.UpdateToGPU(currentImg);
-	}
-
-	int32_t BasePipeline::IsDefaultVertexInput(std::string name)
-	{
-		for (uint32_t index = 0; index < DefaultVertexInput.size(); index++)
-		{
-			if (DefaultVertexInput[index].inputName == name)
-				return (index);
-		}
-		return (-1);
 	}
 
 	void* BasePipeline::Get(std::string name, uint32_t id)
@@ -167,6 +164,18 @@ namespace Soon
 			if (binding->block.members[indexMember].type_description->traits.array.dims_count > 0)
 				std::cout << "\t UniformVar Dim: " << binding->block.members[indexMember].type_description->traits.array.dims[0] << std::endl;
 
+			uniVar.dimCount = binding->block.members[indexMember].type_description->traits.array.dims_count;
+			std::cout << "\t UniformVar DimCount: " << uniVar.dimCount << std::endl;
+
+			if (uniVar.dimCount > 0)
+				uniVar.dim = new uint32_t[uniVar.dimCount];
+
+			for (uint32_t index = 0 ; index < uniVar.dimCount ; index++)
+			{
+				uniVar.dim[index] = binding->block.members[indexMember].type_description->traits.array.dims[index];
+				std::cout << "\t UniformVar Dim: " << uniVar.dim[index] << std::endl;
+			}
+
 			uniVar.type = SpvTypeToVertexType(binding->block.members[indexMember].type_description);
 
 			uniform._members.push_back(uniVar);
@@ -196,12 +205,14 @@ namespace Soon
 		texture._name = binding->name;
 		texture._type = SpvTypeToVertexType(binding->type_description);
 
-		std::cout << "UniformTexture Name: " << texture._name << std::endl;
+		std::cout << std::endl << "UniformTexture Name: " << texture._name << std::endl;
 		std::cout << "UniformTexture Op: " << binding->type_description->op << std::endl;
 
 		texture.dimCount = binding->type_description->traits.array.dims_count;
+
 		if (texture.dimCount > 0)
 			texture.dim = new uint32_t[texture.dimCount];
+
 		for (uint32_t index = 0 ; index < binding->type_description->traits.array.dims_count ; index++)
 		{
 			texture.dim[index] = binding->type_description->traits.array.dims[index];
@@ -209,8 +220,7 @@ namespace Soon
 		}
 
 		int32_t indexDefault = IsDefaultUniform(binding->name);
-		//texture.isTexture = true;
-		// TODO: Unique
+
 		texture._updateFunct = nullptr;
 		if (_conf->IsUniqueSet(binding->set))
 			_mUbm.AddUniqueUniform(texture);
@@ -222,23 +232,24 @@ namespace Soon
 	void BasePipeline::GetRuntimeUniform(SpvReflectDescriptorBinding* binding)
 	{
 		UniformRuntime uniform;
-		uniform._name = binding->name;
-		uniform._binding = binding->binding;
-		uniform._set = binding->set;
-		uniform._size = binding->block.size + (binding->block.size % 32);
+		uniform.mName = binding->name;
+		if (uniform.mName.empty())
+			uniform.mName = binding->type_description->type_name;
+		uniform.mBinding = binding->binding;
+		uniform.mSet = binding->set;
+		uniform.mSize = binding->block.size + (binding->block.size % 32);
 
-		std::cout << "UniformRuntime Name : " << uniform._name << ", Set : " << uniform._set << ", Binding: " << uniform._binding << std::endl;
+		std::cout << "UniformRuntime Name : " << uniform.mName << ", Set : " << uniform.mSet << ", Binding: " << uniform.mBinding << std::endl;
+		std::cout << "UniformRuntime Size : " << uniform.mSize << std::endl;
 
-		//TODO: DIM MEMBER
+		uniform.mDimCount = binding->type_description->traits.array.dims_count;
 
-		uniform.dimCount = binding->type_description->traits.array.dims_count;
-
-		if (uniform.dimCount > 0)
-			uniform.dim = new uint32_t[uniform.dimCount];
+		if (uniform.mDimCount > 0)
+			uniform.mDims = new uint32_t[uniform.mDimCount];
 
 		for (uint32_t index = 0 ; index < binding->type_description->traits.array.dims_count ; index++)
 		{
-			uniform.dim[index] = binding->type_description->traits.array.dims[index];
+			uniform.mDims[index] = binding->type_description->traits.array.dims[index];
 			std::cout << "UniformRuntime Dim: " << binding->type_description->traits.array.dims[index] << std::endl;
 		}
 
@@ -257,6 +268,7 @@ namespace Soon
 			std::cout << "\t UniformRuntimeVar SpvOp: " << binding->block.members[indexMember].type_description->op << std::endl;
 
 			uniVar.dimCount = binding->block.members[indexMember].type_description->traits.array.dims_count;
+			std::cout << "\t UniformRuntimeVar DimCount: " << uniVar.dimCount << std::endl;
 
 			if (uniVar.dimCount > 0)
 				uniVar.dim = new uint32_t[uniVar.dimCount];
@@ -264,7 +276,7 @@ namespace Soon
 			for (uint32_t index = 0 ; index < uniVar.dimCount ; index++)
 			{
 				uniVar.dim[index] = binding->block.members[indexMember].type_description->traits.array.dims[index];
-				std::cout << "UniformRuntime Dim: " << uniVar.dim[index] << std::endl;
+				std::cout << "\t UniformRuntime Dim: " << uniVar.dim[index] << std::endl;
 			}
 
 			uniVar._type = SpvTypeToVertexType(binding->block.members[indexMember].type_description);
@@ -274,19 +286,9 @@ namespace Soon
 			else
 				uniVar.isRuntime = false;
 
-			uniform._members.push_back(uniVar);
+			uniform.mMembers.push_back(uniVar);
 		}
-				/*
-				Comment je fais pour coller une fonction d'update a mes uniform ?
-				Pour que ma camera soit update auto
-				Genre mes models sont par id, comment le mec fait pour dire la pos pour le model ? Faudrait que la mesh connaisse son entity owner et nous passe son id.
-				void funct( void )
-				{
-					mat4 mat .... operation {entity.GetComponent<Transform>()};
-					memcpy(um, mat);
-				}
-				Mesh.GetMaterial().GetPipeline()->SetUpdateFunction("um", &funct);
-				*/
+
 		if (_conf->IsUniqueSet(binding->set))
 			_mUbm.AddUniqueUniform(uniform);
 		else

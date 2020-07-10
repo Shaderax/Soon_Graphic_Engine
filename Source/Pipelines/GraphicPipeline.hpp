@@ -3,9 +3,13 @@
 #include "Pipelines/BasePipeline.hpp"
 
 #include <vector>
+#include <list>
 #include <unordered_map>
 
 #include "Pipelines/GraphicPipelineConf.hpp"
+
+#include "Vertex.hpp"
+#include "MeshVertex.hpp"
 
 namespace Soon
 {
@@ -16,16 +20,21 @@ namespace Soon
 	struct IdRender
 	{
 		uint32_t matId;
-		uint32_t meshId;
+		uint32_t* inputId;
 		bool	cached;
 	};
 
 	class GraphicPipeline : public BasePipeline
 	{
 	private:
-		VertexDescription _vertexDescription;
+		std::vector<VkVertexInputBindingDescription> m_BindingDescription;
+		std::vector<VkVertexInputAttributeDescription> m_AttributeDescriptions;
+
 		std::vector<IdRender> m_RenderData;
 		GraphicPipelineConf* graphicConf;
+
+		MeshVertexDescription	m_MeshVertexInput;
+		std::list<InputBindingDescription>	m_VertexInput;
 	public:
 		GraphicPipeline(GraphicPipelineConf* conf);
 		~GraphicPipeline();
@@ -33,7 +42,8 @@ namespace Soon
 		// TODO: DESTROY _mUbm.CreateDescriptorSetLayout()
 		void RecreatePipeline(void);
 		void GetBindingDescription(void);
-		VertexDescription GetVertexDescription();
+		VertexDescription GetAdditionalVertexInput();
+		MeshVertexDescription GetMeshVertexDescription();
 		void BindCaller(VkCommandBuffer commandBuffer, uint32_t currentImage);
 		
 		void Render(uint32_t id);
@@ -45,5 +55,8 @@ namespace Soon
 
 		void GetInputBindings( spv_reflect::ShaderModule& reflection );
 
+		void SetAttributeDescriptionOffset( uint32_t binding, VertexDescription description );
+
+		void SetBindingVertexInput( uint32_t idMat, uint32_t binding, GpuBuffer& buffer);
 	};
 } // namespace Soon

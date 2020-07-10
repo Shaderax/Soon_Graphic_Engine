@@ -20,11 +20,40 @@ namespace Soon
 	{
 		{"Vertex", EPipelineStage::VERTEX},
 		{"Fragment", EPipelineStage::FRAGMENT},
+		{"Compute", EPipelineStage::COMPUTE}
 	};
 
 	bool IsValidShader( std::string name )
 	{
 		return ValidShaderPath.find(name) != ValidShaderPath.end();
+	}
+
+	void ParseGraphicJson(json& j, GraphicPipelineConf* conf)
+	{
+		for (json::iterator it = j.begin(); it != j.end(); ++it)
+		{
+			if (it.key() == "InputBindings")
+			{
+				for (json::iterator shaderP = it->begin(); shaderP != it->end(); ++shaderP)
+				{
+					conf->AddInputBindings(shaderP.key(), shaderP.value());
+				}
+			}
+			else if (it.key() == "InstanceBinding")
+			{
+				for (json::iterator shaderP = it->begin(); shaderP != it->end(); ++shaderP)
+				{
+					// TODO: HERE
+					conf->SetBindingInputRate(shaderP.value(), VK_VERTEX_INPUT_RATE_INSTANCE);
+					//HAVE TO SAVE IN VEC_OF_INSTZNCE or by input binding
+				}
+			}
+		}
+	}
+
+	void ParseComputeJson(json& j, ComputePipelineConf* conf)
+	{
+
 	}
 
 	void ParseJson(json& j, PipelineConf& conf)
@@ -71,9 +100,15 @@ namespace Soon
 		PipelineConf* conf = nullptr;
 
 		if (j[0]["Type"] == "Graphic")
+		{
 			conf = new GraphicPipelineConf();
+			ParseGraphicJson(j[0], static_cast<GraphicPipelineConf*>(conf));
+		}
 		else if (j[0]["Type"] == "Compute")
+		{
 			conf = new ComputePipelineConf();
+			ParseComputeJson(j[0], static_cast<ComputePipelineConf*>(conf));
+		}
 
 		ParseJson(j[0], *conf);
 

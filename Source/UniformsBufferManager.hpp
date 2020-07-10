@@ -24,9 +24,8 @@ namespace Soon
 
 		uint8_t*	m_CpuBuffer = nullptr;
 		std::vector<VmaAllocation>	m_GpuMemory;
-		std::vector<VkBuffer>		m_GpuBuffer; // TODO: Aligment in vulkan (16)
+		std::vector<VkBuffer>		m_GpuBuffer; // TODO: Aligment in vulkan (32)
 
-		// HERE:
 		uint32_t m_UniqueSize = 0;
 		uint32_t m_NonUniqueSize = 0;
 		std::vector<DescriptorSetDescription> m_Sets;
@@ -68,5 +67,7 @@ namespace Soon
 		void RecreateUniforms( std::unordered_map<uint32_t, uint32_t>& toDraw );
 		void CheckAndResize( uint32_t num );
 
+		void SetRuntimeAmount(std::string name, uint32_t amount, uint32_t idMat);
+		void SetRuntimeVarAmount(UniformRuntime& var, std::string name, uint32_t amount, uint32_t idMat);
 	};
 }

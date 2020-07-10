@@ -40,7 +40,7 @@ namespace Soon
 		std::vector<std::vector<VkDescriptorSetLayoutBinding>> uboLayoutBinding;
 		UniformsBufferManager _mUbm;
 		VkPipeline _pipeline;
-		PipelineConf* _conf; // TODO : DELETE
+		PipelineConf* _conf;
 		std::unordered_map<uint32_t, uint32_t> m_ToDraw;
 		std::vector<uint32_t> _freeId;
 
@@ -49,8 +49,6 @@ namespace Soon
 		void GetRuntimeUniform(SpvReflectDescriptorBinding* binding);
 
 	public:
-		VkVertexInputBindingDescription _bindingDescription;
-		std::vector<VkVertexInputAttributeDescription> _attributeDescriptions;
 		std::vector<DefaultUniformStruct> _defaultUniform
 		{
 			/*
@@ -87,12 +85,13 @@ namespace Soon
 
 		void UpdateData(int currentImg);
 
-		int32_t IsDefaultVertexInput(std::string name);
 		int32_t IsDefaultUniform(std::string name);
 		int32_t IsValidDefaultUniform(SpvReflectDescriptorBinding *block, int32_t index);
 
 		virtual void GetInputBindings( spv_reflect::ShaderModule& reflection );
 		void GetDescriptorBindings( spv_reflect::ShaderModule& reflection );
+
+		void SetRuntimeAmount(std::string name, uint32_t amount, uint32_t idMat);
 	};
 
 	VkFormat VertexTypeToVkFormat(VertexElementType vt);

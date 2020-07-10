@@ -9,6 +9,9 @@
 
 namespace Soon
 {
+	/**
+	 * TEXTURE FORMAT
+	 */
 	TextureFormat::TextureFormat( EnumTextureFormat format )
 	{
 		mFormat = format;
@@ -34,19 +37,29 @@ namespace Soon
 		return !(*this == rhs);
 	}
 
-	Texture::Texture( void ) : m_Data(nullptr), m_UniqueId(Soon::IdError), m_AnisoLevel(1), m_Type(EnumTextureType::TEXTURE_2D)
+	/**
+	 * TEXTURE
+	 */
+	Texture::Texture( void ) : m_Data(nullptr), m_AnisoLevel(1), m_Type(EnumTextureType::TEXTURE_2D), RendererRessource(ERendererRessource::TEXTURE, Soon::IdError)
 	{
 	}
 
 	Texture::Texture( uint32_t width, uint32_t height, EnumTextureFormat format, EnumTextureType type ) : mWidth(width),
 																					mHeight(height),
 																					m_Format(format),
-																					m_UniqueId(Soon::IdError),
 																					m_Type(type),
-																					m_AnisoLevel(1)
+																					m_AnisoLevel(1),
+																					RendererRessource(ERendererRessource::TEXTURE, Soon::IdError)
 	{
 
 		m_Data = new uint8_t[width * height * m_Format.GetSize()]();
+	}
+
+	Texture::~Texture( void )
+	{
+		//TODO: SHARED
+		if (m_Data != nullptr)
+			delete[] m_Data;
 	}
 
 	void Texture::SetPixel( uint32_t x, uint32_t y)
@@ -62,7 +75,7 @@ namespace Soon
 		m_Type = type;
 
 		if (m_Data != nullptr)
-			delete m_Data;
+			delete[] m_Data;
 		
 		m_Data = new uint8_t[mWidth * mHeight * m_Format.GetSize() * (uint8_t)type]();
 

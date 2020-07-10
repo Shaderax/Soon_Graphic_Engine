@@ -4,16 +4,16 @@
 
 namespace Soon
 {
-	Mesh::Mesh(VertexDescription v)
+	Mesh::Mesh(MeshVertexDescription v) : RendererRessource(ERendererRessource::MESH, Soon::IdError)
 	{
 		m_VertexDescription = v;
 	}
 
-	Mesh::Mesh(const Mesh &other)
+	Mesh::Mesh(const Mesh &other) : RendererRessource(ERendererRessource::MESH, other.GetId())
 	{
 	}
 
-	Mesh::Mesh(const Mesh &&other)
+	Mesh::Mesh(const Mesh &&other) : RendererRessource(ERendererRessource::MESH, other.GetId())
 	{
 		//_vertices = other._vertices;
 		//_indices = other._indices;
@@ -28,15 +28,15 @@ namespace Soon
 
 	// Loader Free ?
 
-	void Mesh::SetVertexElement(uint8_t *data, uint32_t size, VertexElement elem)
+	void Mesh::SetVertexElement(uint8_t *data, uint32_t size, MeshVertexElement elem)
 	{
 		assert((m_VertexDescription.HasElement(elem.sementic) && "Has Element"));
 
-		if (!mVertexData)
+		if (!mVertexData.get())
 		{
 			mNumVertex = size;
 			mVertexTotalSize = mNumVertex * m_VertexDescription.GetVertexStrideSize();
-			mVertexData = new uint8_t[mVertexTotalSize]();
+			mVertexData = std::shared_ptr<uint8_t>(new uint8_t[mVertexTotalSize](), std::default_delete<uint8_t[]>());
 		}
 		std::cout << std::endl
 				  << "Elem : " << (int)elem.sementic << std::endl;
@@ -50,7 +50,7 @@ namespace Soon
 		std::cout << "strideSize : " << strideSize << std::endl;
 
 		for (uint32_t index = 0; index < size; index++)
-			memcpy(mVertexData + (index * strideSize) + offset, data + (index * elementSize), elementSize);
+			memcpy(mVertexData.get() + (index * strideSize) + offset, data + (index * elementSize), elementSize);
 	}
 
 	// Material Handle
@@ -90,16 +90,16 @@ namespace Soon
 
 	void Mesh::FreeGpu(void)
 	{
-		if (GraphicsRenderer::GetInstanceOrNull() != nullptr)
-			GraphicsRenderer::GetInstance()->RemoveMesh(m_UniqueId);
-		m_UniqueId = Soon::IdError;
+//		if (GraphicsRenderer::GetInstanceOrNull() != nullptr)
+//			GraphicsRenderer::GetInstance()->RemoveMesh(m_UniqueId);
+//		m_UniqueId = Soon::IdError;
 	}
 
 	void Mesh::SetIndexBuffer(uint32_t *indexData, uint32_t size)
 	{
 		// Need to free indexData
-		mIndices = new uint32_t[size];
-		memcpy(mIndices, indexData, size * sizeof(uint32_t));
+		mIndices = std::shared_ptr<uint32_t>(new uint32_t[size], std::default_delete<uint32_t[]>());
+		memcpy(mIndices.get(), indexData, size * sizeof(uint32_t));
 		mNumIndices = size;
 	}
 } // namespace Soon

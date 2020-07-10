@@ -47,6 +47,8 @@ namespace Soon
 		m_DefaultTexture->SetPixel(1, 1);
 		AddTexture(m_DefaultTexture);
 		std::cout << "Default Texture Id : " << m_DefaultTexture->GetId() << std::endl;
+		delete m_DefaultTexture;
+		m_DefaultTexture = nullptr;
 	}
 
 	GraphicsRenderer::GraphicsRenderer(void) : _changes(false)
@@ -54,42 +56,13 @@ namespace Soon
 		//_instance = this;
 	}
 
-	void GraphicsRenderer::DestroyInvalids( void )
-	{
-		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
-		vkDeviceWaitIdle(device);
-
-		for (uint32_t index = 0 ; index < m_MeshToSupress.size() ; index++)
-		{
-			// TODO: DEGUEU le idle
-			//VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
-			//vkDeviceWaitIdle(device);
-
-			uint32_t meshId = m_MeshToSupress.back();
-			m_MeshToSupress.pop_back();
-
-			vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[meshId].bufferRenderer.vertex.buffer, _meshs[meshId].bufferRenderer.vertex.bufferMemory);
-			vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[meshId].bufferRenderer.indices.buffer, _meshs[meshId].bufferRenderer.indices.bufferMemory);
-
-			_freeId.push_back(meshId);
-		}
-		for (uint32_t index = 0 ; index < m_TextureToSupress.size() ; index++)
-		{
-			uint32_t textureId = m_TextureToSupress.back();
-			m_TextureToSupress.pop_back();
-
-			vmaDestroyImage(GraphicsInstance::GetInstance()->GetAllocator(), m_Textures[textureId].imageRenderer._textureImage, m_Textures[textureId].imageRenderer._textureImageMemory);
-			vkDestroySampler(GraphicsInstance::GetInstance()->GetDevice(), m_Textures[textureId].image._textureSampler, nullptr);
-			vkDestroyImageView(GraphicsInstance::GetInstance()->GetDevice(), m_Textures[textureId].image._imageView, nullptr);
-
-			m_FreeTextureId.push_back(textureId);	
-		}
-	}
 
 	GraphicsRenderer::~GraphicsRenderer(void)
 	{
+		std::cout << "Destroy GraphicsRenderer" << std::endl;
 		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
 		vkDeviceWaitIdle(device);
+
 		RemoveAllPipelines();
 
 		DestroyInvalids();
@@ -98,10 +71,16 @@ namespace Soon
 		{
 			if (_meshs[index].count > 0)
 			{
-				// VERTEX
-				vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[index].bufferRenderer.vertex.buffer, _meshs[index].bufferRenderer.vertex.bufferMemory);
-				// INDICE
-				vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[index].bufferRenderer.indices.buffer, _meshs[index].bufferRenderer.indices.bufferMemory);
+				std::cout << "Destroyed Mesh: " << index << std::endl;
+
+				vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[index].bufferRenderer.vertex.buffer,
+																					_meshs[index].bufferRenderer.vertex.bufferMemory);
+				vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[index].bufferRenderer.indices.buffer,
+																					_meshs[index].bufferRenderer.indices.bufferMemory);
+			}
+			else
+			{
+				std::cout << "NOT Destroyed Mesh: " << index << "count : " << _meshs[index].count << std::endl;
 			}
 		}
 		
@@ -109,10 +88,64 @@ namespace Soon
 		{
 			if (m_Textures[index].count > 0)
 			{
-				vmaDestroyImage(GraphicsInstance::GetInstance()->GetAllocator(), m_Textures[index].imageRenderer._textureImage, m_Textures[index].imageRenderer._textureImageMemory);
+				std::cout << "Destroyed Texture: " << index << std::endl;
+
+				vmaDestroyImage(GraphicsInstance::GetInstance()->GetAllocator(), m_Textures[index].imageRenderer._textureImage,
+																				m_Textures[index].imageRenderer._textureImageMemory);
 				vkDestroySampler(GraphicsInstance::GetInstance()->GetDevice(), m_Textures[index].image._textureSampler, nullptr);
 				vkDestroyImageView(GraphicsInstance::GetInstance()->GetDevice(), m_Textures[index].image._imageView, nullptr);
 			}
+		}
+
+		for (uint32_t index = 0 ; index < m_Buffers.size() ; index++)
+		{
+			if (m_Buffers[index].count > 0)
+			{
+				std::cout << "Destroyed Buffer: " << m_Buffers[index].GetBuffer() << std::endl;
+				vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), m_Buffers[index].GetBuffer(), m_Buffers[index].GetAllocation());
+			}
+		}
+	}
+
+	void GraphicsRenderer::DestroyInvalids( void )
+	{
+		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
+		vkDeviceWaitIdle(device);
+
+		while (!m_MeshToSupress.empty())
+		{
+			uint32_t meshId = m_MeshToSupress.back();
+			m_MeshToSupress.pop_back();
+
+			std::cout << "INVALID Destroyed Mesh: " << meshId << std::endl;
+
+			vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[meshId].bufferRenderer.vertex.buffer, _meshs[meshId].bufferRenderer.vertex.bufferMemory);
+			vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), _meshs[meshId].bufferRenderer.indices.buffer, _meshs[meshId].bufferRenderer.indices.bufferMemory);
+
+			_freeId.push_back(meshId);
+		}
+		while (!m_TextureToSupress.empty())
+		{
+			uint32_t textureId = m_TextureToSupress.back();
+			m_TextureToSupress.pop_back();
+
+			std::cout << "Destroyed Texture: " << textureId << std::endl;
+
+			vmaDestroyImage(GraphicsInstance::GetInstance()->GetAllocator(), m_Textures[textureId].imageRenderer._textureImage, m_Textures[textureId].imageRenderer._textureImageMemory);
+			vkDestroySampler(GraphicsInstance::GetInstance()->GetDevice(), m_Textures[textureId].image._textureSampler, nullptr);
+			vkDestroyImageView(GraphicsInstance::GetInstance()->GetDevice(), m_Textures[textureId].image._imageView, nullptr);
+
+			m_FreeTextureId.push_back(textureId);
+		}
+		while (!m_BufferToSupress.empty())
+		{
+			uint32_t bufferId = m_BufferToSupress.back();
+			m_BufferToSupress.pop_back();
+
+			std::cout << "Destroyed Buffer: " << m_Buffers[bufferId].GetBuffer() << std::endl;
+			vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), m_Buffers[bufferId].GetBuffer(), m_Buffers[bufferId].GetAllocation());
+
+			m_BufferFreeId.push_back(bufferId);
 		}
 	}
 
@@ -219,9 +252,28 @@ namespace Soon
 				val->DestroyAllUniforms();
 	}
 
+	/**
+	 *  MESH
+	 */
 	bool GraphicsRenderer::IsValidMeshId(uint32_t id)
 	{
 		return (id < _meshCounter && _meshs[id].count > 0);
+	}
+
+	uint32_t GraphicsRenderer::AddMesh(uint32_t meshId)
+	{
+		if (meshId != Soon::IdError)
+		{
+			if (IsValidMeshId(meshId))
+			{
+				_meshs[meshId].count += 1;
+				return (meshId);
+			}
+			// TODO: ERROR
+		}
+		std::cout << "MeshId: " << meshId << ", Count: " << _meshs[meshId].count << std::endl;
+
+		return (meshId);
 	}
 
 	uint32_t GraphicsRenderer::AddMesh(Mesh *mesh, uint32_t meshId)
@@ -251,9 +303,12 @@ namespace Soon
 
 		MeshRenderer mr;
 		mr.count = 1;
-		mr.bufferRenderer.vertex = GraphicsInstance::GetInstance()->CreateVertexBuffer(mesh->mVertexData, mesh->mVertexTotalSize);
-		mr.bufferRenderer.indices = GraphicsInstance::GetInstance()->CreateIndexBuffer(mesh->mIndices, mesh->mNumIndices);
+		// TODO: Delete mVertexData for all in Gpu
+		mr.bufferRenderer.vertex = GraphicsInstance::GetInstance()->CreateVertexBuffer(mesh->mVertexData.get(), mesh->mVertexTotalSize);
+		mr.bufferRenderer.indices = GraphicsInstance::GetInstance()->CreateIndexBuffer(mesh->mIndices.get(), mesh->mNumIndices);
 		_meshs[meshId] = mr;
+
+		std::cout << "MeshId: " << meshId << ", Count: " << _meshs[meshId].count << std::endl;
 
 		return (meshId);
 	}
@@ -261,11 +316,13 @@ namespace Soon
 	void GraphicsRenderer::RemoveMesh(uint32_t meshId)
 	{
 		if (meshId == Soon::IdError || !IsValidMeshId(meshId))
-			; // TODO: Error
+			return ; // TODO: Error
 
 		_meshs[meshId].count -= 1;
 		if (_meshs[meshId].count == 0)
 			m_MeshToSupress.push_back(meshId);
+		std::cout << "MeshId: " << meshId << ", Count: " << _meshs[meshId].count << std::endl;
+
 	}
 
 	MeshBufferRenderer& GraphicsRenderer::GetMesh(uint32_t id)
@@ -273,6 +330,9 @@ namespace Soon
 		return (_meshs[id].bufferRenderer);
 	}
 
+	/**
+	 *  TEXTURE
+	 */
 	bool GraphicsRenderer::IsValidTextureId(uint32_t id)
 	{
 		return (id < m_TextureCounter && m_Textures[id].count > 0);
@@ -280,6 +340,7 @@ namespace Soon
 	
 	uint32_t GraphicsRenderer::AddTexture(Texture* texture)
 	{
+
 		if (texture->GetId() != Soon::IdError)
 			return AddTexture(texture->GetId());
 
@@ -300,16 +361,20 @@ namespace Soon
 		mr.count = 1;
 		mr.imageRenderer = GraphicsInstance::GetInstance()->CreateTextureImage(texture);
 		mr.image._imageView = GraphicsInstance::GetInstance()->CreateImageView(mr.imageRenderer._textureImage, TextureFormatToVkFormat(texture->GetFormat()), VK_IMAGE_ASPECT_COLOR_BIT, TextureTypeToVkImageType(texture->GetType()));
+		std::cout << "Texture Type: " << TextureTypeToVkImageType(texture->GetType()) << std::endl;
 		mr.image._textureSampler = GraphicsInstance::GetInstance()->CreateTextureSampler(texture);
 		m_Textures[textureId] = mr;
 
 		texture->m_UniqueId = textureId;
 
+		std::cout << "TextureId: " << textureId << ", Count: " << m_Textures[textureId].count << std::endl;
 		return (textureId);
 	}
 	
 	uint32_t GraphicsRenderer::AddTexture(uint32_t textureId)
 	{
+		std::cout << "TextureId: " << textureId << ", Count: " << m_Buffers[textureId].count << std::endl;
+
 		if (textureId != Soon::IdError)
 		{
 			if (IsValidTextureId(textureId))
@@ -326,11 +391,12 @@ namespace Soon
 	void GraphicsRenderer::RemoveTexture(uint32_t textureId)
 	{
 		if (textureId == Soon::IdError || !IsValidTextureId(textureId))
-			; // TODO: Error
+			return ; // TODO: Error
 
 		m_Textures[textureId].count -= 1;
 		if (m_Textures[textureId].count == 0)
 			m_TextureToSupress.push_back(textureId);
+		std::cout << "TextureId: " << textureId << ", Count: " << m_Textures[textureId].count << std::endl;
 	}
 
 	ImageProperties& GraphicsRenderer::GetImageProperties(uint32_t id)
@@ -342,8 +408,101 @@ namespace Soon
 
 	void GraphicsRenderer::SetDefaultTexture(Texture* texture)
 	{
+		// TODO: HERE
+		RemoveTexture(m_DefaultTexture->GetId());
+		delete m_DefaultTexture;
 
+		texture->m_UniqueId = AddTexture(texture);
+		m_DefaultTexture = texture;
 	}
+
+	/**
+	 * GpuBuffer
+	 */
+
+	bool GraphicsRenderer::IsValidBufferId(uint32_t id)
+	{
+		return (id < m_BufferCounter && m_Buffers[id].count > 0);
+	}
+
+	uint32_t GraphicsRenderer::AddBuffer(uint32_t bufferId)
+	{
+		std::cout << "AddBuffer without" << std::endl;
+		if (bufferId != Soon::IdError)
+		{
+			if (IsValidBufferId(bufferId))
+			{
+				m_Buffers[bufferId].count += 1;
+		std::cout << "BufferId: " << bufferId << ", Count: " << m_Buffers[bufferId].count << std::endl;
+				return (bufferId);
+			}
+			// TODO: ERROR
+		}
+
+		std::cout << "BufferId: " << bufferId << ", Count: " << m_Buffers[bufferId].count << std::endl;
+		return (bufferId);
+	}
+
+	uint32_t GraphicsRenderer::AddBuffer(GpuBuffer& buffer, uint32_t bufferId)
+	{
+		std::cout << "AddBuffer with" << std::endl;
+		if (bufferId != Soon::IdError)
+		{
+			if (IsValidBufferId(bufferId))
+			{
+				m_Buffers[bufferId].count += 1;
+				return (bufferId);
+			}
+			// TODO: ERROR
+		}
+
+		if (!m_BufferFreeId.empty())
+		{
+			bufferId = m_BufferFreeId.back();
+			m_BufferFreeId.pop_back();
+		}
+		else
+		{
+			bufferId = m_BufferCounter;
+			++m_BufferCounter;
+			m_Buffers.emplace_back(buffer.GetBufferUsage(), buffer.GetMemoryUsage(), buffer.GetSize());
+			m_Buffers.back().count = 1;
+			std::cout << "BufferId: " << bufferId << ", Count: " << m_Buffers[bufferId].count << "Buffer: " << m_Buffers.back().GetBuffer() << std::endl;
+			return bufferId;
+		}
+
+		BufferRenderer dataRenderer(buffer.GetBufferUsage(), buffer.GetMemoryUsage(), buffer.GetSize());
+
+		dataRenderer.count = 1;
+		m_Buffers[bufferId] = std::move(dataRenderer);
+
+			std::cout << "BufferId: " << bufferId << ", Count: " << m_Buffers[bufferId].count << "Buffer: " << m_Buffers.back().GetBuffer() << std::endl;
+
+		return (bufferId);
+	}
+
+	void GraphicsRenderer::RemoveBuffer(uint32_t bufferId)
+	{
+		std::cout << "RemoveBuffer" << std::endl;
+		if (bufferId == Soon::IdError || !IsValidBufferId(bufferId))
+			return ; // TODO: Error
+
+		m_Buffers[bufferId].count -= 1;
+		if (m_Buffers[bufferId].count == 0)
+			m_BufferToSupress.push_back(bufferId);
+		std::cout << "BufferId: " << bufferId << ", Count: " << m_Buffers[bufferId].count << "Buffer: " << m_Buffers.back().GetBuffer() << std::endl;
+	}
+
+	BufferRenderer& GraphicsRenderer::GetBufferRenderer(uint32_t id)
+	{
+		//TODO: if id > counter for all Getter
+		if (id == Soon::IdError)
+			throw std::runtime_error("Id == IdError");
+		return m_Buffers[id];
+	}
+
+	/**
+	 */
 
 	void GraphicsRenderer::HasChange(void)
 	{

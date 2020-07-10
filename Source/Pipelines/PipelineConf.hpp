@@ -41,6 +41,7 @@ namespace Soon
 		{
 			return m_DataPtr;
 		}
+		virtual ~GenericProperty() { }
 	};
 
 	template<typename T>
@@ -88,6 +89,8 @@ namespace Soon
 		{
 			return m_PipelineType;
 		}
+
+		virtual ~PipelineConf( void ) {}
 /*
 		template<typename T>
 		void SetProperty(std::string name, T value)

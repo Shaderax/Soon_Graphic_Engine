@@ -7,6 +7,8 @@
 
 #include <cstring>
 
+#include "RendererRessource.hpp"
+
 namespace Soon
 {
 	class GraphicsRenderer;
@@ -55,7 +57,7 @@ namespace Soon
 	/**
 	 * TEXTURE
 	 */
-	class Texture
+	class Texture : RendererRessource
 	{
 	private:
 		uint8_t* m_Data;
@@ -63,7 +65,6 @@ namespace Soon
 		uint8_t		m_MipMapLevel;
 		uint8_t		m_AnisoLevel;
 		TextureFormat	m_Format;
-		uint32_t	m_UniqueId = Soon::IdError;
 		EnumTextureType m_Type;
 
 	public:
@@ -72,6 +73,7 @@ namespace Soon
 
 		Texture( uint32_t width, uint32_t height, EnumTextureFormat format, EnumTextureType type );
 		Texture( void );
+		~Texture( void );
 
 		void SetPixel( uint32_t x, uint32_t y);
 

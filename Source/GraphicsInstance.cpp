@@ -107,6 +107,55 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
 
 namespace Soon
 {
+	/**
+	 * UNIFORMS
+	 */
+	uint32_t GetUniformRuntimeSize(UniformRuntime& uniform, uint32_t id)
+	{
+		uint32_t size = 0;
+		for (UniformRuntimeVar& member : uniform.mMembers)
+		{
+			if (!member.isRuntime)
+				size += member._size;
+			else
+				size += member._size * member.numInBuffer[id];
+		}
+		return size;
+	}
+
+	VertexDescription UniformRuntime::GetVertexDescription(std::vector<std::string> varNames)
+	{
+		VertexDescription description;
+		uint32_t lastOffset = 0;
+		uint32_t offset = 0;
+
+		if (varNames.size() == 0)
+			throw std::runtime_error("varNames is Empty");
+
+		for (const std::string& var : varNames)
+		{
+			offset = 0;
+			VertexElement element;
+			for (const UniformRuntimeVar& member : mMembers)
+			{
+				offset += member._offset;
+				if (member._name == var)
+				{
+					element.mOffset = offset;
+					element.type = member._type;
+					if (lastOffset <= offset)
+						throw std::runtime_error("Wrong var order");
+					lastOffset = offset;
+					break ;
+				}
+			}
+		}
+		return description;
+	}
+
+	/**
+	 * GRAPHICS INSTANCE
+	 */
 	GraphicsInstance *GraphicsInstance::_instance = nullptr;
 
 	GraphicsInstance *GraphicsInstance::GetInstance(void)
@@ -1207,8 +1256,6 @@ namespace Soon
 		TransitionImageLayout(ir._textureImage, TextureFormatToVkFormat(texture->GetFormat()), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, TextureTypeToVkImageType(texture->GetType()));
 
 		vmaDestroyBuffer(m_Allocator, stagingBuffer, staginAlloc);
-		//vkDestroyBuffer(_device, stagingBuffer, nullptr);
-		//vkFreeMemory(_device, stagingBufferMemory, nullptr);
 
 		return (ir);
 	}
@@ -1493,22 +1540,6 @@ namespace Soon
 		return (descriptorSetLayout);
 	}
 
-	BufferRenderer GraphicsInstance::CreateUniformBuffers(size_t size)
-	{
-		BufferRenderer buf;
-		VkDeviceSize bufferSize = size;
-		std::cout << "UNIFORM BUFFER CREATION : " << bufferSize << std::endl;
-
-		buf.buffer.resize(_swapChainImages.size());
-		buf.bufferMemory.resize(_swapChainImages.size());
-		//buf.bufferMemory.resize(_swapChainImages.size());
-
-		for (size_t i = 0; i < _swapChainImages.size(); i++)
-			CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_ONLY, buf.buffer[i], buf.bufferMemory[i]);
-
-		return (buf);
-	}
-
 	void GraphicsInstance::CreateDescriptorPool(void)
 	{
 		VkDescriptorPoolSize poolSize[3] = {};
@@ -1548,9 +1579,8 @@ namespace Soon
 		return (descriptorSets);
 	}
 
-	void GraphicsInstance::UpdateImageDescriptorSets(uint32_t* matIds, uint32_t count, DescriptorSetDescription description, VkDescriptorSet* descriptorSets)
+	void GraphicsInstance::UpdateImageDescriptorSets(uint32_t* matIds, uint32_t count, DescriptorSetDescription& description, VkDescriptorSet* descriptorSets)
 	{
-		std::cout << description.uniformsTexture.size() << std::endl;
 		for (uint32_t index = 0 ; index < description.uniformsTexture.size() ; index++)
 		{
 			for (uint32_t countId = 0 ; countId < count ; countId++)
@@ -1578,16 +1608,45 @@ namespace Soon
 		}
 	}
 
+	void GraphicsInstance::UpdateRuntimeDescriptorSets(uint32_t* matIds, uint32_t count, DescriptorSetDescription& description, VkDescriptorSet* descriptorSets)
+	{
+		for (uint32_t index = 0 ; index < description.uniformsRuntime.size() ; index++)
+		{
+			for (uint32_t countId = 0 ; countId < count ; countId++)
+			{
+				uint32_t bufferId = description.uniformsRuntime[index].mBuffers[matIds[countId]].GetId();
+				BufferRenderer& buffer = GraphicsRenderer::GetInstance()->GetBufferRenderer(bufferId);
+
+				for (size_t i = 0; i < _swapChainImages.size(); i++)
+				{
+					VkDescriptorBufferInfo bufferInfo = {};
+					bufferInfo.buffer = buffer.GetBuffer();
+					bufferInfo.offset = 0;//offset + offsetUniform;
+					bufferInfo.range = buffer.GetSize();
+
+					VkWriteDescriptorSet descriptorWrite = {};
+					descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+					descriptorWrite.dstSet = descriptorSets[i];
+					descriptorWrite.dstBinding = description.uniformsRuntime[index].mBinding;
+					descriptorWrite.dstArrayElement = 0;
+					descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+					descriptorWrite.descriptorCount = 1;
+					descriptorWrite.pBufferInfo = &bufferInfo;
+
+					vkUpdateDescriptorSets(_device, 1, &descriptorWrite, 0, nullptr);
+				}
+			}
+		}
+	}
+
 	void GraphicsInstance::UpdateDescriptorSets(DescriptorSetDescription& description, uint32_t offset, VkDescriptorSet* descriptorSets, VkBuffer* gpuBuffers, uint32_t bufferCount)
 	{
-		std::cout << "UpdateSet : " << (int)description.set << std::endl;
 		// TODO: bufferCount
+		// TODO: DIM
 		uint32_t offsetUniform = 0;
 
 		for (uint32_t index = 0 ; index < description.uniforms.size() ; index++)
 		{
-			std::cout << description.uniforms[index]._name << std::endl;
-
 			for (size_t i = 0; i < _swapChainImages.size(); i++)
 			{
 				VkDescriptorBufferInfo bufferInfo = {};
@@ -1613,17 +1672,6 @@ namespace Soon
 	void GraphicsInstance::DestroyDescriptorSet(VkDescriptorSet descriptor)
 	{
 		vkFreeDescriptorSets(_device, _descriptorPool, 1, &descriptor);
-	}
-
-	UniformSets GraphicsInstance::CreateUniform(size_t size, std::vector<VkDescriptorSetLayout> layoutArray, int dlayout)
-	{
-		UniformSets ds;
-
-		//ds._uniformRender = CreateUniformBuffers(size);
-
-		//ds._descriptorSets = CreateDescriptorSets( size, layoutArray, dlayout, ds._uniformRender.buffer.data(), VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER );
-
-		return (ds);
 	}
 
 	///////////// DEPTH BUFFER / STENCIL BUFFER ///////////////

@@ -1,14 +1,17 @@
 [
 	{
-	   "Name":"Classic",
-	   "Type":"Graphic",
-	   "ShaderPaths":{
-		  "Vertex":"Ressources/Shaders/TestShaders/TestShader.vert.spv",
-		  "Fragment":"Ressources/Shaders/TestShaders/TestShader.frag.spv"
-	   },
-	   "UniqueSets" : [0],
-	   "Properties": {
-		   "FrontFace": "CLOCKWISE"
-	   }
+		"Name": "Classic",
+		"Type": "Graphic",
+		"ShaderPaths": {
+			"Vertex": "Ressources/Shaders/TestShaders/TestShader.vert.spv",
+			"Fragment": "Ressources/Shaders/TestShaders/TestShader.frag.spv"
+		},
+		"Properties": {
+			"FrontFace": "CLOCKWISE"
+		},
+		"InputBindings": {
+			"Pos": 1
+		},
+		"InstanceBinding": [1]
 	}
- ]
+]
