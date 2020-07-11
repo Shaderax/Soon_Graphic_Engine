@@ -21,6 +21,7 @@ namespace Soon
 	{
 		uint32_t matId;
 		uint32_t* inputId;
+		uint32_t numInstance;
 		bool	cached;
 	};
 
@@ -50,13 +51,12 @@ namespace Soon
 		void UnRender(uint32_t id);
 		uint32_t CreateNewId( void );
 		void RemoveId(uint32_t id);
-
 		void SetMeshId(uint32_t matId, uint32_t meshId);
+		bool IsValidToRender(uint32_t id) const;
+		void SetNumInstance(uint32_t id, uint32_t instances);
 
 		void GetInputBindings( spv_reflect::ShaderModule& reflection );
-
 		void SetAttributeDescriptionOffset( uint32_t binding, VertexDescription description );
-
 		void SetBindingVertexInput( uint32_t idMat, uint32_t binding, const GpuBuffer& buffer);
 	};
 } // namespace Soon

@@ -179,7 +179,7 @@ namespace Soon
 		}
 	}
 
-	void GraphicsRenderer::DestroyAllGraphicsPipeline(void)
+	void GraphicsRenderer::DestroyAllPipelines(void)
 	{
 		std::cout << "Renderer : Destroy All Graphics Pipelines" << std::endl;
 
@@ -237,7 +237,7 @@ namespace Soon
 		for( auto const& [key, val] : _graphicPipelines )
 			val->RecreateUniforms();
 		for( auto const& [key, val] : _computePipelines )
-				val->RecreateUniforms();
+			val->RecreateUniforms();
 	}
 
 	void GraphicsRenderer::RecreateAllPipelines(void)

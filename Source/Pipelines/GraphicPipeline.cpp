@@ -42,8 +42,6 @@ namespace Soon
 		_pipeline = GraphicsInstance::GetInstance()->CreatePipeline(dynamic_cast<PipelineConf*>(graphicConf));
 
 		_mUbm.InitBuffers();
-
-		// Alloc Camera
 	}
 
 	// TODO: DESTROY _mUbm.CreateDescriptorSetLayout()
@@ -69,6 +67,12 @@ namespace Soon
 			m_BindingDescription.push_back({it.mBinding, it.mDescription.GetVertexStrideSize(), it.mInputRate});
 	}
 
+	void GraphicPipeline::SetNumInstance(uint32_t id, uint32_t instances)
+	{
+		//TODO: if (IsValidId)
+		m_RenderData[id].numInstance = instances;
+	}
+
 	MeshVertexDescription GraphicPipeline::GetMeshVertexDescription()
 	{
 		return (m_MeshVertexInput);
@@ -82,12 +86,12 @@ namespace Soon
 		if (m_ToDraw.empty())
 			return ;
 
-		std::vector<VkDescriptorSet>& vecDescriptor = _mUbm.GetDescriptorSet(currentImage);
 
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipeline);
 
 		std::vector<DescriptorSetDescription>& sets = _mUbm.GetSets();
 		std::vector<DescriptorSetDescription>& uniqueSets = _mUbm.GetUniqueSets();
+		std::vector<VkDescriptorSet>& vecDescriptor = _mUbm.GetDescriptorSet(currentImage);
 
 		for (uint32_t uniqueId = 0 ; uniqueId < uniqueSets.size() ; uniqueId++)
 		{
@@ -112,15 +116,14 @@ namespace Soon
 
 			for (uint32_t index = 1 ; index < m_BindingDescription.size() ; index++)
 			{
-				if (m_RenderData[it->second].inputId[index] == Soon::IdError)
-					throw std::runtime_error(std::string("BufferId not feed for binding : ") + std::to_string(index));
+				//if (m_RenderData[it->second].inputId[index] == Soon::IdError)
+				//	throw std::runtime_error(std::string("BufferId not feed for binding : ") + std::to_string(index));
 				BufferRenderer& buffer = GraphicsRenderer::GetInstance()->GetBufferRenderer(m_RenderData[it->second].inputId[index]);
 				vkCmdBindVertexBuffers(commandBuffer, m_BindingDescription[index].binding, 1, &(buffer.GetBuffer()), offsets);
 			}
 
 			for (uint32_t setId = 0 ; setId < sets.size() ; setId++)
 			{
-				std::cout << vecDescriptor[uniqueSets.size() + setId + (sets.size() * it->second)] << std::endl;
 				vkCmdBindDescriptorSets(commandBuffer,
 										VK_PIPELINE_BIND_POINT_GRAPHICS,
 										_pipelineLayout,
@@ -130,14 +133,29 @@ namespace Soon
 										0,
 										nullptr);
 			}
-			vkCmdDrawIndexed(commandBuffer, bu.indices.numIndices, 1, 0, 0, 0);
+			vkCmdDrawIndexed(commandBuffer, bu.indices.numIndices, m_RenderData[it->second].numInstance, 0, 0, 0);
 		}
+	}
+
+	bool GraphicPipeline::IsValidToRender(uint32_t id) const
+	{
+		if (!m_RenderData[id].cached || id >= m_RenderData.size())
+			return false;
+		for (uint32_t index = 0 ; index < m_BindingDescription.size() ; index++)
+		{
+			if (m_RenderData[id].inputId[index] == Soon::IdError)
+				return false;
+		}
+		return true;
 	}
 
 	void GraphicPipeline::Render(uint32_t id)
 	{
-		if (!m_RenderData[id].cached || m_RenderData[id].inputId[0] == Soon::IdError)
+		if (!IsValidToRender(id))
+		{
+			std::cout << "Id Not Valid For Render: " << id << std::endl;
 			return ;
+		}
 		m_RenderData[id].cached = false;
 		m_ToDraw[id] = id;
 		GraphicsRenderer::GetInstance()->HasChange();
@@ -145,7 +163,7 @@ namespace Soon
 
 	void GraphicPipeline::UnRender(uint32_t id)
 	{
-		if (m_RenderData[id].cached || id == Soon::IdError)
+		if (!IsValidToRender(id))
 			return ;
 		m_ToDraw.erase(id);
 		m_RenderData[id].cached = true;
@@ -164,6 +182,7 @@ namespace Soon
 				m_RenderData[idMat].inputId[index] = Soon::IdError;
 			m_RenderData[idMat].matId = idMat;
 			m_RenderData[idMat].cached = true;
+			m_RenderData[idMat].numInstance = 1;
 		}
 		else
 		{
@@ -171,7 +190,7 @@ namespace Soon
 			uint32_t* ids = new uint32_t[m_BindingDescription.size()]();
 			for (uint32_t index = 0 ; index < m_BindingDescription.size() ; index++)
 				ids[index] = Soon::IdError;
-			m_RenderData.push_back({idMat, ids, true});
+			m_RenderData.push_back({idMat, ids, 1, true});
 		}
 		_mUbm.Allocate(idMat);
 		GraphicsRenderer::GetInstance()->HasChange();

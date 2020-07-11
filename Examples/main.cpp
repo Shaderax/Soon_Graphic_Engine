@@ -171,6 +171,11 @@ int main()
 	/**
 	 *  COMPUTE
 	 */
+	// Create Pipeline Wich Init my Buffer;
+	// ComputePipeline* tmpPip = (ComputePipeline*)GraphicsRenderer::GetInstance()->AddPipeline("./Examples/InitParticle.json");
+	// Comment ca se lanec une fois genre soit C'est hors Renderer nan pas possible;
+	// Donc C'est dedans mais comment il sait que c'est a exec une fois ?
+	// .Dispatch();
 	uint32_t idComp;
 	uint32_t idGr;
 	ComputePipeline* pip = (ComputePipeline*)GraphicsRenderer::GetInstance()->AddPipeline("./Examples/TestParticle.json");
@@ -182,6 +187,8 @@ int main()
 	grPip->SetMeshId(idGr, mesh->GetId());
 	grPip->SetAttributeDescriptionOffset(1, description);
 	grPip->SetBindingVertexInput(idGr, 1, uniform.mBuffers[idComp]);
+	grPip->SetNumInstance(idGr, 1);
+	grPip->Render(idGr);
 
 	double lastTime = 0;
 	bool did = false;
@@ -219,7 +226,7 @@ int main()
 		GraphicsInstance::GetInstance()->DrawFrame();
 	}
 
-	//delete mesh;
+	delete mesh;
 	//delete meshCubeMap;
 	//delete cubeMap;
 

@@ -9,9 +9,6 @@ namespace Soon
 
 	ComputePipeline::~ComputePipeline()
 	{
-		_pipelineLayout = GraphicsInstance::GetInstance()->CreatePipelineLayout(_mUbm.GetDescriptorSetLayout());
-		computeConf->pipelineInfo.layout = _pipelineLayout;
-		_pipeline = GraphicsInstance::GetInstance()->CreatePipeline(computeConf);
 	}
 
 	void ComputePipeline::Init( void )
@@ -24,30 +21,31 @@ namespace Soon
 		_pipeline = GraphicsInstance::GetInstance()->CreatePipeline(computeConf);
 
 		_mUbm.InitBuffers();
-
-		// Alloc Camera
-
 	}
 
 	// TODO: DESTROY _mUbm.CreateDescriptorSetLayout()
 	void ComputePipeline::RecreatePipeline(void)
 	{
-
+		_pipelineLayout = GraphicsInstance::GetInstance()->CreatePipelineLayout(_mUbm.GetDescriptorSetLayout());
+		computeConf->pipelineInfo.layout = _pipelineLayout;
+		_pipeline = GraphicsInstance::GetInstance()->CreatePipeline(computeConf);
 	}
 
 	void ComputePipeline::BindCaller(VkCommandBuffer commandBuffer, uint32_t currentImage)
 	{
-		std::vector<VkDescriptorSet>& vecDescriptor = _mUbm.GetDescriptorSet(currentImage);
+		if (m_ToDraw.empty())
+			return ;
 
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipeline);
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, _pipeline);
 
 		std::vector<DescriptorSetDescription>& sets = _mUbm.GetSets();
 		std::vector<DescriptorSetDescription>& uniqueSets = _mUbm.GetUniqueSets();
+		std::vector<VkDescriptorSet>& vecDescriptor = _mUbm.GetDescriptorSet(currentImage);
 
 		for (uint32_t uniqueId = 0 ; uniqueId < uniqueSets.size() ; uniqueId++)
 		{
 			vkCmdBindDescriptorSets(commandBuffer,
-									VK_PIPELINE_BIND_POINT_GRAPHICS,
+									VK_PIPELINE_BIND_POINT_COMPUTE,
 									_pipelineLayout,
 									uniqueSets[uniqueId].set,
 									1,
@@ -61,10 +59,8 @@ namespace Soon
 
 			for (uint32_t setId = 0 ; setId < sets.size() ; setId++)
 			{
-				for (uint32_t Id = 0 ; Id < sets[setId].uniformsTexture.size() ; Id++)
-					std::cout << sets[setId].uniformsTexture[Id]._textureId[it->second] << std::endl;
 				vkCmdBindDescriptorSets(commandBuffer,
-										VK_PIPELINE_BIND_POINT_GRAPHICS,
+										VK_PIPELINE_BIND_POINT_COMPUTE,
 										_pipelineLayout,
 										sets[setId].set,
 										1,
@@ -76,17 +72,27 @@ namespace Soon
 		}
 	}
 
-	void ComputePipeline::Render(uint32_t id)
+	bool ComputePipeline::IsValidToProcess(uint32_t id) const
 	{
-		if (!m_ProcessData[id].cached)
+		if (!m_ProcessData[id].cached || id >= m_ProcessData.size())
+			return false;
+		return true;
+	}
+
+	void ComputePipeline::Process(uint32_t id)
+	{
+		if (IsValidToProcess(id))
 			return ;
 		m_ProcessData[id].cached = false;
 		m_ToDraw[id] = id;
 		GraphicsRenderer::GetInstance()->HasChange();
 	}
 
-	void ComputePipeline::UnRender(uint32_t id)
+	void ComputePipeline::UnProcess(uint32_t id)
 	{
+		if (IsValidToProcess(id))
+			return ;
+
 		m_ToDraw.erase(id);
 		m_ProcessData[id].cached = true;
 		GraphicsRenderer::GetInstance()->HasChange();
@@ -100,13 +106,13 @@ namespace Soon
 		{
 			idMat = _freeId.back();
 			_freeId.pop_back();
-			//m_ProcessData[idMat] = {idMat, meshId, false};
+			m_ProcessData[idMat] = {idMat, {0, 0, 0}, false};
 			m_ToDraw[idMat] = idMat;
 		}
 		else
 		{
 			idMat = m_ProcessData.size();
-			//m_ProcessData.push_back({idMat, meshId, false});
+			m_ProcessData.push_back({idMat, {0, 0, 0}, false});
 			m_ToDraw[idMat] = idMat;
 		}
 		_mUbm.Allocate(idMat);

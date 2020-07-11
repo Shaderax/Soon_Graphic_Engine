@@ -154,7 +154,7 @@ namespace Soon
 		void DestroyInvalids( void );
 
 		void DestroyAllUniforms(void);
-		void DestroyAllGraphicsPipeline(void);
+		void DestroyAllPipelines(void);
 
 	};
 } // namespace Soon

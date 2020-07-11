@@ -1068,7 +1068,7 @@ namespace Soon
 
 		vkFreeCommandBuffers(_device, _commandPool, static_cast<uint32_t>(_commandBuffers.size()), _commandBuffers.data());
 
-		GraphicsRenderer::GetInstance()->DestroyAllGraphicsPipeline();
+		GraphicsRenderer::GetInstance()->DestroyAllPipelines();
 
 		vkDestroyRenderPass(_device, _renderPass, nullptr);
 

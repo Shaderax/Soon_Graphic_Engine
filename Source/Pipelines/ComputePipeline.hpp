@@ -24,8 +24,9 @@ namespace Soon
 		void RecreatePipeline(void);
 		void Dispatch( void );
 
-		void Render(uint32_t id);
-		void UnRender(uint32_t id);
+		bool IsValidToProcess(uint32_t id) const;
+		void Process(uint32_t id);
+		void UnProcess(uint32_t id);
 		uint32_t CreateNewId( void );
 		void RemoveId(uint32_t id);
 		void BindCaller(VkCommandBuffer commandBuffer, uint32_t currentImage);

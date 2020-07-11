@@ -9,6 +9,6 @@ namespace Soon
 	{
 	public:
 		ComputePipelineConf(void);
-		VkComputePipelineCreateInfo pipelineInfo;
+		VkComputePipelineCreateInfo pipelineInfo = {};
 	};
 } // namespace Soon
