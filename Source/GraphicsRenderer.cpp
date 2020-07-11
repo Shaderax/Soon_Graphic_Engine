@@ -56,6 +56,36 @@ namespace Soon
 		//_instance = this;
 	}
 
+	void GraphicsRenderer::RecreatePipelines( void )
+	{
+		for (std::string& name : m_PipelinesToRecreate)
+		{
+			if (_computePipelines.find(name) != _computePipelines.end())
+			{
+				_computePipelines[name]->DestroyPipeline();
+				_computePipelines[name]->RecreatePipeline();
+				return ;
+			}
+			else if (_graphicPipelines.find(name) != _graphicPipelines.end())
+			{
+				_graphicPipelines[name]->DestroyPipeline();
+				_graphicPipelines[name]->RecreatePipeline();
+				return ;
+			}
+			// TODO: else
+		}
+	}
+
+	void GraphicsRenderer::Update( void )
+	{
+		if (!IsChange())
+			return ;
+
+		RecreatePipelines();
+		DestroyInvalids();
+		GraphicsInstance::GetInstance()->FillCommandBuffer();
+		ResetChange();
+	}
 
 	GraphicsRenderer::~GraphicsRenderer(void)
 	{
@@ -156,12 +186,12 @@ namespace Soon
 		for( auto const& [key, val] : _graphicPipelines )
 		{
 			if (val)
-				val->DestroyGraphicPipeline();
+				val->DestroyPipeline();
 		}
 		for( auto const& [key, val] : _computePipelines )
 		{
 			if (val)
-				val->DestroyGraphicPipeline();
+				val->DestroyPipeline();
 		}
 	}
 
@@ -178,6 +208,12 @@ namespace Soon
 			_computePipelines.erase(pipeline);
 		}
 		// TODO: HERE
+	}
+
+	void GraphicsRenderer::AddPipelineToRecreate( std::string name )
+	{
+		HasChange();
+		m_PipelinesToRecreate.push_back(name);
 	}
 
 	void GraphicsRenderer::RemoveAllPipelines(void)

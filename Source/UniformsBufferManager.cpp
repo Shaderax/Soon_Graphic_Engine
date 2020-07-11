@@ -309,11 +309,28 @@ namespace Soon
 	{
 	}
 
+	UniformVar& FindUniform(std::vector<UniformVar>& var, std::string name, uint32_t* offset)
+	{
+		size_t pos = name.find('.');
+
+		for (uint32_t index = 0; index < var.size() ; index++)
+		{
+			if (var[index].name == name.substr(0, pos))
+			{
+				if (pos == std::string::npos)
+					return var[index];
+				else
+					return FindUniform(var[index].mMembers, name.substr(pos + 1), offset);
+			}
+			*offset += var[index].size;
+		}
+		throw std::runtime_error("Uniform Not found");
+	}
+
 	void UniformsBufferManager::Set(std::string name, void *value, uint32_t matId )
 	{
 		// TODO: If we exced _uniformDataSize
 		// TODO: Set UNIQUE
-		// TODO: SETTEXTURE
 		// TODO: Runtime
 		// TODO: >1 .
 		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
@@ -322,45 +339,23 @@ namespace Soon
 		void *data = nullptr;
 		size_t pos = name.find(".");
 
-		if (pos == std::string::npos)
+		for (uint32_t setId = 0 ; setId < m_Sets.size() ; setId++)
 		{
-			for (uint32_t setId = 0 ; setId < m_Sets.size() ; setId++)
+			for (uint32_t index = 0; index < m_Sets[setId].uniforms.size() ; index++)
 			{
-				for (uint32_t index = 0; index < m_Sets[setId].uniforms.size() ; index++)
+				if (m_Sets[setId].uniforms[index]._name == name.substr(0, pos))
 				{
-					if (m_Sets[setId].uniforms[index]._name == name)
-					{
-						std::cout << m_Sets[setId].uniforms[index]._name << std::endl;
+					if (pos == std::string::npos)
 						memcpy(m_CpuBuffer + m_UniqueSize + offset + (m_NonUniqueSize * matId), value, m_Sets[setId].uniforms[index]._size);
-						return;
-					}
-					offset += m_Sets[setId].uniforms[index]._size;
-				}
-			}
-		}
-		else
-		{
-			std::string varName;
-			varName = name.substr(pos + 1);
-
-			for (uint32_t setId = 0 ; setId < m_Sets.size() ; setId++)
-			{
-				for (uint32_t index = 0; index < m_Sets[setId].uniforms.size() ; index++)
-				{
-					if (m_Sets[setId].uniforms[index]._name == name.substr(0, pos))
+					else
 					{
-						for (uint32_t member = 0; member < m_Sets[setId].uniforms[index]._members.size(); member++)
-						{
-							if (varName == m_Sets[setId].uniforms[index]._members[member].name)
-							{
-								memcpy(m_CpuBuffer + m_UniqueSize + offset + (m_NonUniqueSize * matId), value, m_Sets[setId].uniforms[index]._members[member].size);
-								//std::cout << "Found Uniform : " << name.substr(0, pos) + "." << varName << std::endl;
-							}
-							offset += m_Sets[setId].uniforms[index]._members[member].size;
-						}
-						return;
+						uint32_t offsetVar = 0;
+						UniformVar& var = FindUniform(m_Sets[setId].uniforms[index]._members, name.substr(pos + 1), &offsetVar);
+						memcpy(m_CpuBuffer + m_UniqueSize + offset + (m_NonUniqueSize * matId), value, var.size);
 					}
+					return;
 				}
+				offset += m_Sets[setId].uniforms[index]._size;
 			}
 		}
 	}
@@ -488,7 +483,7 @@ namespace Soon
 	void UniformsBufferManager::Free( uint32_t idMat )
 	{
 		/*
-		// TODO:
+		// TODO: IMPORTANT
 		uint32_t offset = 0;
 		uint32_t uniqueUniformsSize = m_UniqueUniforms.size() + m_UniqueUniformsTexture.size();
 		uint32_t totalUniformsSize = m_UniformsTexture.size() + m_Uniforms.size();
@@ -571,39 +566,40 @@ namespace Soon
 			for (uint32_t index = 0; index < m_UniqueSets[setId].uniformsRuntime.size() ; index++)
 			{
 				if (m_UniqueSets[setId].uniformsRuntime[index].mName == name)
-				{
 					return m_UniqueSets[setId].uniformsRuntime[index];
-				}
 			}
 		}
+		throw std::runtime_error(name + std::string(" Not Found"));
+
 	}
 
-	void UniformsBufferManager::SetRuntimeVarAmount(UniformRuntime& var, std::string name, uint32_t amount, uint32_t idMat)
+	void UniformsBufferManager::SetRuntimeVarAmount(UniformRuntime& runtime, std::vector<UniformRuntimeVar>& var, std::string name, uint32_t amount, uint32_t idMat)
 	{
 		uint32_t offset = 0;
 		void *data = nullptr;
 		size_t pos = name.find(".");
 
-		for (uint32_t index = 0 ; index < var.mMembers.size() ; index++)
+		for (uint32_t index = 0 ; index < var.size() ; index++)
 		{
-			if (name == var.mMembers[index]._name && var.mMembers[index].isRuntime)
+			if (name == var[index]._name && var[index].isRuntime)
 			{
-				uint32_t runtimeSize = GetUniformRuntimeSize(var, idMat);
-				runtimeSize += var.mMembers[index]._size * (amount - var.mMembers[index].numInBuffer[idMat]);
-				var.mBuffers[idMat].Resize(runtimeSize);
-				var.mMembers[index].numInBuffer[idMat] = amount;
-				// Update
+				if (pos == std::string::npos)
+				{
+					uint32_t runtimeSize = GetUniformRuntimeSize(runtime, idMat);
+					runtimeSize += var[index]._size * (amount - var[index].numInBuffer[idMat]);
+					runtime.mBuffers[idMat].Resize(runtimeSize);
+					var[index].numInBuffer[idMat] = amount;
+					return ;
+				}
+				else
+				{
+					SetRuntimeVarAmount(runtime, var[index].mMembers, name.substr(pos + 1), amount, idMat);
+					return ;
+				}
+				
 			}
 		}
 		// TODO: ERROR
-/*
-		while (name.find(".") != std::string::npos)
-		{
-			if (name == uniform.mName)
-			{
-			}
-		}
-*/
 	}
 
 	// TODO: IdMat norme order
@@ -621,7 +617,7 @@ namespace Soon
 			{
 				if (m_Sets[setId].uniformsRuntime[index].mName == name.substr(0, pos))
 				{
-					SetRuntimeVarAmount(m_Sets[setId].uniformsRuntime[index], name.substr(pos + 1), amount, idMat);
+					SetRuntimeVarAmount(m_Sets[setId].uniformsRuntime[index], m_Sets[setId].uniformsRuntime[index].mMembers, name.substr(pos + 1), amount, idMat);
 					std::vector<VkDescriptorSet> descriptorSets;
 					descriptorSets.resize(m_DescriptorSets.size());
 					for (uint32_t descriptorId = 0 ; descriptorId < m_DescriptorSets.size() ; descriptorId++)
@@ -640,7 +636,7 @@ namespace Soon
 			{
 				if (m_UniqueSets[setId].uniformsRuntime[index].mName == name.substr(0, pos))
 				{
-					SetRuntimeVarAmount(m_UniqueSets[setId].uniformsRuntime[index], name.substr(pos + 1), amount, idMat);
+					SetRuntimeVarAmount(m_UniqueSets[setId].uniformsRuntime[index], m_UniqueSets[setId].uniformsRuntime[index].mMembers, name.substr(pos + 1), amount, idMat);
 					std::vector<VkDescriptorSet> descriptorSets;
 					descriptorSets.resize(m_DescriptorSets.size());
 					for (uint32_t descriptorId = 0 ; descriptorId < m_DescriptorSets.size() ; descriptorId++)

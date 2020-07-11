@@ -77,7 +77,7 @@ namespace Soon
 		virtual void RemoveId(uint32_t id) = 0;
 
 		void DestroyAllUniforms(void);
-		void DestroyGraphicPipeline(void);
+		void DestroyPipeline(void);
 
 		void* Get(std::string name, uint32_t id);
 		// Setter

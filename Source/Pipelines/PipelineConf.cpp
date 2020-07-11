@@ -60,4 +60,14 @@ namespace Soon
 		return VK_SHADER_STAGE_VERTEX_BIT;
 	}
 
+	std::string PipelineConf::GetJsonPath( void ) const
+	{
+		return mJsonPath;
+	}
+
+	void PipelineConf::SetJsonPath( std::string name )
+	{
+		mJsonPath = name;
+	}
+
 } // namespace Soon

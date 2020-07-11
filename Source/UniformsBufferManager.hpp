@@ -68,7 +68,7 @@ namespace Soon
 		void CheckAndResize( uint32_t num );
 
 		void SetRuntimeAmount(std::string name, uint32_t amount, uint32_t idMat);
-		void SetRuntimeVarAmount(UniformRuntime& var, std::string name, uint32_t amount, uint32_t idMat);
+		void SetRuntimeVarAmount(UniformRuntime& runtime, std::vector<UniformRuntimeVar>& var, std::string name, uint32_t amount, uint32_t idMat);
 
 		const UniformRuntime& GetUniformRuntime(std::string name) const;
 

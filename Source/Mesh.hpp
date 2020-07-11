@@ -11,7 +11,7 @@
 
 namespace Soon
 {
-	class Mesh : RendererRessource
+	class Mesh : public RendererRessource
 	{
 		private:
 			GraphicMaterial		m_Material;

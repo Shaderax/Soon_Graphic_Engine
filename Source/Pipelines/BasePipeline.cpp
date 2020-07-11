@@ -21,6 +21,7 @@ namespace Soon
 		delete _conf;
 
 		DestroyAllUniforms();
+		// TODO: CALL REMOVE PIPELINE
 	}
 
 	/**
@@ -83,7 +84,7 @@ namespace Soon
 	/**
 	 * PIPELINES
 	 */
-	void BasePipeline::DestroyGraphicPipeline(void)
+	void BasePipeline::DestroyPipeline(void)
 	{
 		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
 

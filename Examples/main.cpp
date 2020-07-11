@@ -163,16 +163,25 @@ int main()
 	/**
 	 * MESH
 	 */
-	//Mesh* mesh = ObjLoader();
+	Mesh* mesh = ObjLoader();
+	mesh->AllocGpu();
 	//mesh->Render();
 	//mesh->GetMaterial().SetTexture("latexture", texture);
 
 	/**
 	 *  COMPUTE
 	 */
+	uint32_t idComp;
+	uint32_t idGr;
 	ComputePipeline* pip = (ComputePipeline*)GraphicsRenderer::GetInstance()->AddPipeline("./Examples/TestParticle.json");
+	idComp = pip->CreateNewId();
 	const UniformRuntime& uniform = pip->GetUniformRuntime("Particles");
-	VertexDescription description = uniform.GetVertexDescription({"position"});
+	VertexDescription description = uniform.GetVertexDescription({"particles.position"});
+	GraphicPipeline* grPip = (GraphicPipeline*)GraphicsRenderer::GetInstance()->AddPipeline("./Examples/NewDefaultPipeline.json");
+	idGr = grPip->CreateNewId();
+	grPip->SetMeshId(idGr, mesh->GetId());
+	grPip->SetAttributeDescriptionOffset(1, description);
+	grPip->SetBindingVertexInput(idGr, 1, uniform.mBuffers[idComp]);
 
 	double lastTime = 0;
 	bool did = false;
@@ -205,13 +214,7 @@ int main()
 		}
 		*/
 
-		if (GraphicsRenderer::GetInstance()->IsChange())
-		{
-			GraphicsRenderer::GetInstance()->DestroyInvalids();
-			GraphicsInstance::GetInstance()->FillCommandBuffer();
-			GraphicsRenderer::GetInstance()->ResetChange();
-		}
-
+		GraphicsRenderer::GetInstance()->Update();
 		GraphicsInstance::GetInstance()->PollEvent();
 		GraphicsInstance::GetInstance()->DrawFrame();
 	}

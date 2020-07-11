@@ -123,32 +123,47 @@ namespace Soon
 		return size;
 	}
 
+	const UniformRuntimeVar& FindUniformRuntimeVar(const std::vector<UniformRuntimeVar>& var, std::string name, uint32_t* offset)
+	{
+		size_t pos = name.find('.');
+
+		for (uint32_t index = 0; index < var.size() ; index++)
+		{
+			if (var[index]._name == name.substr(0, pos))
+			{
+				if (pos == std::string::npos)
+					return var[index];
+				else
+					return FindUniformRuntimeVar(var[index].mMembers, name.substr(pos + 1), offset);
+			}
+			*offset += var[index]._size; // * numIn ?
+		}
+		throw std::runtime_error("Uniform Not found");
+	}
+
 	VertexDescription UniformRuntime::GetVertexDescription(std::vector<std::string> varNames) const
 	{
 		VertexDescription description;
 		uint32_t lastOffset = 0;
 		uint32_t offset = 0;
+		bool first = true;
 
 		if (varNames.size() == 0)
 			throw std::runtime_error("varNames is Empty");
 
 		for (const std::string& var : varNames)
 		{
-			offset = 0;
 			VertexElement element;
-			for (const UniformRuntimeVar& member : mMembers)
-			{
-				offset += member._offset;
-				if (member._name == var)
-				{
-					element.mOffset = offset;
-					element.type = member._type;
-					if (lastOffset <= offset)
-						throw std::runtime_error("Wrong var order");
-					lastOffset = offset;
-					break ;
-				}
-			}
+
+			offset = 0;
+			const UniformRuntimeVar& runtime = FindUniformRuntimeVar(mMembers, var, &offset);
+			element.mOffset = offset;
+			element.type = runtime._type;
+			if (!first && lastOffset >= offset)
+				throw std::runtime_error("Wrong var order");
+			lastOffset = offset;
+			if (first)
+				first = false;
 		}
 		return description;
 	}

@@ -68,6 +68,8 @@ namespace Soon
 		std::vector<uint32_t> m_MeshToSupress;
 		std::vector<uint32_t> m_TextureToSupress;
 		std::vector<uint32_t> m_BufferToSupress;
+
+		std::vector<std::string> m_PipelinesToRecreate;
 	public:
 		//static GraphicsRenderer* _instance;
 		GraphicsRenderer(void);
@@ -76,6 +78,8 @@ namespace Soon
 		static GraphicsRenderer *GetInstance(void);
 		static void ReleaseInstance(void);
 		void RemoveAllPipelines(void);
+
+		void Update( void );
 
 		void Initialize(void);
 		void RecreateAllUniforms(void);
@@ -122,6 +126,9 @@ namespace Soon
 		}
 
 		void RemovePipeline(std::string pipeline);
+		void AddPipelineToRecreate( std::string name );
+		void RecreatePipelines( void );
+
 
 		// Mesh
 		uint32_t AddMesh(Mesh *mesh, uint32_t meshId);

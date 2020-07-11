@@ -10,8 +10,7 @@ namespace Soon
 	}
 
 	GraphicPipeline::~GraphicPipeline()
-	{
-			
+	{		
 		for ( std::unordered_map<uint32_t, uint32_t>::iterator it = m_ToDraw.begin(); it != m_ToDraw.end(); ++it )
 		{
 			for (uint32_t index = 0 ; index < m_BindingDescription.size() ; index++)
@@ -308,19 +307,21 @@ namespace Soon
 			// TODO: REVOIR LARCHI DES ATTRIBU
 			itAttr->offset = description.data[index].mOffset;
 		}
+		GraphicsRenderer::GetInstance()->AddPipelineToRecreate(_conf->GetJsonPath());
 	}
 
-	void GraphicPipeline::SetBindingVertexInput( uint32_t idMat, uint32_t binding, GpuBuffer& buffer)
+	void GraphicPipeline::SetBindingVertexInput( uint32_t idMat, uint32_t binding, const GpuBuffer& buffer)
 	{
 		if (binding == 0)
 			throw std::runtime_error("Not Good");
 		
+		std::cout << "RenderData: " << m_RenderData.size() << std::endl;
 		for ( uint32_t index = 0 ; index < m_BindingDescription.size() ; index++)
 		{
 			if (m_BindingDescription[index].binding == binding)
 			{
 				// TODO: idMat Checker
-				if (m_RenderData[idMat].inputId[index] == Soon::IdError)
+				if (m_RenderData[idMat].inputId[index] != Soon::IdError)
 					GraphicsRenderer::GetInstance()->RemoveBuffer(m_RenderData[idMat].inputId[index]);
 
 				GraphicsRenderer::GetInstance()->AddBuffer(buffer.GetId());

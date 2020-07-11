@@ -85,7 +85,8 @@ namespace Soon
 
 	void Mesh::AllocGpu(void)
 	{
-		m_UniqueId = GraphicsRenderer::GetInstance()->AddMesh(this, m_UniqueId);
+		if (m_UniqueId == Soon::IdError)
+			m_UniqueId = GraphicsRenderer::GetInstance()->AddMesh(this, m_UniqueId);
 	}
 
 	void Mesh::FreeGpu(void)

@@ -112,6 +112,8 @@ namespace Soon
 
 		ParseJson(j[0], *conf);
 
+		conf->SetJsonPath(path);
+
 		if (conf->GetStages().size() == 0)
 			throw std::runtime_error("No Valid Stage Found in Json");
 

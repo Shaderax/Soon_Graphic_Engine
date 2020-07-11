@@ -125,6 +125,7 @@ struct UniformRuntime
 
 // TODO: DIM
 uint32_t GetUniformRuntimeSize(UniformRuntime& uniform, uint32_t id);
+const UniformRuntimeVar& FindUniformRuntimeVar(std::vector<UniformRuntimeVar>& var, std::string name, uint32_t* offset);
 
 struct DescriptorSetDescription
 {

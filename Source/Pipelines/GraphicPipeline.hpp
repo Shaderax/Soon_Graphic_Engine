@@ -57,6 +57,6 @@ namespace Soon
 
 		void SetAttributeDescriptionOffset( uint32_t binding, VertexDescription description );
 
-		void SetBindingVertexInput( uint32_t idMat, uint32_t binding, GpuBuffer& buffer);
+		void SetBindingVertexInput( uint32_t idMat, uint32_t binding, const GpuBuffer& buffer);
 	};
 } // namespace Soon
