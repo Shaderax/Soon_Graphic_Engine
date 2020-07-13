@@ -91,6 +91,13 @@ namespace Soon
 	{
 		if (!m_ProcessData[id].cached || id >= m_ProcessData.size())
 			return false;
+
+		uint32_t result = 1;
+
+		for (uint32_t index = 0 ; index < 3 ; index++)
+			result *= m_ProcessData[id].workGroup[index];
+		if (result == 0)
+			return (false);
 		return true;
 	}
 
@@ -105,9 +112,6 @@ namespace Soon
 
 	void ComputePipeline::UnProcess(uint32_t id)
 	{
-		if (IsValidToProcess(id))
-			return ;
-
 		m_ToDraw.erase(id);
 		m_ProcessData[id].cached = true;
 		GraphicsRenderer::GetInstance()->HasChange();
@@ -121,14 +125,12 @@ namespace Soon
 		{
 			idMat = _freeId.back();
 			_freeId.pop_back();
-			m_ProcessData[idMat] = {idMat, {0, 0, 0}, false};
-			m_ToDraw[idMat] = idMat;
+			m_ProcessData[idMat] = {idMat, {0, 0, 0}, true};
 		}
 		else
 		{
 			idMat = m_ProcessData.size();
-			m_ProcessData.push_back({idMat, {0, 0, 0}, false});
-			m_ToDraw[idMat] = idMat;
+			m_ProcessData.push_back({idMat, {0, 0, 0}, true});
 		}
 		_mUbm.Allocate(idMat);
 		GraphicsRenderer::GetInstance()->HasChange();

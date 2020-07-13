@@ -649,6 +649,7 @@ namespace Soon
 				}
 			}
 		}
+		throw std::runtime_error(std::string("Not found: ") + name);
 	}
 
 }; // namespace Soon

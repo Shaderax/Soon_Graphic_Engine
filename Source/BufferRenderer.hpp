@@ -16,11 +16,12 @@ namespace Soon
 		uint32_t count = 0;
 		BufferRenderer( VkBufferUsageFlags flags, VmaMemoryUsage memUsg, uint64_t size );
 		~BufferRenderer( void );
-		BufferRenderer(BufferRenderer&) = delete;
-		BufferRenderer(BufferRenderer&&);
+		BufferRenderer(const BufferRenderer&) = delete;
+		BufferRenderer(BufferRenderer&& other);
 		void Destroy( void );
 
 		BufferRenderer& operator=(BufferRenderer&& other) noexcept;
+		BufferRenderer& operator=( const BufferRenderer& other) = delete;
 
 		const VkBuffer& GetBuffer( void ) const;
 		const VmaAllocation& GetAllocation( void ) const;

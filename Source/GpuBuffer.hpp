@@ -17,6 +17,8 @@ namespace Soon
 	public:
 		GpuBuffer( VkBufferUsageFlags flags, VmaMemoryUsage memUsg, uint32_t size );
 		~GpuBuffer( void );
+		GpuBuffer(const GpuBuffer& other);
+		GpuBuffer(GpuBuffer&& other);
 		void SetData( void* data, uint32_t size );
 		void Resize( uint32_t size );
 		VkBufferUsageFlags GetBufferUsage( void ) const;

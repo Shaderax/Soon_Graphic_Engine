@@ -9,6 +9,7 @@ namespace Soon
 	 */
 	BasePipeline::BasePipeline(PipelineConf* conf) : _conf(conf)
 	{
+
 	}
 
 	BasePipeline::~BasePipeline( void )
@@ -18,6 +19,7 @@ namespace Soon
 		vkDestroyPipeline(device, _pipeline, nullptr);
 		vkDestroyPipelineLayout(device, _pipelineLayout, nullptr);
 
+		std::cout << "Destroyed Pipeline: " << _conf->GetJsonPath() << std::endl;
 		delete _conf;
 
 		DestroyAllUniforms();

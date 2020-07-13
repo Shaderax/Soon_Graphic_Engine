@@ -11,13 +11,31 @@ namespace Soon
 		if (size == 0)
 			throw std::runtime_error("GpuBuffer::GpuBuffer: Size == 0");
 
-		//BufferRenderer bufRenderer(m_BufferFlags, m_MemUsg, size);
-
-		m_UniqueId = GraphicsRenderer::GetInstance()->AddBuffer(*this, m_UniqueId);
+		m_UniqueId = GraphicsRenderer::GetInstance()->AddBuffer(*this);
 	}
 
 	GpuBuffer::~GpuBuffer( void )
 	{
+	}
+
+	GpuBuffer::GpuBuffer(const GpuBuffer& other) : RendererRessource(ERendererRessource::BUFFER, other.m_UniqueId)
+	{
+		std::cout << "Copy COnstructor" << std::endl;
+		m_BufferFlags = other.GetBufferUsage();
+		m_MemUsg = other.GetMemoryUsage();
+		m_Size = other.GetSize();
+	}
+
+	GpuBuffer::GpuBuffer(GpuBuffer&& other) : RendererRessource(ERendererRessource::BUFFER, Soon::IdError)
+	{
+		std::cout << "Move COnstructor" << std::endl;
+		m_BufferFlags = other.GetBufferUsage();
+		m_MemUsg = other.GetMemoryUsage();
+		m_Size = other.GetSize();
+		m_UniqueId = other.GetId();
+
+		other.m_UniqueId = Soon::IdError;
+		other.m_Size = 0;
 	}
 
 	void GpuBuffer::Resize( uint32_t size )

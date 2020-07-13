@@ -8,6 +8,7 @@ struct Particle
 
 layout(binding = 0, set = 0) buffer Particles
 {
+	uint num;
 	Particle particles[ ];
 };
 
@@ -20,10 +21,9 @@ float rand(float x)
 
 void main()
 {
-	uint size = 4;
 	uint index = gl_GlobalInvocationID.x;
 	vec3 center = vec3(0.0f, 0.0f, 0.0f);
 
-	particles[index].position = center - ((index % (size/2)) - (size/2));
+	particles[index].position = center - ((index % (num/2)) - (num/2));
 	particles[index].velocity = vec3(rand(gl_GlobalInvocationID.x), rand(gl_GlobalInvocationID.x), rand(gl_GlobalInvocationID.x));
 }

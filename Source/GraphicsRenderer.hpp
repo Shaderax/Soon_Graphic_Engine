@@ -57,7 +57,7 @@ namespace Soon
 		// BUFFER
 		std::uint32_t m_BufferCounter = 0;
 		std::vector<uint32_t> m_BufferFreeId;
-		std::vector<BufferRenderer> m_Buffers;
+		std::vector<BufferRenderer> m_Buffers = {};
 
 		std::unordered_map<std::string, ComputePipeline*> m_UniqueComputePipelines;
 		std::unordered_map<std::string, ComputePipeline*> _computePipelines;
@@ -113,7 +113,7 @@ namespace Soon
 
 		// BUFFER
 		bool IsValidBufferId(uint32_t id);
-		uint32_t AddBuffer(GpuBuffer& buffer, uint32_t bufferId);
+		uint32_t AddBuffer(GpuBuffer& buffer);
 		uint32_t AddBuffer(uint32_t bufferId);
 		void RemoveBuffer(uint32_t bufferId);
 		BufferRenderer& GetBufferRenderer(uint32_t id);

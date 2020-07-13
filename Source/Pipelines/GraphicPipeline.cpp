@@ -163,8 +163,6 @@ namespace Soon
 
 	void GraphicPipeline::UnRender(uint32_t id)
 	{
-		if (!IsValidToRender(id))
-			return ;
 		m_ToDraw.erase(id);
 		m_RenderData[id].cached = true;
 		GraphicsRenderer::GetInstance()->HasChange();

@@ -172,23 +172,30 @@ int main()
 	 *  COMPUTE
 	 */
 	// Create Pipeline Wich Init my Buffer;
-	//ComputePipeline* initPip = (ComputePipeline*)GraphicsRenderer::GetInstance()->AddPipeline("./Examples/InitParticles.json");
-	//initPip->SetProcessFrequency(EProcessFrequency::ONCE);
-	//initPip->Dispatch();
+	uint32_t numParticles = 100;
+	ComputePipeline* initPip = (ComputePipeline*)GraphicsRenderer::GetInstance()->AddPipeline("./Examples/InitParticles.json");
+	initPip->SetProcessFrequency(EProcessFrequency::ONCE);
+	uint32_t id = initPip->CreateNewId();
+	initPip->Set("Particles.num", &numParticles, id);
+	initPip->SetRuntimeAmount("Particles.particles", numParticles, id);
+	initPip->SetWorkGroup(id, numParticles, 1, 1);
+	initPip->Dispatch();
 
 	uint32_t idComp;
 	uint32_t idGr;
 	ComputePipeline* pip = (ComputePipeline*)GraphicsRenderer::GetInstance()->AddPipeline("./Examples/TestParticle.json");
 	idComp = pip->CreateNewId();
-	const UniformRuntime& uniform = pip->GetUniformRuntime("Particles");
-	VertexDescription description = uniform.GetVertexDescription({"particles.position"});
-	GraphicPipeline* grPip = (GraphicPipeline*)GraphicsRenderer::GetInstance()->AddPipeline("./Examples/NewDefaultPipeline.json");
-	idGr = grPip->CreateNewId();
-	grPip->SetMeshId(idGr, mesh->GetId());
-	grPip->SetAttributeDescriptionOffset(1, description);
-	grPip->SetBindingVertexInput(idGr, 1, uniform.mBuffers[idComp]);
-	grPip->SetNumInstance(idGr, 1);
-	grPip->Render(idGr);
+	// I HAVE TO PASS MY RUNTIME BUFFER TO THE OTHER PIPELINE
+
+	//const UniformRuntime& uniform = pip->GetUniformRuntime("Particles");
+	//VertexDescription description = uniform.GetVertexDescription({"particles.position"});
+	//GraphicPipeline* grPip = (GraphicPipeline*)GraphicsRenderer::GetInstance()->AddPipeline("./Examples/NewDefaultPipeline.json");
+	//idGr = grPip->CreateNewId();
+	//grPip->SetMeshId(idGr, mesh->GetId());
+	//grPip->SetAttributeDescriptionOffset(1, description);
+	//grPip->SetBindingVertexInput(idGr, 1, uniform.mBuffers[idComp]);
+	//grPip->SetNumInstance(idGr, 1);
+	//grPip->Render(idGr);
 
 	double lastTime = 0;
 	bool did = false;

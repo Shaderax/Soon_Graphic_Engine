@@ -167,6 +167,7 @@ private:
 	VkPhysicalDevice	_physicalDevice;
 	VkDevice	_device;
 	VkQueue	_graphicsQueue;
+	VkQueue m_ComputeQueue;
 	VkSurfaceKHR	_surface;
 	VkQueue	_presentQueue;
 	VkSwapchainKHR	_swapChain;

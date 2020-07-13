@@ -344,6 +344,9 @@ namespace Soon
 
 		std::cout << "Device Chosen : ";
 		std::cout << GetPhysicalDeviceInfo(_physicalDevice).deviceName << std::endl;
+		std::cout << "Device Min WorkGroup[x]: " << GetPhysicalDeviceInfo(_physicalDevice).limits.maxComputeWorkGroupCount[0] << std::endl;
+		std::cout << "Device Min WorkGroup[y]: " << GetPhysicalDeviceInfo(_physicalDevice).limits.maxComputeWorkGroupCount[1] << std::endl;
+		std::cout << "Device Min WorkGroup[z]: " << GetPhysicalDeviceInfo(_physicalDevice).limits.maxComputeWorkGroupCount[2] << std::endl;
 	}
 
 	void GraphicsInstance::CreateWindow(void)

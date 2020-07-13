@@ -35,6 +35,7 @@ namespace Soon
 		m_Allocation = other.m_Allocation;
 		other.m_Allocation = VK_NULL_HANDLE;
 		m_Size = std::exchange(other.m_Size, 0);
+		count = other.count;
 	}
 
 	void BufferRenderer::Resize( uint32_t size )
@@ -67,6 +68,8 @@ namespace Soon
 			m_Allocation = other.m_Allocation;
 			other.m_Allocation = VK_NULL_HANDLE;
 			m_Size = std::exchange(other.m_Size, 0);
+			count = other.count;
+			other.count = 0;
     	}
     	return *this;
 	}
