@@ -272,7 +272,7 @@ namespace Soon
 																					VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
 																					VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 																					VMA_MEMORY_USAGE_GPU_ONLY,
-																					GetUniformRuntimeSize(m_Sets[index].uniformsRuntime[uniId], 0));
+																					GetUniformRuntimeSize(m_UniqueSets[index].uniformsRuntime[uniId], 0));
 			}
 
 			std::vector<VkDescriptorSet> descriptorSets;

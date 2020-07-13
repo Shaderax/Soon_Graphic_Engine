@@ -59,6 +59,7 @@ namespace Soon
 		std::vector<uint32_t> m_BufferFreeId;
 		std::vector<BufferRenderer> m_Buffers;
 
+		std::unordered_map<std::string, ComputePipeline*> m_UniqueComputePipelines;
 		std::unordered_map<std::string, ComputePipeline*> _computePipelines;
 		std::unordered_map<std::string, GraphicPipeline*> _graphicPipelines;
 
@@ -80,6 +81,7 @@ namespace Soon
 		void RemoveAllPipelines(void);
 
 		void Update( void );
+		void SetProcessFrequency( std::string name, EProcessFrequency frequency );
 
 		void Initialize(void);
 		void RecreateAllUniforms(void);
@@ -96,34 +98,7 @@ namespace Soon
 		//NEW
 		// Max pipelines reach
 		//template <typename... Args>
-		BasePipeline* AddPipeline(std::string name)/*, Args... args)*/
-		{
-			GraphicPipelinesIterator graphicPip = _graphicPipelines.find(name);
-			if (graphicPip != _graphicPipelines.end())
-				return graphicPip->second;
-			ComputePipelinesIterator computePip = _computePipelines.find(name);
-			if (computePip != _computePipelines.end())
-				return computePip->second;
-			
-			PipelineConf* conf = ReadPipelineJson(name);
-
-			BasePipeline* pipeline;
-			if ((conf->GetType() == EPipelineType::COMPUTE))
-			{
-				pipeline = new ComputePipeline(reinterpret_cast<ComputePipelineConf*>(conf));
-				_computePipelines[name] = reinterpret_cast<ComputePipeline*>(pipeline);
-			}
-			else if ((conf->GetType() == EPipelineType::GRAPHIC))
-			{
-				pipeline = new GraphicPipeline(reinterpret_cast<GraphicPipelineConf*>(conf));
-				_graphicPipelines[name] = reinterpret_cast<GraphicPipeline*>(pipeline);
-			}
-
-			pipeline->Init();
-			_changes = true;
-
-			return (pipeline);
-		}
+		BasePipeline* AddPipeline(std::string name);/*, Args... args)*/
 
 		void RemovePipeline(std::string pipeline);
 		void AddPipelineToRecreate( std::string name );

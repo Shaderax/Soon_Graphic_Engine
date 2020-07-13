@@ -908,7 +908,7 @@ namespace Soon
 
 			vkCmdEndRenderPass(_commandBuffers[i]);
 
-			//GraphicsRenderer::GetInstance()->ComputePipelinesBindCaller(_commandBuffers[i], i);
+			GraphicsRenderer::GetInstance()->ComputePipelinesBindCaller(_commandBuffers[i], i);
 
 			if (vkEndCommandBuffer(_commandBuffers[i]) != VK_SUCCESS)
 				throw std::runtime_error("failed to record command buffer!");

@@ -1,0 +1,29 @@
+#version 450
+
+struct Particle
+{
+	vec3 position;
+	vec3 velocity;
+};
+
+layout(binding = 0, set = 0) buffer Particles
+{
+	Particle particles[ ];
+};
+
+layout (local_size_x = 128) in;
+
+float rand(float x)
+{
+	return fract(sin(x)*1.0);
+}
+
+void main()
+{
+	uint size = 4;
+	uint index = gl_GlobalInvocationID.x;
+	vec3 center = vec3(0.0f, 0.0f, 0.0f);
+
+	particles[index].position = center - ((index % (size/2)) - (size/2));
+	particles[index].velocity = vec3(rand(gl_GlobalInvocationID.x), rand(gl_GlobalInvocationID.x), rand(gl_GlobalInvocationID.x));
+}

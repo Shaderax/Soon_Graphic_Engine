@@ -172,10 +172,10 @@ int main()
 	 *  COMPUTE
 	 */
 	// Create Pipeline Wich Init my Buffer;
-	// ComputePipeline* tmpPip = (ComputePipeline*)GraphicsRenderer::GetInstance()->AddPipeline("./Examples/InitParticle.json");
-	// Comment ca se lanec une fois genre soit C'est hors Renderer nan pas possible;
-	// Donc C'est dedans mais comment il sait que c'est a exec une fois ?
-	// .Dispatch();
+	//ComputePipeline* initPip = (ComputePipeline*)GraphicsRenderer::GetInstance()->AddPipeline("./Examples/InitParticles.json");
+	//initPip->SetProcessFrequency(EProcessFrequency::ONCE);
+	//initPip->Dispatch();
+
 	uint32_t idComp;
 	uint32_t idGr;
 	ComputePipeline* pip = (ComputePipeline*)GraphicsRenderer::GetInstance()->AddPipeline("./Examples/TestParticle.json");

@@ -31,6 +31,11 @@ namespace Soon
 		_pipeline = GraphicsInstance::GetInstance()->CreatePipeline(computeConf);
 	}
 
+	void ComputePipeline::SetProcessFrequency(EProcessFrequency freq)
+	{
+		GraphicsRenderer::GetInstance()->SetProcessFrequency(_conf->GetJsonPath(), freq);
+	}
+
 	void ComputePipeline::BindCaller(VkCommandBuffer commandBuffer, uint32_t currentImage)
 	{
 		if (m_ToDraw.empty())
@@ -70,6 +75,16 @@ namespace Soon
 			}
 			vkCmdDispatch(commandBuffer, m_ProcessData[it->second].workGroup[0], m_ProcessData[it->second].workGroup[1], m_ProcessData[it->second].workGroup[2]);
 		}
+	}
+
+	void ComputePipeline::Dispatch( void )
+	{
+		// TODO: Need to replace for wait semaphore
+		VkCommandBuffer commandBuffer = GraphicsInstance::GetInstance()->BeginSingleTimeCommands();
+
+		BindCaller(commandBuffer, GraphicsInstance::GetInstance()->GetNextIdImageToRender());
+
+		GraphicsInstance::GetInstance()->EndSingleTimeCommands(commandBuffer);
 	}
 
 	bool ComputePipeline::IsValidToProcess(uint32_t id) const

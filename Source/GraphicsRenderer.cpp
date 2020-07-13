@@ -72,6 +72,12 @@ namespace Soon
 				_graphicPipelines[name]->RecreatePipeline();
 				return ;
 			}
+			else if (m_UniqueComputePipelines.find(name) != m_UniqueComputePipelines.end())
+			{
+				m_UniqueComputePipelines[name]->DestroyPipeline();
+				m_UniqueComputePipelines[name]->RecreatePipeline();
+				return ;
+			}
 			// TODO: else
 		}
 	}
@@ -179,6 +185,30 @@ namespace Soon
 		}
 	}
 
+	void GraphicsRenderer::SetProcessFrequency( std::string name, EProcessFrequency frequency )
+	{
+		if (frequency == EProcessFrequency::FRAME)
+		{
+			if (m_UniqueComputePipelines.find(name) != m_UniqueComputePipelines.end())
+			{
+				_computePipelines[name] = m_UniqueComputePipelines[name];
+				m_UniqueComputePipelines.erase(name);
+				HasChange();
+				return ;
+			}
+		}
+		else if (frequency == EProcessFrequency::ONCE)
+		{
+			if (_computePipelines.find(name) != _computePipelines.end())
+			{
+				m_UniqueComputePipelines[name] = _computePipelines[name];
+				_computePipelines.erase(name);
+				HasChange();
+				return ;
+			}
+		}
+	}
+
 	void GraphicsRenderer::DestroyAllPipelines(void)
 	{
 		std::cout << "Renderer : Destroy All Graphics Pipelines" << std::endl;
@@ -189,6 +219,11 @@ namespace Soon
 				val->DestroyPipeline();
 		}
 		for( auto const& [key, val] : _computePipelines )
+		{
+			if (val)
+				val->DestroyPipeline();
+		}
+		for( auto const& [key, val] : m_UniqueComputePipelines)
 		{
 			if (val)
 				val->DestroyPipeline();
@@ -207,6 +242,11 @@ namespace Soon
 			delete _computePipelines[pipeline];
 			_computePipelines.erase(pipeline);
 		}
+		else if (m_UniqueComputePipelines.find(pipeline) != m_UniqueComputePipelines.end())
+		{
+			delete m_UniqueComputePipelines[pipeline];
+			m_UniqueComputePipelines.erase(pipeline);
+		}
 		// TODO: HERE
 	}
 
@@ -224,9 +264,12 @@ namespace Soon
 			delete val;
 		for( auto const& [key, val] : _computePipelines )
 			delete val;
+		for( auto const& [key, val] : m_UniqueComputePipelines )
+			delete val;
 
 		_graphicPipelines.clear();
 		_computePipelines.clear();
+		m_UniqueComputePipelines.clear();
 	}
 
 	void GraphicsRenderer::RecreateAllUniforms(void)
@@ -238,6 +281,8 @@ namespace Soon
 			val->RecreateUniforms();
 		for( auto const& [key, val] : _computePipelines )
 			val->RecreateUniforms();
+		for( auto const& [key, val] : m_UniqueComputePipelines )
+			val->RecreateUniforms();
 	}
 
 	void GraphicsRenderer::RecreateAllPipelines(void)
@@ -248,6 +293,8 @@ namespace Soon
 				val->RecreatePipeline();
 		for( auto const& [key, val] : _computePipelines )
 				val->RecreatePipeline();
+		for( auto const& [key, val] : m_UniqueComputePipelines )
+				val->RecreatePipeline();
 	}
 
 	void GraphicsRenderer::UpdateAllDatas(uint32_t imageIndex)
@@ -257,6 +304,37 @@ namespace Soon
 				val->UpdateData(imageIndex);
 		for( auto const& [key, val] : _computePipelines )
 				val->UpdateData(imageIndex);
+		for( auto const& [key, val] : m_UniqueComputePipelines )
+				val->UpdateData(imageIndex);
+	}
+
+	//NEW
+	// Max pipelines reach
+	//template <typename... Args>
+	BasePipeline* GraphicsRenderer::AddPipeline(std::string name)/*, Args... args)*/
+	{
+		GraphicPipelinesIterator graphicPip = _graphicPipelines.find(name);
+		if (graphicPip != _graphicPipelines.end())
+			return graphicPip->second;
+		ComputePipelinesIterator computePip = _computePipelines.find(name);
+		if (computePip != _computePipelines.end())
+			return computePip->second;
+		
+		PipelineConf* conf = ReadPipelineJson(name);
+		BasePipeline* pipeline;
+		if ((conf->GetType() == EPipelineType::COMPUTE))
+		{
+			pipeline = new ComputePipeline(reinterpret_cast<ComputePipelineConf*>(conf));
+			_computePipelines[name] = reinterpret_cast<ComputePipeline*>(pipeline);
+		}
+		else if ((conf->GetType() == EPipelineType::GRAPHIC))
+		{
+			pipeline = new GraphicPipeline(reinterpret_cast<GraphicPipelineConf*>(conf));
+			_graphicPipelines[name] = reinterpret_cast<GraphicPipeline*>(pipeline);
+		}
+		pipeline->Init();
+		_changes = true;
+		return (pipeline);
 	}
 
 	void GraphicsRenderer::GraphicPipelinesBindCaller(VkCommandBuffer commandBuffer, uint32_t index)
@@ -286,6 +364,8 @@ namespace Soon
 				val->DestroyAllUniforms();
 		for( auto const& [key, val] : _computePipelines )
 				val->DestroyAllUniforms();
+		for( auto const& [key, val] : m_UniqueComputePipelines )
+			val->DestroyAllUniforms();
 	}
 
 	/**
