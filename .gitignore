@@ -2,6 +2,7 @@ Build
 vert.spv
 frag.spv
 comp.spv
+.gdb*
 
 # Prerequisites
 *.d
