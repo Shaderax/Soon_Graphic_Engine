@@ -18,6 +18,8 @@
 #define TINYOBJLOADER_IMPLEMENTATION // define this in only *one* .cc
 #include "ThirdParty/tinyobjloader/tiny_obj_loader.h"
 
+#include "MeshVertex.hpp"
+
 using namespace Soon;
 
 /**
@@ -26,13 +28,14 @@ using namespace Soon;
 
 Mesh* ObjLoader(void)
 {
-	VertexDescription vd;
-	vd.AddVertexElement(VertexElement(EnumVertexElementSementic::POSITION, VertexElementType(EnumVertexElementType::FLOAT, 1, 3)));
-	vd.AddVertexElement(VertexElement(EnumVertexElementSementic::TEXCOORD, VertexElementType(EnumVertexElementType::FLOAT, 1, 2)));
-	vd.AddVertexElement(VertexElement(EnumVertexElementSementic::NORMAL, VertexElementType(EnumVertexElementType::FLOAT, 1, 3)));
+	MeshVertexDescription vd;
+	vd.AddVertexElement(MeshVertexElement(EnumVertexElementSementic::POSITION, VertexElementType(EnumVertexElementType::FLOAT, 1, 3)));
+	vd.AddVertexElement(MeshVertexElement(EnumVertexElementSementic::TEXCOORD, VertexElementType(EnumVertexElementType::FLOAT, 1, 2)));
+	vd.AddVertexElement(MeshVertexElement(EnumVertexElementSementic::NORMAL, VertexElementType(EnumVertexElementType::FLOAT, 1, 3)));
 	Mesh* mesh = new Mesh(vd);
 
 	std::string inputfile = "./Examples/Cube.obj";
+	//std::string inputfile = "./Examples/Cube.obj";
 	tinyobj::attrib_t attrib;
 	std::vector<tinyobj::shape_t> shapes;
 	std::vector<tinyobj::material_t> materials;
@@ -55,9 +58,9 @@ Mesh* ObjLoader(void)
 	{
 		exit(1);
 	}
-	mesh->SetVertexElement((uint8_t*)attrib.vertices.data(), attrib.vertices.size() / 3, VertexElement(EnumVertexElementSementic::POSITION, VertexElementType(EnumVertexElementType::FLOAT, 1, 3)));
-	mesh->SetVertexElement((uint8_t*)attrib.texcoords.data(), attrib.texcoords.size() / 2, VertexElement(EnumVertexElementSementic::TEXCOORD, VertexElementType(EnumVertexElementType::FLOAT, 1, 2)));
-	mesh->SetVertexElement((uint8_t*)attrib.normals.data(), attrib.normals.size() / 3, VertexElement(EnumVertexElementSementic::NORMAL, VertexElementType(EnumVertexElementType::FLOAT, 1, 3)));
+	mesh->SetVertexElement((uint8_t*)attrib.vertices.data(), attrib.vertices.size() / 3, MeshVertexElement(EnumVertexElementSementic::POSITION, VertexElementType(EnumVertexElementType::FLOAT, 1, 3)));
+	mesh->SetVertexElement((uint8_t*)attrib.texcoords.data(), attrib.texcoords.size() / 2, MeshVertexElement(EnumVertexElementSementic::TEXCOORD, VertexElementType(EnumVertexElementType::FLOAT, 1, 2)));
+	mesh->SetVertexElement((uint8_t*)attrib.normals.data(), attrib.normals.size() / 3, MeshVertexElement(EnumVertexElementSementic::NORMAL, VertexElementType(EnumVertexElementType::FLOAT, 1, 3)));
 
 	std::vector<uint32_t> indices;
 	for (uint32_t index = 0 ; index < shapes[0].mesh.indices.size() ; index++)
@@ -142,14 +145,20 @@ int main()
 	 */
 	Texture texture;
 	int channel, width, height;
-	unsigned char *data = stbi_load("/home/shaderax/Pictures/Alex.png", &width, &height, &channel, 4);
+	unsigned char *data = stbi_load("/home/shaderax/Documents/Project/Late_Night/Ressources/Pixel/sprite_15.png", &width, &height, &channel, 4);
 	texture.SetData(data, width, height, TextureFormat(EnumTextureFormat::RGBA));
+	texture.SetFilterMode(EnumFilterMode::NEAREST);
 	stbi_image_free(data);
 
 	/**
 	 * TEXTURE CUBE MAP
 	 */
 	Texture* cubeMap = LoadTextureCubeMap();
+	Mesh* meshCubeMap = ObjLoader();
+	meshCubeMap->GetMaterial().SetPipeline("./Examples/Skybox.json");
+	meshCubeMap->Render();
+	// TODO: CANNOT SETTEXTURE BEFORE RENDER
+	meshCubeMap->GetMaterial().SetTexture("texSampler", *cubeMap);
 	/**
 	 */
 
@@ -157,15 +166,10 @@ int main()
 	 * MESH
 	 */
 	Mesh* mesh = ObjLoader();
+	mesh->AllocGpu();
 	mesh->Render();
-
-	Mesh* meshCubeMap = ObjLoader();
-	meshCubeMap->GetMaterial().SetPipeline("./Examples/Skybox.json");
-	meshCubeMap->Render();
-	meshCubeMap->GetMaterial().SetTexture("texSampler", *cubeMap);
-
 	mesh->GetMaterial().SetTexture("latexture", texture);
-	//mesh->GetMaterial().SetVec3("cou.bondour", vec3<float>(0.2f, 0.1f, 0.0f));
+
 	double lastTime = 0;
 	bool did = false;
 	double time = glfwGetTime();
@@ -177,8 +181,8 @@ int main()
 	while (!GraphicsInstance::GetInstance()->ShouldClose(GraphicsInstance::GetInstance()->GetWindow()))
 	{
 		lastTime = ShowFPS(lastTime);
-		//glfwGetCursorPos(GraphicsInstance::GetInstance()->GetWindow(), &x, &y);
-		//mesh->GetMaterial().SetVec3("cou.bondour", vec3<float>(((float)x / 1280) * 2 - 1, ((float)y / 720) * 2 - 1, 0.0f));
+		glfwGetCursorPos(GraphicsInstance::GetInstance()->GetWindow(), &x, &y);
+		mesh->GetMaterial().SetVec3("cou.bondour", vec3<float>(((float)x / 1280) * 2 - 1, ((float)y / 720) * 2 - 1, 0.0f));
 
 		if (glfwGetTime() - time > 5.0f)
 		{
@@ -195,18 +199,14 @@ int main()
 			}
 		}
 
-		if (GraphicsRenderer::GetInstance()->IsChange())
-		{
-			GraphicsRenderer::GetInstance()->DestroyInvalids();
-			GraphicsInstance::GetInstance()->FillCommandBuffer();
-			GraphicsRenderer::GetInstance()->ResetChange();
-		}
-
+		GraphicsRenderer::GetInstance()->Update();
 		GraphicsInstance::GetInstance()->PollEvent();
 		GraphicsInstance::GetInstance()->DrawFrame();
 	}
 
 	delete mesh;
+	delete meshCubeMap;
+	delete cubeMap;
 
 	// Destroy
 	GraphicsRenderer::ReleaseInstance();

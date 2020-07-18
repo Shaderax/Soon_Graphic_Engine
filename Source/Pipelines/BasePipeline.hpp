@@ -40,12 +40,18 @@ namespace Soon
 		std::vector<std::vector<VkDescriptorSetLayoutBinding>> uboLayoutBinding;
 		UniformsBufferManager _mUbm;
 		VkPipeline _pipeline;
-		PipelineConf* _conf; // TODO : DELETE
+		PipelineConf* _conf;
 		std::unordered_map<uint32_t, uint32_t> m_ToDraw;
 		std::vector<uint32_t> _freeId;
+
+		void ParseUniform(SpvReflectDescriptorBinding* binding);
+		void ParseTextureUniform(SpvReflectDescriptorBinding* binding);
+		void ParseRuntimeUniform(SpvReflectDescriptorBinding* binding);
+
+		UniformVar ParseUniformMembers(SpvReflectBlockVariable& block) const;
+		UniformRuntimeVar ParseRuntimeUniformMembers(SpvReflectBlockVariable& block) const;
+
 	public:
-		VkVertexInputBindingDescription _bindingDescription;
-		std::vector<VkVertexInputAttributeDescription> _attributeDescriptions;
 		std::vector<DefaultUniformStruct> _defaultUniform
 		{
 			/*
@@ -71,7 +77,7 @@ namespace Soon
 		virtual void RemoveId(uint32_t id) = 0;
 
 		void DestroyAllUniforms(void);
-		void DestroyGraphicPipeline(void);
+		void DestroyPipeline(void);
 
 		void* Get(std::string name, uint32_t id);
 		// Setter
@@ -82,12 +88,16 @@ namespace Soon
 
 		void UpdateData(int currentImg);
 
-		int32_t IsDefaultVertexInput(std::string name);
 		int32_t IsDefaultUniform(std::string name);
 		int32_t IsValidDefaultUniform(SpvReflectDescriptorBinding *block, int32_t index);
 
 		virtual void GetInputBindings( spv_reflect::ShaderModule& reflection );
 		void GetDescriptorBindings( spv_reflect::ShaderModule& reflection );
+
+		void SetRuntimeAmount(std::string name, uint32_t amount, uint32_t idMat);
+		void SetRuntimeBuffer(std::string name, GpuBuffer& buffer, uint32_t idMat);
+
+		UniformRuntime& GetUniformRuntime(std::string name);
 	};
 
 	VkFormat VertexTypeToVkFormat(VertexElementType vt);

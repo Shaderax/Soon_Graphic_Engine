@@ -35,7 +35,9 @@ namespace Soon
 		if (m_Properties.find(name) == m_Properties.end())
 			return ; // TODO: Not FOUND
 		
-		memcpy(m_Properties[name].data, (m_Properties[name].funct(value)->GetData()), m_Properties[name].size);
+		GenericProperty* prop = m_Properties[name].funct(value);
+		memcpy(m_Properties[name].data, prop->GetData(), m_Properties[name].size);
+		delete prop;
 	}
 
 	VkShaderStageFlagBits PipelineStageToVk( EPipelineStage stage )
@@ -56,6 +58,16 @@ namespace Soon
 				break;
 		};
 		return VK_SHADER_STAGE_VERTEX_BIT;
+	}
+
+	std::string PipelineConf::GetJsonPath( void ) const
+	{
+		return mJsonPath;
+	}
+
+	void PipelineConf::SetJsonPath( std::string name )
+	{
+		mJsonPath = name;
 	}
 
 } // namespace Soon

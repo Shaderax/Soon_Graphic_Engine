@@ -1,0 +1,9 @@
+[
+	{
+		"Name": "Classic",
+		"Type": "Compute",
+		"ShaderPaths": {
+			"Compute": "Ressources/Shaders/TestShaders/TestParticles.comp.spv"
+		}
+	}
+]

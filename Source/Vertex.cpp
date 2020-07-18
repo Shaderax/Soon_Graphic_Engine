@@ -7,13 +7,6 @@
 
 namespace Soon
 {
-std::vector<VertexInput> DefaultVertexInput
-{
-	{"inPosition", EnumVertexElementSementic::POSITION},
-	{"inNormal", EnumVertexElementSementic::NORMAL},
-	{"inTexCoord", EnumVertexElementSementic::TEXCOORD}
-};
-
 VertexElementType::VertexElementType(void) : baseType(EnumVertexElementType::UNKNOW), column(1), row(1)
 {
 }
@@ -55,33 +48,15 @@ bool operator!=(const VertexElementType &lhs, const VertexElementType &rhs)
 	return !(lhs == rhs);
 }
 
-bool VertexDescription::HasElement(EnumVertexElementSementic sem)
-{
-	for (VertexElement &element : data)
-	{
-		if (element.sementic == sem)
-		{
-			return (true);
-		}
-	}
-	return (false);
-}
-
 void VertexDescription::AddVertexElement(VertexElement element)
 {
-	// true for nothing
-	assert(!HasElement(element.sementic) && "Has Element");
-
 	strideSize += element.type.GetTypeSize();
 	data.push_back(element);
 }
 
-void VertexDescription::AddVertexElement(EnumVertexElementSementic sem, EnumVertexElementType type, uint32_t column, uint32_t row)
+void VertexDescription::AddVertexElement(EnumVertexElementType type, uint32_t column, uint32_t row)
 {
-	assert((!HasElement(sem) && "Has Element"));
-
 	VertexElement ve;
-	ve.sementic = sem;
 	ve.type.baseType = type;
 	ve.type.row = row;
 	ve.type.column = column;
@@ -89,38 +64,18 @@ void VertexDescription::AddVertexElement(EnumVertexElementSementic sem, EnumVert
 	strideSize += ve.type.GetTypeSize();
 }
 
-void VertexDescription::RemoveVertexElement(EnumVertexElementSementic sem)
+void VertexDescription::RemoveVertexElement(uint32_t id)
 {
-	assert(!HasElement(sem) && "Has Element");
+	if (id >= data.size())
+		throw std::runtime_error("Id >= data.size()");
 
-	for (auto iterator = data.begin(); iterator != data.end(); iterator++)
-	{
-		if ((*iterator).sementic == sem)
-		{
-			strideSize -= (*iterator).type.GetTypeSize();
-			data.erase(iterator);
-		}
-	}
+	strideSize -= data[id].type.GetTypeSize();
+	data.erase(data.begin() + id);
 }
 
-uint32_t VertexDescription::GetVertexStrideSize(void)
+uint32_t VertexDescription::GetVertexStrideSize(void) const
 {
 	return (strideSize);
-}
-
-uint32_t VertexDescription::GetElementOffset(EnumVertexElementSementic sem)
-{
-	assert(HasElement(sem) && "Has Element");
-
-	uint32_t offset = 0;
-
-	for (VertexElement &element : data)
-	{
-		if (sem == element.sementic)
-			break;
-		offset += element.type.GetTypeSize();
-	}
-	return (offset);
 }
 
 uint32_t VertexDescription::GetElementOffset( uint32_t id )
@@ -143,6 +98,11 @@ uint32_t VertexDescription::GetNumElement( void )
 	return (data.size());
 }
 
+void VertexDescription::SetBaseOffset( uint64_t offset )
+{
+	mBaseOffset = offset;
+}
+
 bool operator==(const VertexDescription &lhs, const VertexDescription &rhs)
 {
 	if ((lhs.strideSize != rhs.strideSize) || (lhs.data.size() != rhs.data.size()))
@@ -150,11 +110,12 @@ bool operator==(const VertexDescription &lhs, const VertexDescription &rhs)
 
 	for (uint32_t index = 0 ; index < rhs.data.size() ; index++)
 	{
-		if ((lhs.data[index].sementic != rhs.data[index].sementic) || (lhs.data[index].type != rhs.data[index].type))
+		if ((lhs.data[index].type != rhs.data[index].type) || (lhs.data[index].mOffset != rhs.data[index].mOffset))
 			return (false);
 	}
 	return (true);
 }
+
 bool operator!=(const VertexDescription &lhs, const VertexDescription &rhs)
 {
 	return !(lhs == rhs);
@@ -207,6 +168,14 @@ bool operator!=(const VertexDescription &lhs, const VertexDescription &rhs)
 			break;
 		}
 		return (ve);
+	}
+
+	uint32_t GetTypeUniformAlignment(VertexElementType type)
+	{
+		if (type.column == 3)
+			type.column = 4;
+
+		return type.GetTypeSize();
 	}
 
 	VkDescriptorType DescriptorTypeSpvToVk(SpvReflectDescriptorType type)

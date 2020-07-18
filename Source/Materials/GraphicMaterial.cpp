@@ -41,11 +41,11 @@ namespace Soon
 		//	_id = GRAPHICPIPELINE->RemoveFromPipeline();
 	}
 
-	bool GraphicMaterial::HasValidVertexDescription(VertexDescription meshVD)
+	bool GraphicMaterial::HasValidVertexDescription(MeshVertexDescription meshVD)
 	{
 		if (m_Pipeline == nullptr)
 			return (false);
-		return (meshVD == GRAPHICPIPELINE->GetVertexDescription());
+		return (meshVD == GRAPHICPIPELINE->GetMeshVertexDescription());
 	}
 
 	void GraphicMaterial::SetMesh(std::uint32_t meshId)

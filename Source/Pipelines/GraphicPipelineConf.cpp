@@ -16,7 +16,6 @@ namespace Soon
 		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 
 		inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-		//					inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
 
 		inputAssembly.primitiveRestartEnable = VK_FALSE;
 
@@ -41,10 +40,7 @@ namespace Soon
 		rasterizer.depthClampEnable = VK_FALSE;
 		rasterizer.rasterizerDiscardEnable = VK_FALSE;
 
-		//				if (sType == GraphicsInstance::ShaderType::VERTEX_FRAGMENT)
 		rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-		//				else
-		//					rasterizer.polygonMode = VK_POLYGON_MODE_POINT;
 		rasterizer.lineWidth = 1.0f;
 		rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
 		rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE; //VK_FRONT_FACE_COUNTER_CLOCKWISE;//
@@ -67,6 +63,14 @@ namespace Soon
 
 		colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 		colorBlendAttachment.blendEnable = VK_FALSE;
+		/**/
+		colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+		colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+		colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+		colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+		colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+		colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+		/**/
 
 		colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 		colorBlending.logicOpEnable = VK_FALSE;
@@ -93,6 +97,82 @@ namespace Soon
 		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
 		//		pipelineInfo.layout = pipelineLayout;
+	}
+
+	bool GraphicPipelineConf::IsMeshDefaultVertexInput(std::string name)
+	{
+		for (uint32_t index = 0; index < m_MeshDefaultVertexInput.size(); index++)
+		{
+			if (m_MeshDefaultVertexInput[index].inputName == name)
+				return (true);
+		}
+		return (false);
+	}
+
+	bool GraphicPipelineConf::IsDefaultVertexInput(std::string name)
+	{
+		for (uint32_t index = 0; index < m_DefaultInputBindings.size(); index++)
+		{
+			for (auto const& input : m_DefaultInputBindings)
+			{
+				if (std::find(input.mInputName.begin(), input.mInputName.end(), name) != input.mInputName.end())
+					return (true);
+			}
+		}
+		return (false);
+	}
+
+	const DefaultInputBinding& GraphicPipelineConf::GetDefaultVertexInput(std::string name) const
+	{
+		// TODO: Binding Can't be 0
+		for (auto const& input : m_DefaultInputBindings)
+		{
+			if (std::find(input.mInputName.begin(), input.mInputName.end(), name) != input.mInputName.end())
+				return (input);
+		}
+		//__FILE__, __LINE__, __FUNCTION__;
+		throw std::runtime_error(name + std::string(" Not a DefaultVertexInput"));
+	}
+	
+	const DefaultMeshVertexInput& GraphicPipelineConf::GetMeshDefaultVertexInput(std::string name) const
+	{
+		for (uint32_t index = 0; index < m_MeshDefaultVertexInput.size(); index++)
+		{
+			if (m_MeshDefaultVertexInput[index].inputName == name)
+				return (m_MeshDefaultVertexInput[index]);
+		}
+		throw std::runtime_error(name + std::string(" Not a DefaultMeshVertexInput"));
+	}
+
+	void GraphicPipelineConf::SetBindingInputRate( uint32_t binding, VkVertexInputRate inputRate)
+	{
+		for (auto& input : m_DefaultInputBindings)
+		{
+			if (input.mBinding == binding)
+			{
+				input.mInputRate = inputRate;
+				return ;
+			}
+		}
+	}
+
+	void GraphicPipelineConf::AddInputBindings(std::string name, uint32_t binding)
+	{
+		if (binding == 0)
+			throw std::runtime_error(name + " at Binding : can't be 0");
+
+		auto it = std::find_if(m_DefaultInputBindings.begin(), m_DefaultInputBindings.end(), [&binding](DefaultInputBinding& v) { return v.mBinding == binding; });
+
+		if (it == m_DefaultInputBindings.end())
+		{
+			DefaultInputBinding input;
+			input.mBinding = binding;
+			input.mInputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+			input.mInputName.push_back(name);
+			m_DefaultInputBindings.push_back(input);
+		}
+		else
+			it->mInputName.push_back(name);
 	}
 
 	GenericProperty* CullModeToVk(std::string name)

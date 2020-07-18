@@ -1,32 +1,3 @@
-// Skybox
-{
-	"Pipelines": {
-		"Classic": {
-			"Type": "Graphic",
-			"ShaderPaths": {
-				"vertexPath": "Ressources/Shaders/Skybox/Skybox.vert.spv",
-				"fragmentPath": "Ressources/Shaders/Skybox/Skybox.frag.spv"
-			},
-			"UniqueSets": [
-				0
-			],
-			"Properties": {
-				"CullMode": "FRONT"
-			}
-		}
-	}
-}
-
-// Load CubeMesh
-// Load CubeTextureMine
-// CubeMesh->GetMaterial().SetPipeline("Default.json");
-// CubeMesh->GetMaterial()->SetTexture(CubeTextureMine);
-
-// Load CubeMesh
-// Load CubeTexture
-// CubeMesh->GetMaterial().SetPipeline("Skybox.json");
-// CubeMesh->GetMaterial()->SetTexture(CubeTexture);
-
 // Pour le Compute
 // pip = GraphicRenderer::AddPipeline("Compute.json");
 // pip.AddToPipeline(MeshId); // Non un compute a pas ca.
@@ -49,17 +20,6 @@
 // La graphic pipeline peut recevoir la description du buffer de la compute comme un VertexDescription et en fonction de ca faire les inputs pour la pipeline.
 
 /*
-----
-layout(set = 0, binding = 1) buffer Bu
-{
-	Particle  particles[];
-};
-----
-
-struct Buffer
-{
-	uint32_t bufferId;
-};
 
 pipCompute = AddPipeline("Compute.json");
 pipNbody = AddPipeline("Nbody.json");
@@ -67,35 +27,9 @@ pipNbody = AddPipeline("Nbody.json");
 pipCompute.Dispatch();
 pipCompute.GetBuffer("particles"); // BUFFER()
 
-LIST(POSITION: "particles.pos")
-Mesh mesh = buffer.ToMesh(LIST);
-	// mesh.AddVertexElement(Position, vec3);
-
-Dans le cas d'un particule sys on veut que les pos soit recup dans un uniform puis la pos est ajouter a l'objet 3d.
-
-Mais la pos dans l'uniform arrive 
-
-Si ya des sphere comment que je fais ?
-inPos = Sphere.pos
-inTexCoord = Sphere.texCoord
-Et pour les pos ?
-bah en théorie c'est un vertex en plus, mais on oeut pas et tout ne peut etre dans un meme buffer 
-
-// Genre il recup les offset et les stride depuis l'uniform.
-
-// Je recup une mesh avec le vertexElement de rempli et la mesh et le buffer ont le meme id ? OUI
-// Et pour l'index Buffer  ?
-
-Mesh BufferToMesh(BUFFER)
-{
-	mesh;
-}
-
 //TODO: If user setCopute on graphicPipeline
 
 */
-
-
 
 /**
  * POST-PROCESSING
@@ -127,3 +61,17 @@ Mesh BufferToMesh(BUFFER)
 		En gros on va pas les gere pour l'instant mais faire comme, du coup comment ca se passe dans le JSON ?
 			- 
  */
+
+		"UniqueSets": [
+			0
+		],
+
+
+/*
+// COMPUTE DISPATCH 
+// Put In Graphic
+
+ComputePipeline* compute = Renderer::AddPipeline("Compute.json");
+compute->SetRuntimeAmount("bu.particles", 100);
+GpuBuffer buffer = compute->GetRuntimeBuffer("bu");
+*/

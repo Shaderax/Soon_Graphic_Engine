@@ -41,6 +41,7 @@ namespace Soon
 		{
 			return m_DataPtr;
 		}
+		virtual ~GenericProperty() { }
 	};
 
 	template<typename T>
@@ -76,6 +77,7 @@ namespace Soon
 	private:
 		std::vector<uint32_t> m_UniqueSets;
 		std::vector<PipelineStage> m_Stages;
+		std::string mJsonPath;
 	protected:
 		std::unordered_map<std::string, PipelineProperty>	m_Properties;
         EPipelineType m_PipelineType;
@@ -84,10 +86,16 @@ namespace Soon
 
 		PipelineConf( EPipelineType type );
 
+
 		EPipelineType GetType( void )
 		{
 			return m_PipelineType;
 		}
+
+		void SetJsonPath( std::string name );
+		std::string GetJsonPath( void ) const;
+
+		virtual ~PipelineConf( void ) {}
 /*
 		template<typename T>
 		void SetProperty(std::string name, T value)

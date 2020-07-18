@@ -42,6 +42,11 @@ set(SRC
 	Materials/Material.cpp
 
 	Pipelines/PipelineJson.cpp
+
+	MeshVertex.cpp
+	RendererRessource.cpp
+	BufferRenderer.cpp
+	GpuBuffer.cpp
 	)
 
 add_library(Source ${SRC})

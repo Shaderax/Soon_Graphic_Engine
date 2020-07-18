@@ -17,6 +17,8 @@
 
 #include "Pipelines/PipelineJson.hpp"
 
+#include "BufferRenderer.hpp"
+
 namespace Soon
 {
 	struct MeshRenderer
@@ -33,6 +35,7 @@ namespace Soon
 	};
 
 	class Mesh;
+	class Buffer;
 
 	class GraphicsRenderer
 	{
@@ -40,15 +43,23 @@ namespace Soon
 		static GraphicsRenderer* _instance;
 		bool _changes;
 
+		// MESH
 		std::uint32_t _meshCounter = 0;
 		std::vector<uint32_t> _freeId;
 		std::vector<MeshRenderer> _meshs;
 
+		// TEXTURE
 		std::uint32_t m_TextureCounter = 0;
 		std::vector<uint32_t> m_FreeTextureId;
 		std::vector<TextureRenderer> m_Textures;
 		Texture*				m_DefaultTexture;
 
+		// BUFFER
+		std::uint32_t m_BufferCounter = 0;
+		std::vector<uint32_t> m_BufferFreeId;
+		std::vector<BufferRenderer> m_Buffers = {};
+
+		std::unordered_map<std::string, ComputePipeline*> m_UniqueComputePipelines;
 		std::unordered_map<std::string, ComputePipeline*> _computePipelines;
 		std::unordered_map<std::string, GraphicPipeline*> _graphicPipelines;
 
@@ -57,6 +68,9 @@ namespace Soon
 
 		std::vector<uint32_t> m_MeshToSupress;
 		std::vector<uint32_t> m_TextureToSupress;
+		std::vector<uint32_t> m_BufferToSupress;
+
+		std::vector<std::string> m_PipelinesToRecreate;
 	public:
 		//static GraphicsRenderer* _instance;
 		GraphicsRenderer(void);
@@ -65,6 +79,9 @@ namespace Soon
 		static GraphicsRenderer *GetInstance(void);
 		static void ReleaseInstance(void);
 		void RemoveAllPipelines(void);
+
+		void Update( void );
+		void SetProcessFrequency( std::string name, EProcessFrequency frequency );
 
 		void Initialize(void);
 		void RecreateAllUniforms(void);
@@ -81,53 +98,38 @@ namespace Soon
 		//NEW
 		// Max pipelines reach
 		//template <typename... Args>
-		BasePipeline* AddPipeline(std::string name)/*, Args... args)*/
-		{
-			GraphicPipelinesIterator graphicPip = _graphicPipelines.find(name);
-			if (graphicPip != _graphicPipelines.end())
-				return graphicPip->second;
-			ComputePipelinesIterator computePip = _computePipelines.find(name);
-			if (computePip != _computePipelines.end())
-				return computePip->second;
-			
-			PipelineConf* conf = ReadPipelineJson(name);
-
-			BasePipeline* pipeline;
-			if ((conf->GetType() == EPipelineType::COMPUTE))
-			{
-				pipeline = new ComputePipeline(reinterpret_cast<ComputePipelineConf*>(conf));
-				_computePipelines[name] = reinterpret_cast<ComputePipeline*>(pipeline);
-			}
-			else if ((conf->GetType() == EPipelineType::GRAPHIC))
-			{
-				pipeline = new GraphicPipeline(reinterpret_cast<GraphicPipelineConf*>(conf));
-				_graphicPipelines[name] = reinterpret_cast<GraphicPipeline*>(pipeline);
-			}
-
-			pipeline->Init();
-			_changes = true;
-
-			return (pipeline);
-		}
+		BasePipeline* AddPipeline(std::string name);/*, Args... args)*/
 
 		void RemovePipeline(std::string pipeline);
+		void AddPipelineToRecreate( std::string name );
+		void RecreatePipelines( void );
 
-		// Add Mesh in tab
+
+		// Mesh
 		uint32_t AddMesh(Mesh *mesh, uint32_t meshId);
+		uint32_t AddMesh(uint32_t meshId);
 		void RemoveMesh(uint32_t meshId);
 		MeshBufferRenderer &GetMesh(uint32_t id);
 
-		void DestroyInvalids( void );
+		// BUFFER
+		bool IsValidBufferId(uint32_t id);
+		uint32_t AddBuffer(GpuBuffer& buffer);
+		uint32_t AddBuffer(uint32_t bufferId);
+		void RemoveBuffer(uint32_t bufferId);
+		BufferRenderer& GetBufferRenderer(uint32_t id);
 
-
-		void DestroyAllUniforms(void);
-		void DestroyAllGraphicsPipeline(void);
-
-		uint32_t AddTexture(Texture* texture);
+		// TEXTURE
+		uint32_t AddTexture(Texture& texture);
 		uint32_t AddTexture( uint32_t textureId);
 		void RemoveTexture(uint32_t textureId);
 		ImageProperties& GetImageProperties(uint32_t id);
 
-		void SetDefaultTexture(Texture* texture);
+		void SetDefaultTexture(Texture& texture);
+
+		void DestroyInvalids( void );
+
+		void DestroyAllUniforms(void);
+		void DestroyAllPipelines(void);
+
 	};
 } // namespace Soon

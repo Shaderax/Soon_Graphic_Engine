@@ -11,6 +11,13 @@ namespace Soon
 		uint32_t workGroup[3];
 		bool	cached;
 	};
+
+	enum class EProcessFrequency : uint8_t
+	{
+		FRAME = 0,
+		ONCE = 1
+	};
+
 	class ComputePipeline : public BasePipeline
 	{
 	private:
@@ -23,9 +30,11 @@ namespace Soon
 		// TODO: DESTROY _mUbm.CreateDescriptorSetLayout()
 		void RecreatePipeline(void);
 		void Dispatch( void );
+		void SetProcessFrequency(EProcessFrequency freq);
 
-		void Render(uint32_t id);
-		void UnRender(uint32_t id);
+		bool IsValidToProcess(uint32_t id) const;
+		void Process(uint32_t id);
+		void UnProcess(uint32_t id);
 		uint32_t CreateNewId( void );
 		void RemoveId(uint32_t id);
 		void BindCaller(VkCommandBuffer commandBuffer, uint32_t currentImage);

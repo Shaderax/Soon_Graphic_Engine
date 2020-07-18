@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Vertex.hpp"
+#include "MeshVertex.hpp"
 #include <stdint.h>
 #include <limits>
+#include <memory>
 
 #include "Materials/GraphicMaterial.hpp"
 
@@ -10,28 +11,27 @@
 
 namespace Soon
 {
-	class Mesh
+	class Mesh : public RendererRessource
 	{
 		private:
 			GraphicMaterial		m_Material;
-			VertexDescription	m_VertexDescription;
-
-			uint32_t	m_UniqueId = Soon::IdError;
+			MeshVertexDescription	m_VertexDescription;
 
 		public:
-			uint8_t*	mVertexData = nullptr;
-			uint32_t*	mIndices;
+			//uint8_t*	mVertexData = nullptr;
+			std::shared_ptr<uint8_t> mVertexData;
+			std::shared_ptr<uint32_t>	mIndices;
 			uint32_t	mNumIndices;
 			uint32_t	mNumVertex;
 			uint32_t	mVertexTotalSize = 0;
 
-			Mesh( VertexDescription v );
+			Mesh( MeshVertexDescription v );
 			Mesh( const Mesh &other );
 			Mesh( const Mesh &&other );
 			~Mesh( void );
 			// Loader Free ?
 
-			void	SetVertexElement( uint8_t* data, uint32_t size, VertexElement elem );
+			void	SetVertexElement( uint8_t* data, uint32_t size, MeshVertexElement elem );
 			void	SetIndexBuffer( uint32_t* indexData, uint32_t size );
 			// Material Handle
 			void	SetMaterial( GraphicMaterial& material );

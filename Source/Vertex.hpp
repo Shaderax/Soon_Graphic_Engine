@@ -4,29 +4,10 @@
 #include <vector>
 #include <assert.h>
 #include "Modules/SPIRV-Reflect/spirv_reflect.h"
+#include "vulkan/vulkan.h"
 
 namespace Soon
 {
-	enum class EnumVertexElementSementic : uint16_t
-	{
-		POSITION = 0, /**< Position */
-		//VES_BLEND_WEIGHTS = 2, /**< Blend weights */
-		//VES_BLEND_INDICES = 3, /**< Blend indices */
-		NORMAL = 1, /**< Normal */
-		//VES_COLOR = 5, /**< Color */
-		TEXCOORD = 2, /**< UV coordinate */
-					  //VES_BITANGENT = 7, /**< Bitangent */
-					  //VES_TANGENT = 8, /**< Tangent */
-					  //VES_POSITIONT = 9, /**< Transformed position */
-					  //VES_PSIZE = 10 /**< Point size */
-	};
-
-	struct VertexInput
-	{
-		std::string inputName;
-		EnumVertexElementSementic type;
-	};
-
 	enum class EnumVertexElementType : uint8_t
 	{
 		UNKNOW = 0,
@@ -66,18 +47,6 @@ namespace Soon
 		uint32_t column;
 
 		uint32_t GetTypeSize();
-
-		/*
-	bool operator==(const VertexElementType &lhs, const VertexElementType &rhs)
-	{
-		return (lhs.baseType == rhs.baseType && lhs.row == rhs.row && lhs.column == rhs.column);
-	}
-
-	bool operator!=(const VertexElementType &lhs, const VertexElementType &rhs)
-	{
-		return !(lhs == rhs);
-	}
-	*/
 	};
 
 	bool operator==(const VertexElementType &lhs, const VertexElementType &rhs);
@@ -89,36 +58,50 @@ namespace Soon
 		{
 		}
 
-		VertexElement(EnumVertexElementSementic _sem, VertexElementType _type)
+		VertexElement(VertexElementType _type, uint32_t offset)
 		{
-			sementic = _sem;
 			type = _type;
+			mOffset = offset;
 		}
 
-		EnumVertexElementSementic sementic;
 		VertexElementType type;
+		uint32_t mOffset = 0;
 	};
 
 	struct VertexDescription
 	{
 		std::vector<VertexElement> data;
 		uint32_t strideSize = 0;
+		uint64_t mBaseOffset = 0;
 
-		bool HasElement(EnumVertexElementSementic sem);
 		void AddVertexElement(VertexElement element);
-		void AddVertexElement(EnumVertexElementSementic sem, EnumVertexElementType type, uint32_t column, uint32_t row);
-		void RemoveVertexElement(EnumVertexElementSementic sem);
-		uint32_t GetVertexStrideSize(void);
-		uint32_t GetElementOffset(EnumVertexElementSementic sem);
+		void AddVertexElement(EnumVertexElementType type, uint32_t column, uint32_t row);
+		void RemoveVertexElement(uint32_t id);
+		uint32_t GetVertexStrideSize(void) const;
 		uint32_t GetElementOffset(uint32_t id);
 		uint32_t GetNumElement(void);
+		void SetBaseOffset( uint64_t offset );
 	};
 
 	bool operator==(const VertexDescription &lhs, const VertexDescription &rhs);
 	bool operator!=(const VertexDescription &lhs, const VertexDescription &rhs);
 
-	extern std::vector<VertexInput> DefaultVertexInput;
-
 	VertexElementType SpvTypeToVertexType(SpvReflectTypeDescription *type);
+	uint32_t GetTypeUniformAlignment(VertexElementType type);
 	bool IsImageType(SpvReflectTypeFlags type);
+
+	struct DefaultInputBinding
+	{
+		uint32_t mBinding;
+		VkVertexInputRate mInputRate;
+		std::vector<std::string> mInputName;
+	};
+
+	struct InputBindingDescription
+	{
+		uint32_t mBinding;
+		VkVertexInputRate mInputRate;
+		VertexDescription mDescription;
+	};
+
 } // namespace Soon

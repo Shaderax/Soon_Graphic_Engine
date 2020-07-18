@@ -23,6 +23,6 @@ namespace Soon
 		void Render( std::uint32_t meshId );
 		void UnRender( void );
 		void RemoveFromPipeline(std::uint32_t meshId);
-		bool HasValidVertexDescription(VertexDescription meshVD);
+		bool HasValidVertexDescription(MeshVertexDescription meshVD);
 	};
 } // namespace Soon

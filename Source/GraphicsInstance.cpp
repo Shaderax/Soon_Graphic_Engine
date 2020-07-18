@@ -107,6 +107,73 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
 
 namespace Soon
 {
+	/**
+	 * UNIFORMS
+	 */
+	uint32_t GetUniformRuntimeSize( UniformRuntime& uniform, uint32_t id)
+	{
+		uint32_t lastOffset = 0;
+		uint32_t size = 0;
+
+		return uniform.mMembers.back()._offset + uniform.mMembers.back()._size;
+	}
+
+	UniformRuntimeVar& FindUniformRuntimeVar(std::vector<UniformRuntimeVar>& var, std::string name, uint32_t* offset)
+	{
+		size_t pos = name.find('.');
+
+		for (uint32_t index = 0; index < var.size() ; index++)
+		{
+			if (var[index]._name == name.substr(0, pos))
+			{
+				if (pos == std::string::npos)
+					return var[index];
+				else
+					return FindUniformRuntimeVar(var[index].mMembers, name.substr(pos + 1), offset);
+			}
+			*offset += var[index]._size; //TODO: DIM // * numIn ?
+		}
+		throw std::runtime_error("Uniform Not found");
+	}
+
+	VertexDescription UniformRuntime::GetVertexDescription(std::vector<std::string> varNames, uint32_t id)
+	{
+		VertexDescription description;
+		uint32_t lastOffset = 0;
+		uint32_t offset = 0;
+		bool first = true;
+
+		if (varNames.size() == 0)
+			throw std::runtime_error("varNames is Empty");
+
+		// TTODO: HERE
+		description.SetBaseOffset(mBuffers[id].m_Offset);
+
+		for (const std::string& var : varNames)
+		{
+			VertexElement element;
+
+			offset = 0;
+			const UniformRuntimeVar& runtime = FindUniformRuntimeVar(mMembers, var, &offset);
+			element.mOffset = offset;
+			element.type = runtime._type;
+			if (!first && lastOffset >= offset)
+				throw std::runtime_error("Wrong var order");
+			lastOffset = offset;
+			if (first)
+				first = false;
+			description.AddVertexElement(element);
+		}
+		if (!mMembers.back().mMembers.empty())
+			description.strideSize = mMembers.back()._size + (GetTypeUniformAlignment(mMembers.back().mMembers.begin()->_type) % mMembers.back().mMembers.begin()->_type.GetTypeSize());
+		else
+			description.strideSize = mMembers.back()._size;
+		return description;
+	}
+
+	/**
+	 * GRAPHICS INSTANCE
+	 */
 	GraphicsInstance *GraphicsInstance::_instance = nullptr;
 
 	GraphicsInstance *GraphicsInstance::GetInstance(void)
@@ -280,6 +347,9 @@ namespace Soon
 
 		std::cout << "Device Chosen : ";
 		std::cout << GetPhysicalDeviceInfo(_physicalDevice).deviceName << std::endl;
+		std::cout << "Device Min WorkGroup[x]: " << GetPhysicalDeviceInfo(_physicalDevice).limits.maxComputeWorkGroupCount[0] << std::endl;
+		std::cout << "Device Min WorkGroup[y]: " << GetPhysicalDeviceInfo(_physicalDevice).limits.maxComputeWorkGroupCount[1] << std::endl;
+		std::cout << "Device Min WorkGroup[z]: " << GetPhysicalDeviceInfo(_physicalDevice).limits.maxComputeWorkGroupCount[2] << std::endl;
 	}
 
 	void GraphicsInstance::CreateWindow(void)
@@ -844,7 +914,7 @@ namespace Soon
 
 			vkCmdEndRenderPass(_commandBuffers[i]);
 
-			//GraphicsRenderer::GetInstance()->ComputePipelinesBindCaller(_commandBuffers[i], i);
+			GraphicsRenderer::GetInstance()->ComputePipelinesBindCaller(_commandBuffers[i], i);
 
 			if (vkEndCommandBuffer(_commandBuffers[i]) != VK_SUCCESS)
 				throw std::runtime_error("failed to record command buffer!");
@@ -1004,7 +1074,7 @@ namespace Soon
 
 		vkFreeCommandBuffers(_device, _commandPool, static_cast<uint32_t>(_commandBuffers.size()), _commandBuffers.data());
 
-		GraphicsRenderer::GetInstance()->DestroyAllGraphicsPipeline();
+		GraphicsRenderer::GetInstance()->DestroyAllPipelines();
 
 		vkDestroyRenderPass(_device, _renderPass, nullptr);
 
@@ -1120,24 +1190,24 @@ namespace Soon
 	{
 		auto app = reinterpret_cast<GraphicsInstance *>(glfwGetWindowUserPointer(window));
 		app->_framebufferResized = true;
-		std::cout << width << " " << height << std::endl;
+		std::cout << "FramebufferResizeCallback: " << "Width: " << width << " Height: " << height << std::endl;
 		app->_windowAttribute._width = width;
 		app->_windowAttribute._height = height;
 	}
 
-	VkSampler GraphicsInstance::CreateTextureSampler(Texture* texture)
+	VkSampler GraphicsInstance::CreateTextureSampler(Texture& texture)
 	{
 		VkSampler textureSampler;
 
 		VkSamplerCreateInfo samplerInfo = {};
 		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-		samplerInfo.magFilter = TextureFilterModeToVk(texture->GetFilterMode());
-		samplerInfo.minFilter = TextureFilterModeToVk(texture->GetFilterMode());
+		samplerInfo.magFilter = TextureFilterModeToVk(texture.GetFilterMode());
+		samplerInfo.minFilter = TextureFilterModeToVk(texture.GetFilterMode());
 		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT; // VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE
 		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		samplerInfo.anisotropyEnable = VK_TRUE;
-		samplerInfo.maxAnisotropy = texture->GetAnisotropLevel();
+		samplerInfo.anisotropyEnable = VK_FALSE;
+		samplerInfo.maxAnisotropy = texture.GetAnisotropLevel();
 		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 		samplerInfo.unnormalizedCoordinates = VK_FALSE;
 		samplerInfo.compareEnable = VK_FALSE;
@@ -1181,11 +1251,10 @@ namespace Soon
 		return (VK_IMAGE_VIEW_TYPE_2D);
 	}
 
-	ImageRenderer GraphicsInstance::CreateTextureImage(Texture* texture)
+	ImageRenderer GraphicsInstance::CreateTextureImage(Texture& texture)
 	{
-		std::cout << "width " << texture->mWidth <<  " " << "Height : " << texture->mHeight << "Format : " << texture->GetFormat().GetSize() << std::endl;
 		ImageRenderer ir;
-		size_t imageSize = texture->GetArrayLayer() * texture->mWidth * texture->mHeight * texture->GetFormat().GetSize();
+		size_t imageSize = texture.GetArrayLayer() * texture.mWidth * texture.mHeight * texture.GetFormat().GetSize();
 
 		VkBuffer stagingBuffer;
 		VmaAllocation staginAlloc;
@@ -1194,21 +1263,18 @@ namespace Soon
 
 		CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, stagingBuffer, staginAlloc);
 
-
 		void *data = nullptr;
 		vmaMapMemory(m_Allocator, staginAlloc, &data);
-		memcpy(data, texture->GetData(), imageSize);
+		memcpy(data, texture.GetData(), imageSize);
 		vmaUnmapMemory(m_Allocator, staginAlloc);
 
-		CreateImage({texture->mWidth, texture->mHeight}, TextureFormatToVkFormat(texture->GetFormat()), texture->GetArrayLayer(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VMA_MEMORY_USAGE_GPU_ONLY, ir._textureImage, ir._textureImageMemory);
+		CreateImage({texture.mWidth, texture.mHeight}, TextureFormatToVkFormat(texture.GetFormat()), texture.GetArrayLayer(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VMA_MEMORY_USAGE_GPU_ONLY, ir._textureImage, ir._textureImageMemory);
 
-		TransitionImageLayout(ir._textureImage, TextureFormatToVkFormat(texture->GetFormat()), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, TextureTypeToVkImageType(texture->GetType()));
-		CopyBufferToImage(stagingBuffer, ir._textureImage, texture->mWidth, texture->mHeight, TextureTypeToVkImageType(texture->GetType()));
-		TransitionImageLayout(ir._textureImage, TextureFormatToVkFormat(texture->GetFormat()), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, TextureTypeToVkImageType(texture->GetType()));
+		TransitionImageLayout(ir._textureImage, TextureFormatToVkFormat(texture.GetFormat()), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, TextureTypeToVkImageType(texture.GetType()));
+		CopyBufferToImage(stagingBuffer, ir._textureImage, texture.mWidth, texture.mHeight, TextureTypeToVkImageType(texture.GetType()));
+		TransitionImageLayout(ir._textureImage, TextureFormatToVkFormat(texture.GetFormat()), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, TextureTypeToVkImageType(texture.GetType()));
 
 		vmaDestroyBuffer(m_Allocator, stagingBuffer, staginAlloc);
-		//vkDestroyBuffer(_device, stagingBuffer, nullptr);
-		//vkFreeMemory(_device, stagingBufferMemory, nullptr);
 
 		return (ir);
 	}
@@ -1443,36 +1509,13 @@ namespace Soon
 
 	void GraphicsInstance::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
 	{
-		VkCommandBufferAllocateInfo allocInfo = {};
-		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandPool = _commandPool;
-		allocInfo.commandBufferCount = 1;
+        VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
 
-		VkCommandBuffer commandBuffer;
-		vkAllocateCommandBuffers(_device, &allocInfo, &commandBuffer);
+        VkBufferCopy copyRegion{};
+        copyRegion.size = size;
+        vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
-		VkCommandBufferBeginInfo beginInfo = {};
-		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-		vkBeginCommandBuffer(commandBuffer, &beginInfo);
-
-		VkBufferCopy copyRegion = {};
-		copyRegion.size = size;
-		vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
-
-		vkEndCommandBuffer(commandBuffer);
-
-		VkSubmitInfo submitInfo = {};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &commandBuffer;
-
-		vkQueueSubmit(_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-		vkQueueWaitIdle(_graphicsQueue);
-
-		vkFreeCommandBuffers(_device, _commandPool, 1, &commandBuffer);
+        EndSingleTimeCommands(commandBuffer);
 	}
 
 	std::vector<VkDescriptorSetLayout> GraphicsInstance::CreateDescriptorSetLayout(std::vector<std::vector<VkDescriptorSetLayoutBinding>> uboLayoutBinding)
@@ -1491,22 +1534,6 @@ namespace Soon
 				throw std::runtime_error("failed to create descriptor set layout!");
 		}
 		return (descriptorSetLayout);
-	}
-
-	BufferRenderer GraphicsInstance::CreateUniformBuffers(size_t size)
-	{
-		BufferRenderer buf;
-		VkDeviceSize bufferSize = size;
-		std::cout << "UNIFORM BUFFER CREATION : " << bufferSize << std::endl;
-
-		buf.buffer.resize(_swapChainImages.size());
-		buf.bufferMemory.resize(_swapChainImages.size());
-		//buf.bufferMemory.resize(_swapChainImages.size());
-
-		for (size_t i = 0; i < _swapChainImages.size(); i++)
-			CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_ONLY, buf.buffer[i], buf.bufferMemory[i]);
-
-		return (buf);
 	}
 
 	void GraphicsInstance::CreateDescriptorPool(void)
@@ -1548,9 +1575,8 @@ namespace Soon
 		return (descriptorSets);
 	}
 
-	void GraphicsInstance::UpdateImageDescriptorSets(uint32_t* matIds, uint32_t count, DescriptorSetDescription description, VkDescriptorSet* descriptorSets)
+	void GraphicsInstance::UpdateImageDescriptorSets(uint32_t* matIds, uint32_t count, DescriptorSetDescription& description, VkDescriptorSet* descriptorSets)
 	{
-		std::cout << description.uniformsTexture.size() << std::endl;
 		for (uint32_t index = 0 ; index < description.uniformsTexture.size() ; index++)
 		{
 			for (uint32_t countId = 0 ; countId < count ; countId++)
@@ -1578,16 +1604,47 @@ namespace Soon
 		}
 	}
 
+	void GraphicsInstance::UpdateRuntimeDescriptorSets(uint32_t* matIds, uint32_t count, DescriptorSetDescription& description, VkDescriptorSet* descriptorSets)
+	{
+		for (uint32_t index = 0 ; index < description.uniformsRuntime.size() ; index++)
+		{
+			for (uint32_t countId = 0 ; countId < count ; countId++)
+			{
+				uint32_t bufferId = description.uniformsRuntime[index].mBuffers[matIds[countId]].GetId();
+				BufferRenderer& buffer = GraphicsRenderer::GetInstance()->GetBufferRenderer(bufferId);
+
+				for (size_t i = 0; i < _swapChainImages.size(); i++)
+				{
+					VkDescriptorBufferInfo bufferInfo = {};
+					//std::cout << "Update: offset: " << description.uniformsRuntime[index].mBuffers[matIds[countId]].m_Offset << std::endl;
+					//std::cout << "Update size: " << buffer.GetSize() << std::endl;
+					bufferInfo.buffer = buffer.GetBuffer();
+					bufferInfo.offset = description.uniformsRuntime[index].mBuffers[matIds[countId]].m_Offset;
+					bufferInfo.range = buffer.GetSize() - description.uniformsRuntime[index].mBuffers[matIds[countId]].m_Offset;
+
+					VkWriteDescriptorSet descriptorWrite = {};
+					descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+					descriptorWrite.dstSet = descriptorSets[i];
+					descriptorWrite.dstBinding = description.uniformsRuntime[index].mBinding;
+					descriptorWrite.dstArrayElement = 0;
+					descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+					descriptorWrite.descriptorCount = 1;
+					descriptorWrite.pBufferInfo = &bufferInfo;
+
+					vkUpdateDescriptorSets(_device, 1, &descriptorWrite, 0, nullptr);
+				}
+			}
+		}
+	}
+
 	void GraphicsInstance::UpdateDescriptorSets(DescriptorSetDescription& description, uint32_t offset, VkDescriptorSet* descriptorSets, VkBuffer* gpuBuffers, uint32_t bufferCount)
 	{
-		std::cout << "UpdateSet : " << (int)description.set << std::endl;
 		// TODO: bufferCount
+		// TODO: DIM
 		uint32_t offsetUniform = 0;
 
 		for (uint32_t index = 0 ; index < description.uniforms.size() ; index++)
 		{
-			std::cout << description.uniforms[index]._name << std::endl;
-
 			for (size_t i = 0; i < _swapChainImages.size(); i++)
 			{
 				VkDescriptorBufferInfo bufferInfo = {};
@@ -1613,17 +1670,6 @@ namespace Soon
 	void GraphicsInstance::DestroyDescriptorSet(VkDescriptorSet descriptor)
 	{
 		vkFreeDescriptorSets(_device, _descriptorPool, 1, &descriptor);
-	}
-
-	UniformSets GraphicsInstance::CreateUniform(size_t size, std::vector<VkDescriptorSetLayout> layoutArray, int dlayout)
-	{
-		UniformSets ds;
-
-		//ds._uniformRender = CreateUniformBuffers(size);
-
-		//ds._descriptorSets = CreateDescriptorSets( size, layoutArray, dlayout, ds._uniformRender.buffer.data(), VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER );
-
-		return (ds);
 	}
 
 	///////////// DEPTH BUFFER / STENCIL BUFFER ///////////////
