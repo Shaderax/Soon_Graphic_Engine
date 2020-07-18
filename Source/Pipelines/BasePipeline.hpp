@@ -95,8 +95,9 @@ namespace Soon
 		void GetDescriptorBindings( spv_reflect::ShaderModule& reflection );
 
 		void SetRuntimeAmount(std::string name, uint32_t amount, uint32_t idMat);
+		void SetRuntimeBuffer(std::string name, GpuBuffer& buffer, uint32_t idMat);
 
-		const UniformRuntime& GetUniformRuntime(std::string name) const;
+		UniformRuntime& GetUniformRuntime(std::string name);
 	};
 
 	VkFormat VertexTypeToVkFormat(VertexElementType vt);

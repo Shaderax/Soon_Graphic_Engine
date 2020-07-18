@@ -72,6 +72,7 @@ namespace Soon
 	{
 		std::vector<VertexElement> data;
 		uint32_t strideSize = 0;
+		uint64_t mBaseOffset = 0;
 
 		void AddVertexElement(VertexElement element);
 		void AddVertexElement(EnumVertexElementType type, uint32_t column, uint32_t row);
@@ -79,12 +80,14 @@ namespace Soon
 		uint32_t GetVertexStrideSize(void) const;
 		uint32_t GetElementOffset(uint32_t id);
 		uint32_t GetNumElement(void);
+		void SetBaseOffset( uint64_t offset );
 	};
 
 	bool operator==(const VertexDescription &lhs, const VertexDescription &rhs);
 	bool operator!=(const VertexDescription &lhs, const VertexDescription &rhs);
 
 	VertexElementType SpvTypeToVertexType(SpvReflectTypeDescription *type);
+	uint32_t GetTypeUniformAlignment(VertexElementType type);
 	bool IsImageType(SpvReflectTypeFlags type);
 
 	struct DefaultInputBinding

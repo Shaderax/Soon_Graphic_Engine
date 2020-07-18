@@ -119,12 +119,12 @@ namespace Soon
 		BufferRenderer& GetBufferRenderer(uint32_t id);
 
 		// TEXTURE
-		uint32_t AddTexture(Texture* texture);
+		uint32_t AddTexture(Texture& texture);
 		uint32_t AddTexture( uint32_t textureId);
 		void RemoveTexture(uint32_t textureId);
 		ImageProperties& GetImageProperties(uint32_t id);
 
-		void SetDefaultTexture(Texture* texture);
+		void SetDefaultTexture(Texture& texture);
 
 		void DestroyInvalids( void );
 

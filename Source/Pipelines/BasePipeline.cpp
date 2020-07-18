@@ -78,9 +78,15 @@ namespace Soon
 		_mUbm.SetRuntimeAmount(name, amount, idMat);
 	}
 
-	const UniformRuntime& BasePipeline::GetUniformRuntime(std::string name) const
+	UniformRuntime& BasePipeline::GetUniformRuntime(std::string name)
 	{
 		return _mUbm.GetUniformRuntime(name);
+	}
+
+
+	void BasePipeline::SetRuntimeBuffer(std::string name, GpuBuffer& buffer, uint32_t idMat)
+	{
+		_mUbm.SetRuntimeBuffer(name, buffer, idMat);
 	}
 
 	/**
@@ -251,13 +257,13 @@ namespace Soon
 		uniVar._offset = block.offset;
 		uniVar._size = block.size;
 
-		std::cout << "\t UniformRuntimeVar Name : " << uniVar._name << std::endl;
-		std::cout << "\t UniformRuntimeVar Offset : " << uniVar._offset << std::endl;
-		std::cout << "\t UniformRuntimeVar Size : " << uniVar._size << std::endl;
-		std::cout << "\t UniformRuntimeVar SpvOp: " << block.type_description->op << std::endl;
+		DEBUG("\t UniformRuntimeVar Name : ", uniVar._name);
+		DEBUG("\t UniformRuntimeVar Offset : ", uniVar._offset);
+		DEBUG("\t UniformRuntimeVar Size : ", uniVar._size);
+		DEBUG("\t UniformRuntimeVar SpvOp: ", block.type_description->op);
 
 		uniVar.dimCount = block.type_description->traits.array.dims_count;
-		std::cout << "\t UniformRuntimeVar DimCount: " << uniVar.dimCount << std::endl;
+		DEBUG("\t UniformRuntimeVar DimCount: ", uniVar.dimCount);
 
 		if (uniVar.dimCount > 0)
 			uniVar.dim = new uint32_t[uniVar.dimCount];
@@ -265,7 +271,7 @@ namespace Soon
 		for (uint32_t index = 0 ; index < uniVar.dimCount ; index++)
 		{
 			uniVar.dim[index] = block.type_description->traits.array.dims[index];
-			std::cout << "\t UniformRuntime Dim: " << uniVar.dim[index] << std::endl;
+			DEBUG("\t UniformRuntime Dim: ", uniVar.dim[index]);
 		}
 
 		uniVar._type = SpvTypeToVertexType(block.type_description);
@@ -290,8 +296,8 @@ namespace Soon
 		uniform.mSet = binding->set;
 		uniform.mSize = binding->block.size + (binding->block.size % 32);
 
-		std::cout << "UniformRuntime Name : " << uniform.mName << ", Set : " << uniform.mSet << ", Binding: " << uniform.mBinding << std::endl;
-		std::cout << "UniformRuntime Size : " << uniform.mSize << std::endl;
+		DEBUG("UniformRuntime Name : ", uniform.mName, ", Set : ", uniform.mSet, ", Binding: ", uniform.mBinding);
+		DEBUG("UniformRuntime Size : ", uniform.mSize);
 
 		uniform.mDimCount = binding->type_description->traits.array.dims_count;
 
@@ -301,10 +307,10 @@ namespace Soon
 		for (uint32_t index = 0 ; index < binding->type_description->traits.array.dims_count ; index++)
 		{
 			uniform.mDims[index] = binding->type_description->traits.array.dims[index];
-			std::cout << "UniformRuntime Dim: " << binding->type_description->traits.array.dims[index] << std::endl;
+			DEBUG("UniformRuntime Dim: ", binding->type_description->traits.array.dims[index]);
 		}
 
-		std::cout << "UniformRuntime Op: " << binding->type_description->op << std::endl;
+		DEBUG("UniformRuntime Op: ", binding->type_description->op);
 
 		for (uint32_t indexMember = 0; indexMember < binding->block.member_count; indexMember++)
 			uniform.mMembers.push_back(ParseRuntimeUniformMembers(binding->block.members[indexMember]));

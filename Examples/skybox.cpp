@@ -35,6 +35,7 @@ Mesh* ObjLoader(void)
 	Mesh* mesh = new Mesh(vd);
 
 	std::string inputfile = "./Examples/Cube.obj";
+	//std::string inputfile = "./Examples/Cube.obj";
 	tinyobj::attrib_t attrib;
 	std::vector<tinyobj::shape_t> shapes;
 	std::vector<tinyobj::material_t> materials;
@@ -142,21 +143,22 @@ int main()
 	/**
 	 * Texture 
 	 */
-	//Texture texture;
-	//int channel, width, height;
-	//unsigned char *data = stbi_load("/home/shaderax/Pictures/Alex.png", &width, &height, &channel, 4);
-	//texture.SetData(data, width, height, TextureFormat(EnumTextureFormat::RGBA));
-	//stbi_image_free(data);
+	Texture texture;
+	int channel, width, height;
+	unsigned char *data = stbi_load("/home/shaderax/Documents/Project/Late_Night/Ressources/Pixel/sprite_15.png", &width, &height, &channel, 4);
+	texture.SetData(data, width, height, TextureFormat(EnumTextureFormat::RGBA));
+	texture.SetFilterMode(EnumFilterMode::NEAREST);
+	stbi_image_free(data);
 
 	/**
 	 * TEXTURE CUBE MAP
 	 */
-	//Texture* cubeMap = LoadTextureCubeMap();
-	//Mesh* meshCubeMap = ObjLoader();
-	//meshCubeMap->GetMaterial().SetPipeline("./Examples/Skybox.json");
-	//meshCubeMap->Render();
+	Texture* cubeMap = LoadTextureCubeMap();
+	Mesh* meshCubeMap = ObjLoader();
+	meshCubeMap->GetMaterial().SetPipeline("./Examples/Skybox.json");
+	meshCubeMap->Render();
 	// TODO: CANNOT SETTEXTURE BEFORE RENDER
-	//meshCubeMap->GetMaterial().SetTexture("texSampler", *cubeMap);
+	meshCubeMap->GetMaterial().SetTexture("texSampler", *cubeMap);
 	/**
 	 */
 
@@ -165,37 +167,8 @@ int main()
 	 */
 	Mesh* mesh = ObjLoader();
 	mesh->AllocGpu();
-	//mesh->Render();
-	//mesh->GetMaterial().SetTexture("latexture", texture);
-
-	/**
-	 *  COMPUTE
-	 */
-	// Create Pipeline Wich Init my Buffer;
-	uint32_t numParticles = 100;
-	ComputePipeline* initPip = (ComputePipeline*)GraphicsRenderer::GetInstance()->AddPipeline("./Examples/InitParticles.json");
-	initPip->SetProcessFrequency(EProcessFrequency::ONCE);
-	uint32_t id = initPip->CreateNewId();
-	initPip->Set("Particles.num", &numParticles, id);
-	initPip->SetRuntimeAmount("Particles.particles", numParticles, id);
-	initPip->SetWorkGroup(id, numParticles, 1, 1);
-	initPip->Dispatch();
-
-	uint32_t idComp;
-	uint32_t idGr;
-	ComputePipeline* pip = (ComputePipeline*)GraphicsRenderer::GetInstance()->AddPipeline("./Examples/TestParticle.json");
-	idComp = pip->CreateNewId();
-	// I HAVE TO PASS MY RUNTIME BUFFER TO THE OTHER PIPELINE
-
-	//const UniformRuntime& uniform = pip->GetUniformRuntime("Particles");
-	//VertexDescription description = uniform.GetVertexDescription({"particles.position"});
-	//GraphicPipeline* grPip = (GraphicPipeline*)GraphicsRenderer::GetInstance()->AddPipeline("./Examples/NewDefaultPipeline.json");
-	//idGr = grPip->CreateNewId();
-	//grPip->SetMeshId(idGr, mesh->GetId());
-	//grPip->SetAttributeDescriptionOffset(1, description);
-	//grPip->SetBindingVertexInput(idGr, 1, uniform.mBuffers[idComp]);
-	//grPip->SetNumInstance(idGr, 1);
-	//grPip->Render(idGr);
+	mesh->Render();
+	mesh->GetMaterial().SetTexture("latexture", texture);
 
 	double lastTime = 0;
 	bool did = false;
@@ -208,10 +181,9 @@ int main()
 	while (!GraphicsInstance::GetInstance()->ShouldClose(GraphicsInstance::GetInstance()->GetWindow()))
 	{
 		lastTime = ShowFPS(lastTime);
-		//glfwGetCursorPos(GraphicsInstance::GetInstance()->GetWindow(), &x, &y);
-		//mesh->GetMaterial().SetVec3("cou.bondour", vec3<float>(((float)x / 1280) * 2 - 1, ((float)y / 720) * 2 - 1, 0.0f));
+		glfwGetCursorPos(GraphicsInstance::GetInstance()->GetWindow(), &x, &y);
+		mesh->GetMaterial().SetVec3("cou.bondour", vec3<float>(((float)x / 1280) * 2 - 1, ((float)y / 720) * 2 - 1, 0.0f));
 
-/*
 		if (glfwGetTime() - time > 5.0f)
 		{
 			time = glfwGetTime();
@@ -226,7 +198,6 @@ int main()
 				did = false;
 			}
 		}
-		*/
 
 		GraphicsRenderer::GetInstance()->Update();
 		GraphicsInstance::GetInstance()->PollEvent();
@@ -234,8 +205,8 @@ int main()
 	}
 
 	delete mesh;
-	//delete meshCubeMap;
-	//delete cubeMap;
+	delete meshCubeMap;
+	delete cubeMap;
 
 	// Destroy
 	GraphicsRenderer::ReleaseInstance();

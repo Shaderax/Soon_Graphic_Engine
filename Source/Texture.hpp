@@ -57,7 +57,7 @@ namespace Soon
 	/**
 	 * TEXTURE
 	 */
-	class Texture : RendererRessource
+	class Texture : public RendererRessource
 	{
 	private:
 		uint8_t* m_Data;
@@ -84,12 +84,12 @@ namespace Soon
 		void Allocate( void );
 		void Free( void );
 		EnumFilterMode GetFilterMode( void );
+		void SetFilterMode(EnumFilterMode filter);
 		uint8_t GetAnisotropLevel( void );
 		TextureFormat GetFormat( void );
 		uint8_t GetMipMapLevel( void );
 		uint8_t GetArrayLayer( void );
 		EnumTextureType GetType( void );
-		uint32_t GetId( void );
 
 		friend GraphicsRenderer;
 	};

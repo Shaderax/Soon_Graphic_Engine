@@ -100,6 +100,11 @@ namespace Soon
 		return m_Filter;
 	}
 
+	void Texture::SetFilterMode(EnumFilterMode filter)
+	{
+		m_Filter = filter;
+	}
+
 	uint8_t Texture::GetAnisotropLevel( void )
 	{
 		return m_AnisoLevel;
@@ -123,10 +128,5 @@ namespace Soon
 	EnumTextureType Texture::GetType( void )
 	{
 		return m_Type;
-	}
-
-	uint32_t Texture::GetId( void )
-	{
-		return (m_UniqueId);
 	}
 } // namespace Soon

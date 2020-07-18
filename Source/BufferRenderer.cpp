@@ -38,9 +38,20 @@ namespace Soon
 		count = other.count;
 	}
 
-	void BufferRenderer::Resize( uint32_t size )
+	void BufferRenderer::Resize( VkDeviceSize size )
 	{
+		VkBufferCreateInfo bufferInfo = {};
+		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		bufferInfo.size = size;
+		bufferInfo.usage = m_BufferFlags;
+		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
+		VmaAllocationCreateInfo allocInfo = {};
+		allocInfo.usage = m_MemUsg;
+
+		vmaDestroyBuffer(GraphicsInstance::GetInstance()->GetAllocator(), m_Buffer, m_Allocation);
+		vmaCreateBuffer(GraphicsInstance::GetInstance()->GetAllocator(), &bufferInfo, &allocInfo, &m_Buffer, &m_Allocation, nullptr);
+		m_Size = size;
 	}
 
 	const VkBuffer& BufferRenderer::GetBuffer( void ) const

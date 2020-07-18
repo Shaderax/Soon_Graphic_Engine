@@ -98,6 +98,11 @@ uint32_t VertexDescription::GetNumElement( void )
 	return (data.size());
 }
 
+void VertexDescription::SetBaseOffset( uint64_t offset )
+{
+	mBaseOffset = offset;
+}
+
 bool operator==(const VertexDescription &lhs, const VertexDescription &rhs)
 {
 	if ((lhs.strideSize != rhs.strideSize) || (lhs.data.size() != rhs.data.size()))
@@ -110,6 +115,7 @@ bool operator==(const VertexDescription &lhs, const VertexDescription &rhs)
 	}
 	return (true);
 }
+
 bool operator!=(const VertexDescription &lhs, const VertexDescription &rhs)
 {
 	return !(lhs == rhs);
@@ -162,6 +168,14 @@ bool operator!=(const VertexDescription &lhs, const VertexDescription &rhs)
 			break;
 		}
 		return (ve);
+	}
+
+	uint32_t GetTypeUniformAlignment(VertexElementType type)
+	{
+		if (type.column == 3)
+			type.column = 4;
+
+		return type.GetTypeSize();
 	}
 
 	VkDescriptorType DescriptorTypeSpvToVk(SpvReflectDescriptorType type)

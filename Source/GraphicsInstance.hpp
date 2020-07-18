@@ -120,12 +120,12 @@ struct UniformRuntime
 	uint32_t mDimCount;
 	uint32_t* mDims;
 
-	VertexDescription GetVertexDescription(std::vector<std::string> varNames) const;
+	VertexDescription GetVertexDescription(std::vector<std::string> varNames, uint32_t id);
 };
 
 // TODO: DIM
-uint32_t GetUniformRuntimeSize(UniformRuntime& uniform, uint32_t id);
-const UniformRuntimeVar& FindUniformRuntimeVar(std::vector<UniformRuntimeVar>& var, std::string name, uint32_t* offset);
+uint32_t GetUniformRuntimeSize( UniformRuntime& uniform, uint32_t id);
+UniformRuntimeVar& FindUniformRuntimeVar(std::vector<UniformRuntimeVar>& var, std::string name, uint32_t* offset);
 
 struct DescriptorSetDescription
 {
@@ -233,14 +233,14 @@ public:
 	void CreateCommandBuffers(void);
 	void CreateSyncObjects(void);
 	void CreateDescriptorPool(void);
-	VkSampler CreateTextureSampler(Texture* texture);
+	VkSampler CreateTextureSampler(Texture& texture);
 	VkPipelineLayout CreatePipelineLayout(std::vector<VkDescriptorSetLayout> descriptorSetLayout);
 	VertexBufferRenderer CreateStorageBuffer(void *ptrData, uint32_t size);
 	VertexBufferRenderer CreateVertexBuffer(uint8_t *ptrData, uint32_t size);
 	//UniformSets CreateUniform(size_t size, std::vector<VkDescriptorSetLayout> layoutArray, int dlayout);
 	IndiceBufferRenderer CreateIndexBuffer(uint32_t *indexData, uint32_t size);
 	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage, VkBuffer &buffer, VmaAllocation &allocation);
-	ImageRenderer CreateTextureImage(Texture* texture);
+	ImageRenderer CreateTextureImage(Texture& texture);
 	void CreateImage(VkExtent2D textureExtent, VkFormat format, uint32_t layer, VkImageTiling tiling, VkImageUsageFlags usage, VmaMemoryUsage properties, VkImage &image, VmaAllocation &imageMemory, VmaAllocationCreateFlags flag = 0);
 	void DestroyDescriptorSet(VkDescriptorSet descriptor);
 	void CreateAllocator(void);

@@ -3,6 +3,8 @@
 
 #include <stdexcept>
 
+#include "Utilities/Error.hpp"
+
 namespace Soon
 {
 	GraphicPipeline::GraphicPipeline(GraphicPipelineConf* conf) : BasePipeline(conf), graphicConf(conf)
@@ -13,11 +15,12 @@ namespace Soon
 	{		
 		for ( std::unordered_map<uint32_t, uint32_t>::iterator it = m_ToDraw.begin(); it != m_ToDraw.end(); ++it )
 		{
-			for (uint32_t index = 0 ; index < m_BindingDescription.size() ; index++)
+			GraphicsRenderer::GetInstance()->RemoveMesh(m_RenderData[it->second].inputId[0]);
+			uint32_t index  = 0;
+			for (InputBindingDescription& input : m_VertexInput)
 			{
-				if (index == 0)
-					GraphicsRenderer::GetInstance()->RemoveMesh(m_RenderData[it->second].inputId[index]);
 				GraphicsRenderer::GetInstance()->RemoveBuffer(m_RenderData[it->second].inputId[index]);
+				++index;
 			}
 		}
 		for (uint32_t index = 0 ; index < m_RenderData.size() ; index++)
@@ -29,10 +32,10 @@ namespace Soon
 		for (PipelineStage stage : graphicConf->GetStages())
 			GetShaderData(stage.shaderPath);
 
-		GetBindingDescription();
+		std::vector<VkVertexInputBindingDescription> bindings = GetBindingDescription();
 
-		graphicConf->vertexInputInfo.vertexBindingDescriptionCount = 1 + m_VertexInput.size();
-		graphicConf->vertexInputInfo.pVertexBindingDescriptions = m_BindingDescription.data();
+		graphicConf->vertexInputInfo.vertexBindingDescriptionCount = bindings.size();
+		graphicConf->vertexInputInfo.pVertexBindingDescriptions = bindings.data();
 
 		graphicConf->vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(m_AttributeDescriptions.size());
 		graphicConf->vertexInputInfo.pVertexAttributeDescriptions = m_AttributeDescriptions.data();
@@ -53,18 +56,51 @@ namespace Soon
 
 		graphicConf->scissor.extent = Extent;
 
+/**/
+		std::vector<VkVertexInputBindingDescription> bindings = GetBindingDescription();
+
+		graphicConf->vertexInputInfo.vertexBindingDescriptionCount = bindings.size();
+		graphicConf->vertexInputInfo.pVertexBindingDescriptions = bindings.data();
+		graphicConf->vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(m_AttributeDescriptions.size());
+		graphicConf->vertexInputInfo.pVertexAttributeDescriptions = m_AttributeDescriptions.data();
+
+		//for (MeshVertexElement& a: m_MeshVertexInput.data)
+		//{
+		//	std::cout << "Mesh offset: " << a.mOffset << std::endl;
+		//	std::cout << "Mesh sementic: " << (int)a.sementic << std::endl;
+		//	std::cout << "Mesh typeSize: " << a.type.GetTypeSize() << std::endl;
+		//}
+		//for (VkVertexInputBindingDescription& a: bindings)
+		//{
+		//	std::cout << "Binding binding: " << a.binding << std::endl;
+		//	std::cout << "Binding inputRate: " << a.inputRate << std::endl;
+		//	std::cout << "Binding stride: " << a.stride << std::endl;
+		//}
+		//for (VkVertexInputAttributeDescription& a : m_AttributeDescriptions)
+		//{
+		//	std::cout << "Attribute Binding: " << a.binding << std::endl;
+		//	std::cout << "Attribute Format: " << a.format << std::endl;
+		//	std::cout << "Attribute Location: " << a.location << std::endl;
+		//	std::cout << "Attribute Offset: " << a.offset << std::endl;
+		//}
+/**/
+
 		graphicConf->pipelineInfo.renderPass = GraphicsInstance::GetInstance()->GetRenderPass();
 		_pipelineLayout = GraphicsInstance::GetInstance()->CreatePipelineLayout(_mUbm.GetDescriptorSetLayout());
 		graphicConf->pipelineInfo.layout = _pipelineLayout;
 		_pipeline = GraphicsInstance::GetInstance()->CreatePipeline(graphicConf);
 	}
 	
-	void GraphicPipeline::GetBindingDescription( void )
+	std::vector<VkVertexInputBindingDescription> GraphicPipeline::GetBindingDescription( void )
 	{
-		m_BindingDescription.push_back({0, m_MeshVertexInput.GetVertexStrideSize(), VK_VERTEX_INPUT_RATE_VERTEX});
+		std::vector<VkVertexInputBindingDescription> bindings;
+
+		bindings.push_back({0, m_MeshVertexInput.GetVertexStrideSize(), VK_VERTEX_INPUT_RATE_VERTEX});
 
 		for (const InputBindingDescription& it : m_VertexInput)
-			m_BindingDescription.push_back({it.mBinding, it.mDescription.GetVertexStrideSize(), it.mInputRate});
+			bindings.push_back({it.mBinding, it.mDescription.GetVertexStrideSize(), it.mInputRate});
+		
+		return bindings;
 	}
 
 	void GraphicPipeline::SetNumInstance(uint32_t id, uint32_t instances)
@@ -80,10 +116,7 @@ namespace Soon
 
 	void GraphicPipeline::BindCaller(VkCommandBuffer commandBuffer, uint32_t currentImage)
 	{
-		std::cout << graphicConf->GetStages()[0].shaderPath << std::endl;
-		std::cout << "\t Bind Caller for the Current Image : " << currentImage << std::endl;
-
-		if (m_ToDraw.empty())
+		if (m_ToDraw.empty()) // MayBe Delete
 			return ;
 
 
@@ -103,23 +136,29 @@ namespace Soon
 									&(vecDescriptor[uniqueId]), 0, nullptr);
 		}
 
-		VkDeviceSize offsets[] = {0};
+		uint32_t index = 0;
+		VkDeviceSize offsets[1] = {0};
 		// Need to rework this
 		// Maybe pool of mem and list outsize ?
 		for ( std::unordered_map<uint32_t, uint32_t>::iterator it = m_ToDraw.begin(); it != m_ToDraw.end(); ++it )
 		{
-			std::cout << "To Draw : " << it->second << std::endl;
+			//std::cout << "To Draw : " << it->second << std::endl;
 			MeshBufferRenderer &bu = GraphicsRenderer::GetInstance()->GetMesh(m_RenderData[it->second].inputId[0]);
 
 			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &(bu.vertex.buffer), offsets);
 			vkCmdBindIndexBuffer(commandBuffer, bu.indices.buffer, 0, VK_INDEX_TYPE_UINT32);
 
-			for (uint32_t index = 1 ; index < m_BindingDescription.size() ; index++)
+			index = 1;
+			for (InputBindingDescription& input : m_VertexInput)
 			{
-				//if (m_RenderData[it->second].inputId[index] == Soon::IdError)
-				//	throw std::runtime_error(std::string("BufferId not feed for binding : ") + std::to_string(index));
+				//std::cout << "BaseOffset in bind: " << input.mDescription.mBaseOffset << std::endl;
+				//std::cout << "Stride in bind: " << input.mDescription.strideSize << std::endl;
+				//std::cout << "InstanceRate in bind: " << input.mInputRate << std::endl;
+				//std::cout << "Bind in bind: " << input.mBinding << std::endl;
+
 				BufferRenderer& buffer = GraphicsRenderer::GetInstance()->GetBufferRenderer(m_RenderData[it->second].inputId[index]);
-				vkCmdBindVertexBuffers(commandBuffer, m_BindingDescription[index].binding, 1, &(buffer.GetBuffer()), offsets);
+				vkCmdBindVertexBuffers(commandBuffer, input.mBinding, 1, &(buffer.GetBuffer()), &(input.mDescription.mBaseOffset));
+				++index;
 			}
 
 			for (uint32_t setId = 0 ; setId < sets.size() ; setId++)
@@ -133,6 +172,7 @@ namespace Soon
 										0,
 										nullptr);
 			}
+			//std::cout << "Instance: " << m_RenderData[it->second].numInstance << std::endl;
 			vkCmdDrawIndexed(commandBuffer, bu.indices.numIndices, m_RenderData[it->second].numInstance, 0, 0, 0);
 		}
 	}
@@ -140,11 +180,18 @@ namespace Soon
 	bool GraphicPipeline::IsValidToRender(uint32_t id) const
 	{
 		if (!m_RenderData[id].cached || id >= m_RenderData.size())
+		{
+			std::cout << "First" << std::endl;
 			return false;
-		for (uint32_t index = 0 ; index < m_BindingDescription.size() ; index++)
+		}
+
+		for (uint32_t index = 0 ; index < m_VertexInput.size() + 1; index++) // Should i iterate on my list vertexInut ?
 		{
 			if (m_RenderData[id].inputId[index] == Soon::IdError)
+			{
+				std::cout << "Second: " << index << std::endl;
 				return false;
+			}
 		}
 		return true;
 	}
@@ -176,7 +223,7 @@ namespace Soon
 		{
 			idMat = _freeId.back();
 			_freeId.pop_back();
-			for (uint32_t index = 0 ; index < m_BindingDescription.size() ; index++)
+			for (uint32_t index = 0 ; index < m_VertexInput.size() + 1 ; index++)
 				m_RenderData[idMat].inputId[index] = Soon::IdError;
 			m_RenderData[idMat].matId = idMat;
 			m_RenderData[idMat].cached = true;
@@ -185,8 +232,8 @@ namespace Soon
 		else
 		{
 			idMat = m_RenderData.size();
-			uint32_t* ids = new uint32_t[m_BindingDescription.size()]();
-			for (uint32_t index = 0 ; index < m_BindingDescription.size() ; index++)
+			uint32_t* ids = new uint32_t[m_VertexInput.size() + 1]();
+			for (uint32_t index = 0 ; index < m_VertexInput.size() + 1 ; index++)
 				ids[index] = Soon::IdError;
 			m_RenderData.push_back({idMat, ids, 1, true});
 		}
@@ -233,7 +280,8 @@ namespace Soon
 		inputs.resize(count);
 		reflection.EnumerateInputVariables(&count, inputs.data());
 
-		uint32_t offset = 0;
+		uint32_t offsetMesh = 0;
+		uint32_t offsetVertex = 0;
 
 		for (uint32_t index = 0; index < count; index++)
 		{
@@ -251,15 +299,16 @@ namespace Soon
 				attributeDes.binding = 0;
 				attributeDes.format = VertexTypeToVkFormat(SpvTypeToVertexType(inputs[index]->type_description));
 				attributeDes.location = inputs[index]->location;
-				attributeDes.offset = offset;
+				attributeDes.offset = offsetMesh;
 
 				m_AttributeDescriptions.push_back(attributeDes);
 
-        		std::cout << inputs[index]->name << std::endl;
-				std::cout << std::endl << "Location: " << inputs[index]->location << std::endl;
-				std::cout << "Base Type : " << (int)input.type.baseType << " Column : " << input.type.column << " Row : " << input.type.row << std::endl;
+        		DEBUG("\n", inputs[index]->name);
+				DEBUG("Location: ", inputs[index]->location);
+				DEBUG("Base Type : ", (int)input.type.baseType, " Column : ", input.type.column, " Row : ", input.type.row);
+				DEBUG("Ofset: ", offsetMesh);
 
-				offset += input.type.GetTypeSize();
+				offsetMesh += input.type.GetTypeSize();
 			}
 			else if (graphicConf->IsDefaultVertexInput(inputs[index]->name))
 			{
@@ -284,11 +333,11 @@ namespace Soon
 				attributeDes.binding = defaultBinding;
 				attributeDes.format = VertexTypeToVkFormat(SpvTypeToVertexType(inputs[index]->type_description));
 				attributeDes.location = inputs[index]->location;
-				attributeDes.offset = offset;
+				attributeDes.offset = offsetVertex;
 
 				m_AttributeDescriptions.push_back(attributeDes);
 
-				offset += input.type.GetTypeSize();
+				offsetVertex += input.type.GetTypeSize();
 
 				std::cout << std::endl << "Location: " << inputs[index]->location << std::endl;
     			std::cout << inputs[index]->name << std::endl;
@@ -318,12 +367,22 @@ namespace Soon
 				throw std::runtime_error("Not Good");
 		}
 
+		it->mDescription.mBaseOffset = description.mBaseOffset;
+		it->mDescription.strideSize = description.strideSize;
+		DEBUG("InputVertex Binding: ", it->mBinding);
+		DEBUG("InputVertex BaseOffset: ", it->mDescription.mBaseOffset);
+		DEBUG("InputVertex StrideSize: ", it->mDescription.strideSize);
+		DEBUG("InputVertex Rate: ", it->mInputRate);
+
 		auto itAttr = std::find_if(m_AttributeDescriptions.begin(), m_AttributeDescriptions.end(), [&binding](VkVertexInputAttributeDescription& a){ return binding == a.binding;});
 		for (uint32_t index = 0 ; index < description.data.size() ; index++)
 		{
-			// TODO: REVOIR LARCHI DES ATTRIBU
 			itAttr->offset = description.data[index].mOffset;
-		}
+			DEBUG("Attribute Location: ", itAttr->location);
+			DEBUG("Attribute offset: ", itAttr->offset);
+			++itAttr;
+		}		
+
 		GraphicsRenderer::GetInstance()->AddPipelineToRecreate(_conf->GetJsonPath());
 	}
 
@@ -332,10 +391,10 @@ namespace Soon
 		if (binding == 0)
 			throw std::runtime_error("Not Good");
 		
-		std::cout << "RenderData: " << m_RenderData.size() << std::endl;
-		for ( uint32_t index = 0 ; index < m_BindingDescription.size() ; index++)
+		uint32_t index = 1;
+		for ( InputBindingDescription& input : m_VertexInput )
 		{
-			if (m_BindingDescription[index].binding == binding)
+			if (input.mBinding == binding)
 			{
 				// TODO: idMat Checker
 				if (m_RenderData[idMat].inputId[index] != Soon::IdError)
@@ -345,6 +404,8 @@ namespace Soon
 				m_RenderData[idMat].inputId[index] = buffer.GetId();
 				return ;
 			}
+			++index;
 		}
+		throw std::runtime_error("Binding Not Found");
 	}
 } // namespace Soon

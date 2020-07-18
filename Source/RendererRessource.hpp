@@ -17,7 +17,6 @@ namespace Soon
 	{
 	private:
 		ERendererRessource m_Type;
-		uint32_t count = 0;
 	protected:
 		uint32_t m_UniqueId = Soon::IdError;
 		RendererRessource( ERendererRessource type, uint32_t id ); //TODO: ID 

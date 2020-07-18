@@ -45,10 +45,11 @@ namespace Soon
 		m_DefaultTexture->SetPixel(0, 1);
 		m_DefaultTexture->SetPixel(1, 0);
 		m_DefaultTexture->SetPixel(1, 1);
-		AddTexture(m_DefaultTexture);
+		AddTexture(*m_DefaultTexture);
+		//AddTexture(m_DefaultTexture->GetId());
 		std::cout << "Default Texture Id : " << m_DefaultTexture->GetId() << std::endl;
-		delete m_DefaultTexture;
-		m_DefaultTexture = nullptr;
+		//delete m_DefaultTexture;
+		//m_DefaultTexture = nullptr;
 	}
 
 	GraphicsRenderer::GraphicsRenderer(void) : _changes(false)
@@ -58,8 +59,12 @@ namespace Soon
 
 	void GraphicsRenderer::RecreatePipelines( void )
 	{
-		for (std::string& name : m_PipelinesToRecreate)
+		//if (m_PipelinesToRecreate.size() != 0)
+		//	vkDeviceWaitIdle(GraphicsInstance::GetInstance()->GetDevice());
+		for ( ; !m_PipelinesToRecreate.empty() ; )
 		{
+			std::string name = m_PipelinesToRecreate.back();
+			m_PipelinesToRecreate.pop_back();
 			if (_computePipelines.find(name) != _computePipelines.end())
 			{
 				_computePipelines[name]->DestroyPipeline();
@@ -68,6 +73,7 @@ namespace Soon
 			}
 			else if (_graphicPipelines.find(name) != _graphicPipelines.end())
 			{
+				std::cout << name << " Is recreared" << std::endl;
 				_graphicPipelines[name]->DestroyPipeline();
 				_graphicPipelines[name]->RecreatePipeline();
 				return ;
@@ -151,6 +157,7 @@ namespace Soon
 	void GraphicsRenderer::DestroyInvalids( void )
 	{
 		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
+
 		vkDeviceWaitIdle(device);
 
 		while (!m_MeshToSupress.empty())
@@ -280,7 +287,6 @@ namespace Soon
 	void GraphicsRenderer::RecreateAllUniforms(void)
 	{
 		std::cout << "Renderer : Recreate All Uniforms" << std::endl;
-		std::cout << _graphicPipelines.size() << std::endl;
 
 		for( auto const& [key, val] : _graphicPipelines )
 			val->RecreateUniforms();
@@ -346,25 +352,16 @@ namespace Soon
 	{
 		for( auto const& [key, val] : _graphicPipelines )
 		{
-			std::cout << "Graphic Bind Caller" << std::endl;
 			val->BindCaller(commandBuffer, index);
 		}
-		std::cout << std::endl;
 	}
 
 	void GraphicsRenderer::ComputePipelinesBindCaller(VkCommandBuffer commandBuffer, uint32_t index)
 	{
 		for( auto const& [key, val] : _computePipelines )
 		{
-			std::cout << "Compute Bind Caller" << std::endl;
 			val->BindCaller(commandBuffer, index);
 		}
-		for( auto const& [key, val] : m_UniqueComputePipelines )
-		{
-			std::cout << "Compute Bind Caller" << std::endl;
-			val->BindCaller(commandBuffer, index);
-		}
-		std::cout << std::endl;
 	}
 
 	void GraphicsRenderer::DestroyAllUniforms(void)
@@ -458,10 +455,10 @@ namespace Soon
 		return ((id < m_TextureCounter) && (m_Textures[id].count > 0));
 	}
 	
-	uint32_t GraphicsRenderer::AddTexture(Texture* texture)
+	uint32_t GraphicsRenderer::AddTexture(Texture& texture)
 	{
-		if (texture->GetId() != Soon::IdError)
-			return AddTexture(texture->GetId());
+		if (texture.GetId() != Soon::IdError)
+			return AddTexture(texture.GetId());
 
 		uint32_t textureId;
 		if (!m_FreeTextureId.empty())
@@ -479,11 +476,11 @@ namespace Soon
 		TextureRenderer mr;
 		mr.count = 1;
 		mr.imageRenderer = GraphicsInstance::GetInstance()->CreateTextureImage(texture);
-		mr.image._imageView = GraphicsInstance::GetInstance()->CreateImageView(mr.imageRenderer._textureImage, TextureFormatToVkFormat(texture->GetFormat()), VK_IMAGE_ASPECT_COLOR_BIT, TextureTypeToVkImageType(texture->GetType()));
+		mr.image._imageView = GraphicsInstance::GetInstance()->CreateImageView(mr.imageRenderer._textureImage, TextureFormatToVkFormat(texture.GetFormat()), VK_IMAGE_ASPECT_COLOR_BIT, TextureTypeToVkImageType(texture.GetType()));
 		mr.image._textureSampler = GraphicsInstance::GetInstance()->CreateTextureSampler(texture);
 		m_Textures[textureId] = mr;
 
-		texture->m_UniqueId = textureId;
+		texture.m_UniqueId = textureId;
 
 		std::cout << "TextureId: " << textureId << ", Count: " << m_Textures[textureId].count << std::endl;
 		return (textureId);
@@ -521,14 +518,14 @@ namespace Soon
 		return (m_Textures[id].image);
 	}
 
-	void GraphicsRenderer::SetDefaultTexture(Texture* texture)
+	void GraphicsRenderer::SetDefaultTexture(Texture& texture)
 	{
 		// TODO: HERE
 		RemoveTexture(m_DefaultTexture->GetId());
 		delete m_DefaultTexture;
 
-		texture->m_UniqueId = AddTexture(texture);
-		m_DefaultTexture = texture;
+		texture.m_UniqueId = AddTexture(texture);
+		m_DefaultTexture = &texture;
 	}
 
 	/**

@@ -20,28 +20,47 @@ namespace Soon
 
 	GpuBuffer::GpuBuffer(const GpuBuffer& other) : RendererRessource(ERendererRessource::BUFFER, other.m_UniqueId)
 	{
-		std::cout << "Copy COnstructor" << std::endl;
 		m_BufferFlags = other.GetBufferUsage();
 		m_MemUsg = other.GetMemoryUsage();
 		m_Size = other.GetSize();
+		m_Offset = other.m_Offset;
 	}
 
 	GpuBuffer::GpuBuffer(GpuBuffer&& other) : RendererRessource(ERendererRessource::BUFFER, Soon::IdError)
 	{
-		std::cout << "Move COnstructor" << std::endl;
 		m_BufferFlags = other.GetBufferUsage();
 		m_MemUsg = other.GetMemoryUsage();
 		m_Size = other.GetSize();
 		m_UniqueId = other.GetId();
+		m_Offset = other.m_Offset;
 
 		other.m_UniqueId = Soon::IdError;
 		other.m_Size = 0;
+		other.m_Offset = 0;
+	}
+
+	GpuBuffer& GpuBuffer::operator=(GpuBuffer& other)
+	{
+		m_BufferFlags = other.m_BufferFlags;
+		m_MemUsg = other.m_MemUsg;
+		m_Size = other.m_Size;
+		m_Offset = other.m_Offset;
+
+		if (m_UniqueId != Soon::IdError)
+			GraphicsRenderer::GetInstance()->RemoveBuffer(m_UniqueId);
+
+		m_UniqueId = other.m_UniqueId;
+		GraphicsRenderer::GetInstance()->AddBuffer(m_UniqueId);
+
+		return *this;
 	}
 
 	void GpuBuffer::Resize( uint32_t size )
 	{
+		std::cout << "Resize gpuBuffer from " << m_Size << " to " << size << std::endl;
 		BufferRenderer& buffer = GraphicsRenderer::GetInstance()->GetBufferRenderer(m_UniqueId);
-		vmaResizeAllocation(GraphicsInstance::GetInstance()->GetAllocator(), buffer.GetAllocation(), size);
+		buffer.Resize(size);
+		m_Size = size;
 	}
 
 	void GpuBuffer::SetData( void* ptrData, uint32_t size )

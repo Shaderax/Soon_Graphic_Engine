@@ -61,7 +61,7 @@ namespace Soon
 	{
 		if (m_Pipeline && _id != IdError)
 		{
-			GraphicsRenderer::GetInstance()->AddTexture(&texture);
+			GraphicsRenderer::GetInstance()->AddTexture(texture);
 			std::cout << "Set Texture : " << texture.GetId() << std::endl;
 			m_Pipeline->SetTexture(name, _id, texture.GetId());
 			// TODO: REMOVE TEXTURE ?

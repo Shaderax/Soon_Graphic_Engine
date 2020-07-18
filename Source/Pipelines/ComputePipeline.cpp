@@ -60,7 +60,7 @@ namespace Soon
 		VkDeviceSize offsets[] = {0};
 		for ( std::unordered_map<uint32_t, uint32_t>::iterator it = m_ToDraw.begin(); it != m_ToDraw.end(); ++it )
 		{
-			std::cout << "To Draw : " << it->second << std::endl;
+			//std::cout << "To Draw : " << it->second << std::endl;
 
 			for (uint32_t setId = 0 ; setId < sets.size() ; setId++)
 			{
@@ -103,7 +103,7 @@ namespace Soon
 
 	void ComputePipeline::Process(uint32_t id)
 	{
-		if (IsValidToProcess(id))
+		if (!IsValidToProcess(id))
 			return ;
 		m_ProcessData[id].cached = false;
 		m_ToDraw[id] = id;
@@ -147,6 +147,7 @@ namespace Soon
 		_freeId.push_back(id);
 		//_mUbm.Free(id);
 	}
+
 	void ComputePipeline::SetWorkGroup(uint32_t matId, uint32_t x, uint32_t y, uint32_t z)
 	{
 		m_ProcessData[matId].workGroup[0] = x;

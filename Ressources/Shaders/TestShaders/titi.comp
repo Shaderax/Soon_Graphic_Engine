@@ -1,0 +1,20 @@
+#version 450
+
+struct Particle
+{
+	vec3 position;
+	vec3 velocity;
+};
+
+layout(binding = 0, set = 0) buffer Particles
+{
+	uint num;
+	Particle particles[3];
+};
+
+layout (local_size_x = 128) in;
+
+void main()
+{
+
+}

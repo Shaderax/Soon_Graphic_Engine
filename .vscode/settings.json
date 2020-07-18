@@ -81,6 +81,8 @@
 		"bit": "cpp",
 		"forward_list": "cpp",
 		"unordered_set": "cpp",
-		"valarray": "cpp"
+		"valarray": "cpp",
+		"strstream": "cpp",
+		"typeindex": "cpp"
 	}
 }

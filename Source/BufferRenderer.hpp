@@ -27,6 +27,8 @@ namespace Soon
 		const VmaAllocation& GetAllocation( void ) const;
 		VkDeviceSize GetSize( void ) const;
 
-		void Resize( uint32_t size );
+		void Resize( VkDeviceSize size );
+
+		//void Resize( uint32_t size );
 	};
 }

@@ -68,9 +68,16 @@ namespace Soon
 		void CheckAndResize( uint32_t num );
 
 		void SetRuntimeAmount(std::string name, uint32_t amount, uint32_t idMat);
-		void SetRuntimeVarAmount(UniformRuntime& runtime, std::vector<UniformRuntimeVar>& var, std::string name, uint32_t amount, uint32_t idMat);
+		void SetRuntimeBuffer(std::string name, GpuBuffer& buffer, uint32_t idMat);
 
-		const UniformRuntime& GetUniformRuntime(std::string name) const;
+		void SetRuntime(std::string name, void* value, uint32_t matId);
+
+		UniformRuntime& GetUniformRuntime(std::string name);
+		UniformRuntime& GetUniqueUniformRuntime(std::string name);
+		GpuBuffer& GetRuntimeBuffer(std::string name);
+		void SetUniqueRuntimeAmount(std::string name, uint32_t amount);
+		void SetUniqueRuntimeBuffer(std::string name, GpuBuffer& buffer);
+
 
 	};
 }

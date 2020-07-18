@@ -28,7 +28,7 @@ namespace Soon
 	class GraphicPipeline : public BasePipeline
 	{
 	private:
-		std::vector<VkVertexInputBindingDescription> m_BindingDescription;
+		//std::vector<VkVertexInputBindingDescription> m_BindingDescription;
 		std::vector<VkVertexInputAttributeDescription> m_AttributeDescriptions;
 
 		std::vector<IdRender> m_RenderData;
@@ -42,7 +42,8 @@ namespace Soon
 		void Init( void );
 		// TODO: DESTROY _mUbm.CreateDescriptorSetLayout()
 		void RecreatePipeline(void);
-		void GetBindingDescription(void);
+		//void GetBindingDescription(void);
+		std::vector<VkVertexInputBindingDescription> GetBindingDescription( void );
 		VertexDescription GetAdditionalVertexInput();
 		MeshVertexDescription GetMeshVertexDescription();
 		void BindCaller(VkCommandBuffer commandBuffer, uint32_t currentImage);

@@ -110,20 +110,15 @@ namespace Soon
 	/**
 	 * UNIFORMS
 	 */
-	uint32_t GetUniformRuntimeSize(UniformRuntime& uniform, uint32_t id)
+	uint32_t GetUniformRuntimeSize( UniformRuntime& uniform, uint32_t id)
 	{
+		uint32_t lastOffset = 0;
 		uint32_t size = 0;
-		for (UniformRuntimeVar& member : uniform.mMembers)
-		{
-			if (!member.isRuntime)
-				size += member._size;
-			else
-				size += member._size * member.numInBuffer[id];
-		}
-		return size;
+
+		return uniform.mMembers.back()._offset + uniform.mMembers.back()._size;
 	}
 
-	const UniformRuntimeVar& FindUniformRuntimeVar(const std::vector<UniformRuntimeVar>& var, std::string name, uint32_t* offset)
+	UniformRuntimeVar& FindUniformRuntimeVar(std::vector<UniformRuntimeVar>& var, std::string name, uint32_t* offset)
 	{
 		size_t pos = name.find('.');
 
@@ -136,12 +131,12 @@ namespace Soon
 				else
 					return FindUniformRuntimeVar(var[index].mMembers, name.substr(pos + 1), offset);
 			}
-			*offset += var[index]._size; // * numIn ?
+			*offset += var[index]._size; //TODO: DIM // * numIn ?
 		}
 		throw std::runtime_error("Uniform Not found");
 	}
 
-	VertexDescription UniformRuntime::GetVertexDescription(std::vector<std::string> varNames) const
+	VertexDescription UniformRuntime::GetVertexDescription(std::vector<std::string> varNames, uint32_t id)
 	{
 		VertexDescription description;
 		uint32_t lastOffset = 0;
@@ -150,6 +145,9 @@ namespace Soon
 
 		if (varNames.size() == 0)
 			throw std::runtime_error("varNames is Empty");
+
+		// TTODO: HERE
+		description.SetBaseOffset(mBuffers[id].m_Offset);
 
 		for (const std::string& var : varNames)
 		{
@@ -164,7 +162,12 @@ namespace Soon
 			lastOffset = offset;
 			if (first)
 				first = false;
+			description.AddVertexElement(element);
 		}
+		if (!mMembers.back().mMembers.empty())
+			description.strideSize = mMembers.back()._size + (GetTypeUniformAlignment(mMembers.back().mMembers.begin()->_type) % mMembers.back().mMembers.begin()->_type.GetTypeSize());
+		else
+			description.strideSize = mMembers.back()._size;
 		return description;
 	}
 
@@ -1187,24 +1190,24 @@ namespace Soon
 	{
 		auto app = reinterpret_cast<GraphicsInstance *>(glfwGetWindowUserPointer(window));
 		app->_framebufferResized = true;
-		std::cout << width << " " << height << std::endl;
+		std::cout << "FramebufferResizeCallback: " << "Width: " << width << " Height: " << height << std::endl;
 		app->_windowAttribute._width = width;
 		app->_windowAttribute._height = height;
 	}
 
-	VkSampler GraphicsInstance::CreateTextureSampler(Texture* texture)
+	VkSampler GraphicsInstance::CreateTextureSampler(Texture& texture)
 	{
 		VkSampler textureSampler;
 
 		VkSamplerCreateInfo samplerInfo = {};
 		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-		samplerInfo.magFilter = TextureFilterModeToVk(texture->GetFilterMode());
-		samplerInfo.minFilter = TextureFilterModeToVk(texture->GetFilterMode());
+		samplerInfo.magFilter = TextureFilterModeToVk(texture.GetFilterMode());
+		samplerInfo.minFilter = TextureFilterModeToVk(texture.GetFilterMode());
 		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT; // VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE
 		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		samplerInfo.anisotropyEnable = VK_TRUE;
-		samplerInfo.maxAnisotropy = texture->GetAnisotropLevel();
+		samplerInfo.anisotropyEnable = VK_FALSE;
+		samplerInfo.maxAnisotropy = texture.GetAnisotropLevel();
 		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 		samplerInfo.unnormalizedCoordinates = VK_FALSE;
 		samplerInfo.compareEnable = VK_FALSE;
@@ -1248,10 +1251,10 @@ namespace Soon
 		return (VK_IMAGE_VIEW_TYPE_2D);
 	}
 
-	ImageRenderer GraphicsInstance::CreateTextureImage(Texture* texture)
+	ImageRenderer GraphicsInstance::CreateTextureImage(Texture& texture)
 	{
 		ImageRenderer ir;
-		size_t imageSize = texture->GetArrayLayer() * texture->mWidth * texture->mHeight * texture->GetFormat().GetSize();
+		size_t imageSize = texture.GetArrayLayer() * texture.mWidth * texture.mHeight * texture.GetFormat().GetSize();
 
 		VkBuffer stagingBuffer;
 		VmaAllocation staginAlloc;
@@ -1260,17 +1263,16 @@ namespace Soon
 
 		CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, stagingBuffer, staginAlloc);
 
-
 		void *data = nullptr;
 		vmaMapMemory(m_Allocator, staginAlloc, &data);
-		memcpy(data, texture->GetData(), imageSize);
+		memcpy(data, texture.GetData(), imageSize);
 		vmaUnmapMemory(m_Allocator, staginAlloc);
 
-		CreateImage({texture->mWidth, texture->mHeight}, TextureFormatToVkFormat(texture->GetFormat()), texture->GetArrayLayer(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VMA_MEMORY_USAGE_GPU_ONLY, ir._textureImage, ir._textureImageMemory);
+		CreateImage({texture.mWidth, texture.mHeight}, TextureFormatToVkFormat(texture.GetFormat()), texture.GetArrayLayer(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VMA_MEMORY_USAGE_GPU_ONLY, ir._textureImage, ir._textureImageMemory);
 
-		TransitionImageLayout(ir._textureImage, TextureFormatToVkFormat(texture->GetFormat()), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, TextureTypeToVkImageType(texture->GetType()));
-		CopyBufferToImage(stagingBuffer, ir._textureImage, texture->mWidth, texture->mHeight, TextureTypeToVkImageType(texture->GetType()));
-		TransitionImageLayout(ir._textureImage, TextureFormatToVkFormat(texture->GetFormat()), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, TextureTypeToVkImageType(texture->GetType()));
+		TransitionImageLayout(ir._textureImage, TextureFormatToVkFormat(texture.GetFormat()), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, TextureTypeToVkImageType(texture.GetType()));
+		CopyBufferToImage(stagingBuffer, ir._textureImage, texture.mWidth, texture.mHeight, TextureTypeToVkImageType(texture.GetType()));
+		TransitionImageLayout(ir._textureImage, TextureFormatToVkFormat(texture.GetFormat()), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, TextureTypeToVkImageType(texture.GetType()));
 
 		vmaDestroyBuffer(m_Allocator, stagingBuffer, staginAlloc);
 
@@ -1507,36 +1509,13 @@ namespace Soon
 
 	void GraphicsInstance::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
 	{
-		VkCommandBufferAllocateInfo allocInfo = {};
-		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandPool = _commandPool;
-		allocInfo.commandBufferCount = 1;
+        VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
 
-		VkCommandBuffer commandBuffer;
-		vkAllocateCommandBuffers(_device, &allocInfo, &commandBuffer);
+        VkBufferCopy copyRegion{};
+        copyRegion.size = size;
+        vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
-		VkCommandBufferBeginInfo beginInfo = {};
-		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-		vkBeginCommandBuffer(commandBuffer, &beginInfo);
-
-		VkBufferCopy copyRegion = {};
-		copyRegion.size = size;
-		vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
-
-		vkEndCommandBuffer(commandBuffer);
-
-		VkSubmitInfo submitInfo = {};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &commandBuffer;
-
-		vkQueueSubmit(_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-		vkQueueWaitIdle(_graphicsQueue);
-
-		vkFreeCommandBuffers(_device, _commandPool, 1, &commandBuffer);
+        EndSingleTimeCommands(commandBuffer);
 	}
 
 	std::vector<VkDescriptorSetLayout> GraphicsInstance::CreateDescriptorSetLayout(std::vector<std::vector<VkDescriptorSetLayoutBinding>> uboLayoutBinding)
@@ -1637,9 +1616,11 @@ namespace Soon
 				for (size_t i = 0; i < _swapChainImages.size(); i++)
 				{
 					VkDescriptorBufferInfo bufferInfo = {};
+					//std::cout << "Update: offset: " << description.uniformsRuntime[index].mBuffers[matIds[countId]].m_Offset << std::endl;
+					//std::cout << "Update size: " << buffer.GetSize() << std::endl;
 					bufferInfo.buffer = buffer.GetBuffer();
-					bufferInfo.offset = 0;//offset + offsetUniform;
-					bufferInfo.range = buffer.GetSize();
+					bufferInfo.offset = description.uniformsRuntime[index].mBuffers[matIds[countId]].m_Offset;
+					bufferInfo.range = buffer.GetSize() - description.uniformsRuntime[index].mBuffers[matIds[countId]].m_Offset;
 
 					VkWriteDescriptorSet descriptorWrite = {};
 					descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
