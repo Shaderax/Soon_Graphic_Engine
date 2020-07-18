@@ -1,8 +1,5 @@
 - Uniforms Auto realloc. 
 - FREE.
-- Load Additional vertex input.
-- Runtime Array
-	- RessourceRenderer Mesh and Texture
 - Dim
 - Descriptor Pool
-- Instance
+- Apply New Code Style

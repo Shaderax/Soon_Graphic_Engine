@@ -127,6 +127,9 @@ namespace Soon
 	
 	void UniformsBufferManager::AddUniqueUniform( Uniform uniform )
 	{
+		if (m_CpuBuffer != nullptr)
+			; // TODO: Error
+
 		m_UniqueSize += uniform._size;
 		for (uint32_t index = 0 ; index < m_UniqueSets.size() ; index++)
 		{
