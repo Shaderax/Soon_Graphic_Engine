@@ -818,9 +818,7 @@ namespace Soon
 			framebufferInfo.layers = 1;
 
 			if (vkCreateFramebuffer(_device, &framebufferInfo, nullptr, &_swapChainFramebuffers[i]) != VK_SUCCESS)
-			{
 				throw std::runtime_error("failed to create framebuffer!");
-			}
 		}
 	}
 
