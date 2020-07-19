@@ -19,6 +19,7 @@
 #include "ThirdParty/tinyobjloader/tiny_obj_loader.h"
 
 #include "MeshVertex.hpp"
+#include "Camera.hpp"
 
 using namespace Soon;
 
@@ -67,38 +68,6 @@ Mesh* ObjLoader(void)
 		indices.push_back(shapes[0].mesh.indices[index].vertex_index);
 	mesh->SetIndexBuffer(indices.data(), indices.size());
 
-	// Loop over shapes
-	//for (size_t s = 0; s < shapes.size(); s++)
-	//{
-	//	// Loop over faces(polygon)
-	//	size_t index_offset = 0;
-	//	for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++)
-	//	{
-	//		int fv = shapes[s].mesh.num_face_vertices[f];
-	//		// Loop over vertices in the face.
-	//		for (size_t v = 0; v < fv; v++)
-	//		{
-	//			// access to vertex
-	//			tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
-	//			tinyobj::real_t vx = attrib.vertices[3 * idx.vertex_index + 0];
-	//			tinyobj::real_t vy = attrib.vertices[3 * idx.vertex_index + 1];
-	//			tinyobj::real_t vz = attrib.vertices[3 * idx.vertex_index + 2];
-	//			tinyobj::real_t nx = attrib.normals[3 * idx.normal_index + 0];
-	//			tinyobj::real_t ny = attrib.normals[3 * idx.normal_index + 1];
-	//			tinyobj::real_t nz = attrib.normals[3 * idx.normal_index + 2];
-	//			tinyobj::real_t tx = attrib.texcoords[2 * idx.texcoord_index + 0];
-	//			tinyobj::real_t ty = attrib.texcoords[2 * idx.texcoord_index + 1];
-	//			// Optional: vertex colors
-	//			// tinyobj::real_t red = attrib.colors[3*idx.vertex_index+0];
-	//			// tinyobj::real_t green = attrib.colors[3*idx.vertex_index+1];
-	//			// tinyobj::real_t blue = attrib.colors[3*idx.vertex_index+2];
-	//		}
-	//		index_offset += fv;
-//
-	//		// per-face material
-	//		shapes[s].mesh.material_ids[f];
-	//	}
-	//}
 	return mesh;
 }
 
@@ -134,22 +103,32 @@ Texture* LoadTextureCubeMap( void )
 	return textureCubeMap;
 }
 
+void Rotate(float x, float y, float z, Quaternion* _rot)
+{
+	if (x)
+		*(_rot) *= Quaternion(vec3<float>(1.0f, 0.0f, 0.0f), x);
+	if (y)
+		*(_rot) *= Quaternion(vec3<float>(0.0f, 1.0f, 0.0f), y);
+	if (z)
+		*(_rot) *= Quaternion(vec3<float>(0.0f, 0.0f, 1.0f), z);
+}
+
 int main()
 {
 	// Init
 	GraphicsInstance::GetInstance()->Initialize();
 	GraphicsRenderer::GetInstance()->Initialize();
 
-	/**
-	 * Texture 
-	 */
-	Texture texture;
-	int channel, width, height;
-	unsigned char *data = stbi_load("/home/shaderax/Documents/Project/Late_Night/Ressources/Pixel/sprite_15.png", &width, &height, &channel, 4);
-	texture.SetData(data, width, height, TextureFormat(EnumTextureFormat::RGBA));
-	texture.SetFilterMode(EnumFilterMode::NEAREST);
-	stbi_image_free(data);
 
+	Mesh* mesh = ObjLoader();
+	mesh->Render();
+	mat4<float> model;
+	mesh->GetMaterial().GetPipeline()->SetUnique("uc.view", &model);
+	mesh->GetMaterial().GetPipeline()->SetUnique("uc.proj", &model);
+	model(0, 0) = 0.1f;
+	model(1, 1) = 0.1f;
+	model(2, 2) = 0.1f;
+	mesh->GetMaterial().GetPipeline()->Set("um.model", &model, mesh->GetId());
 	/**
 	 * TEXTURE CUBE MAP
 	 */
@@ -157,54 +136,63 @@ int main()
 	Mesh* meshCubeMap = ObjLoader();
 	meshCubeMap->GetMaterial().SetPipeline("./Examples/Skybox.json");
 	meshCubeMap->Render();
-	// TODO: CANNOT SETTEXTURE BEFORE RENDER
 	meshCubeMap->GetMaterial().SetTexture("texSampler", *cubeMap);
+	// TODO: CANNOT SETTEXTURE BEFORE RENDER
 	/**
 	 */
-
-	/**
-	 * MESH
-	 */
-	Mesh* mesh = ObjLoader();
-	mesh->AllocGpu();
-	mesh->Render();
-	mesh->GetMaterial().SetTexture("latexture", texture);
 
 	double lastTime = 0;
-	bool did = false;
-	double time = glfwGetTime();
-	double x = 0.0f;
-	double y = 0.0f;
+	Camera3D camera;
+	mat4<float> tmpMat;
 
 	// Loop
 	std::cout << "Begin Loop" << std::endl;
 	while (!GraphicsInstance::GetInstance()->ShouldClose(GraphicsInstance::GetInstance()->GetWindow()))
 	{
 		lastTime = ShowFPS(lastTime);
-		glfwGetCursorPos(GraphicsInstance::GetInstance()->GetWindow(), &x, &y);
-		mesh->GetMaterial().SetVec3("cou.bondour", vec3<float>(((float)x / 1280) * 2 - 1, ((float)y / 720) * 2 - 1, 0.0f));
 
-		if (glfwGetTime() - time > 5.0f)
-		{
-			time = glfwGetTime();
-			if (!did)
-			{
-				did = true;
-				mesh->UnRender();
-			}
-			else
-			{
-				mesh->Render();
-				did = false;
-			}
-		}
+		tmpMat = camera.GetViewMatrix();
+		mesh->GetMaterial().GetPipeline()->SetUnique("uc.view", &(tmpMat));
+		tmpMat(3, 0) = 0;
+		tmpMat(3, 1) = 0;
+		tmpMat(3, 2) = 0;
+		meshCubeMap->GetMaterial().GetPipeline()->SetUnique("uc.view", &(tmpMat));
+
+		tmpMat = camera.GetProjectionMatrix();
+		meshCubeMap->GetMaterial().GetPipeline()->SetUnique("uc.proj", &(tmpMat));
+		mesh->GetMaterial().GetPipeline()->SetUnique("uc.proj", &(tmpMat));
+
+		/**/
+			vec3<float> dir;
+			float rot = 0.0f;
+
+			if ( glfwGetKey(GraphicsInstance::GetInstance()->GetWindow(), GLFW_KEY_W))
+				dir.z += 0.01f;
+			if ( glfwGetKey(GraphicsInstance::GetInstance()->GetWindow(), GLFW_KEY_S))
+				dir.z -= 0.01f;
+			if ( glfwGetKey(GraphicsInstance::GetInstance()->GetWindow(), GLFW_KEY_A))
+				dir.x -= 0.01f;
+			if ( glfwGetKey(GraphicsInstance::GetInstance()->GetWindow(), GLFW_KEY_D))
+				dir.x += 0.01f;
+			if ( glfwGetKey(GraphicsInstance::GetInstance()->GetWindow(), GLFW_KEY_SPACE))
+				dir.y += 0.01f;
+			if ( glfwGetKey(GraphicsInstance::GetInstance()->GetWindow(), GLFW_KEY_LEFT_CONTROL))
+				dir.y -= 0.01f;
+			if ( glfwGetKey(GraphicsInstance::GetInstance()->GetWindow(), GLFW_KEY_LEFT))
+				rot = 1.0f;
+			if ( glfwGetKey(GraphicsInstance::GetInstance()->GetWindow(), GLFW_KEY_RIGHT))
+				rot = -1.0f;
+
+			camera.m_Pos += dir;
+			Rotate(0.0f, rot, 0.0f, &(camera.m_Rotation));
+							//Rotate(0.0f, rot, 0.0f);
+		/**/
 
 		GraphicsRenderer::GetInstance()->Update();
 		GraphicsInstance::GetInstance()->PollEvent();
 		GraphicsInstance::GetInstance()->DrawFrame();
 	}
 
-	delete mesh;
 	delete meshCubeMap;
 	delete cubeMap;
 

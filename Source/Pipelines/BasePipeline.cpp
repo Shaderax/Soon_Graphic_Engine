@@ -115,6 +115,11 @@ namespace Soon
 		_mUbm.Set( name, value, id );
 	}
 
+	void BasePipeline::SetUnique(std::string name, void* value)
+	{
+		_mUbm.SetUnique(name, value);
+	}
+
 	/**
 	 * TEXTURE
 	 */

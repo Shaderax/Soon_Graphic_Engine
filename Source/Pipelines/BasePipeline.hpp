@@ -82,6 +82,7 @@ namespace Soon
 		void* Get(std::string name, uint32_t id);
 		// Setter
 		void Set(std::string name, void *value, uint32_t id);
+		void SetUnique(std::string name, void* value);
 		void SetTexture(std::string name, uint32_t idMat, uint32_t textureId);
 		bool SetDefaultUniform(DefaultUniformStruct structure);
 		//void SetMesh(uint32_t matId, uint32_t meshId );

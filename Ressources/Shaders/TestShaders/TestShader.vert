@@ -33,18 +33,29 @@ layout(set = 0, binding = 3) uniform Wallah
 } ko[];
 */
 
+layout(set = 0, binding = 0) uniform UniformCamera
+{
+	mat4 view;
+	mat4 proj;
+} uc;
+
+layout(set = 1, binding = 0) uniform UniformModel
+{
+	mat4 model;
+} um;
+
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 inTexCoord;
-//layout(location = 2) in vec3 inNormal;
+layout(location = 2) in vec3 inNormal;
 
-layout(location = 2) in vec3 Pos;
+//layout(location = 2) in vec3 Pos;
 
 layout(location = 0) out vec2 outCoord;
 //layout(location = 1) out vec3 outNormal;
 
 void main()
 {
-	gl_Position = vec4(inPosition + Pos, 1.0);// + Pos, 1.0);
+	gl_Position = uc.proj * uc.view * um.model * vec4(inPosition/* + Pos*/, 1.0);// + Pos, 1.0);
 	//vec3 i = Pos;
 	outCoord = inTexCoord;
 	//outNormal = inNormal;

@@ -68,7 +68,7 @@ namespace Soon
 		}
 	}
 
-	const BasePipeline *Material::GetPipeline(void) const
+	BasePipeline *Material::GetPipeline(void) const
 	{
 		return (m_Pipeline);
 	}

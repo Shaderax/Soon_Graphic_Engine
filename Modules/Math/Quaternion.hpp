@@ -57,9 +57,9 @@ struct Quaternion
 
 		// pitch (y-axis rotation)
 		double sinp = 2.0f * (f * v.y - v.z * v.x);
-//		if (fabs(sinp) >= 1)
-//			pitch = copysign(M_PI / 2, sinp); // use 90 degrees if out of range
-//		else
+		if (fabs(sinp) >= 1)
+			pitch = copysign(M_PI / 2, sinp); // use 90 degrees if out of range
+		else
 		pitch = asin(sinp);
 
 		// yaw (z-axis rotation)

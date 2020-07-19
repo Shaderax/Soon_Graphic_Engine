@@ -77,10 +77,4 @@ class vec2
 			this->x /= mag;
 			this->y /= mag;
 		}
-
-		void show( void )
-		{
-			std::cout << x << " " << y << std::endl;
-		}
-
 };

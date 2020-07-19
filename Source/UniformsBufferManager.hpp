@@ -53,6 +53,8 @@ namespace Soon
 		void UpdateToGPU( uint32_t currentImg );
 		void* Get( std::string name, uint32_t matId );
 		void Set( std::string name, void* value, uint32_t matId );
+		void SetUnique(std::string name, void *value );
+
 		void SetTexture(std::string name, uint32_t idMat, uint32_t textureId);
 		void Allocate( uint32_t idMat );
 		void AddLayoutBinding(VkDescriptorSetLayoutBinding ubo, uint32_t set);

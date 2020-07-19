@@ -44,7 +44,7 @@ namespace Soon
 		void SetUniform(std::string name, void *data);
 		void* GetUniform(std::string name);
 		void SetTexture(std::string name, Texture &texture);
-		const BasePipeline* GetPipeline(void) const;
+		BasePipeline* GetPipeline(void) const;
 		void SetPipeline(std::string name);
 		// TODO: Put All Desconstruct as virtual
 	};

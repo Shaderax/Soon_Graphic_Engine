@@ -351,7 +351,6 @@ namespace Soon
 	{
 		// TODO: If we exced _uniformDataSize
 		// TODO: Set UNIQUE
-		// TODO: Runtime
 		// TODO: >1 .
 		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
 
@@ -371,11 +370,50 @@ namespace Soon
 					{
 						uint32_t offsetVar = 0;
 						UniformVar& var = FindUniform(m_Sets[setId].uniforms[index]._members, name.substr(pos + 1), &offsetVar);
-						memcpy(m_CpuBuffer + m_UniqueSize + offset + (m_NonUniqueSize * matId), value, var.size);
+						std::cout << "UniqueSize: " << m_UniqueSize << std::endl;
+						std::cout << "NonUniqueSize: " << m_NonUniqueSize << std::endl;
+						std::cout << "Offset: " << offset << std::endl;
+						std::cout << "OffsetVar: " << offsetVar << std::endl;
+
+						memcpy(m_CpuBuffer + m_UniqueSize + offset + offsetVar + (m_NonUniqueSize * matId), value, var.size);
 					}
 					return;
 				}
 				offset += m_Sets[setId].uniforms[index]._size;
+			}
+		}
+	}
+
+	void UniformsBufferManager::SetUnique(std::string name, void* value )
+	{
+		// TODO: If we exced _uniformDataSize
+		// TODO: Set UNIQUE
+		// TODO: >1 .
+		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
+
+		uint32_t offset = 0;
+		void *data = nullptr;
+		size_t pos = name.find(".");
+
+		for (uint32_t setId = 0 ; setId < m_UniqueSets.size() ; setId++)
+		{
+			for (uint32_t index = 0; index < m_UniqueSets[setId].uniforms.size() ; index++)
+			{
+				if (m_UniqueSets[setId].uniforms[index]._name == name.substr(0, pos))
+				{
+					if (pos == std::string::npos)
+						memcpy(m_CpuBuffer + offset, value, m_UniqueSets[setId].uniforms[index]._size);
+					else
+					{
+						uint32_t offsetVar = 0;
+						UniformVar& var = FindUniform(m_UniqueSets[setId].uniforms[index]._members, name.substr(pos + 1), &offsetVar);
+						std::cout << "Offset: " << offset << std::endl;
+						std::cout << "OffsetVar: " << offsetVar << std::endl;
+						memcpy(m_CpuBuffer + offset + offsetVar, value, var.size);
+					}
+					return;
+				}
+				offset += m_UniqueSets[setId].uniforms[index]._size;
 			}
 		}
 	}
