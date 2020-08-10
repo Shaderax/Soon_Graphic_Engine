@@ -19,7 +19,7 @@ namespace Soon
 	{
 	private:
 		uint32_t		m_NumElements = 0;
-		uint32_t		m_MinElements = 10;
+		uint32_t		m_MinElements = 1000;
 		uint32_t		m_ActualResize = 0;
 
 		uint8_t*	m_CpuBuffer = nullptr;

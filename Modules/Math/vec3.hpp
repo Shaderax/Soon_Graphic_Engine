@@ -133,4 +133,9 @@ class vec3
 		{
 			std::cout << x << " " << y << " " << z << std::endl;
 		}
+
+		bool operator==(const vec3<T>& other) const
+		{
+			return x == other.x && y == other.y && z == other.z;
+		}
 };

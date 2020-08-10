@@ -185,7 +185,7 @@ namespace Soon
 			return false;
 		}
 
-		for (uint32_t index = 0 ; index < m_VertexInput.size() + 1; index++) // Should i iterate on my list vertexInut ?
+		for (uint32_t index = 0 ; index < m_VertexInput.size() + 1; index++)
 		{
 			if (m_RenderData[id].inputId[index] == Soon::IdError)
 			{
@@ -221,6 +221,7 @@ namespace Soon
 
 		if (!_freeId.empty())
 		{
+			std::cout << "Get a free id" << std::endl;
 			idMat = _freeId.back();
 			_freeId.pop_back();
 			for (uint32_t index = 0 ; index < m_VertexInput.size() + 1 ; index++)
@@ -232,6 +233,7 @@ namespace Soon
 		else
 		{
 			idMat = m_RenderData.size();
+			std::cout << idMat << std::endl;
 			uint32_t* ids = new uint32_t[m_VertexInput.size() + 1]();
 			for (uint32_t index = 0 ; index < m_VertexInput.size() + 1 ; index++)
 				ids[index] = Soon::IdError;

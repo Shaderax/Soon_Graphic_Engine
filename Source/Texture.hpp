@@ -9,6 +9,8 @@
 
 #include "RendererRessource.hpp"
 
+#include <memory>
+
 namespace Soon
 {
 	class GraphicsRenderer;
@@ -60,7 +62,7 @@ namespace Soon
 	class Texture : public RendererRessource
 	{
 	private:
-		uint8_t* m_Data;
+		std::shared_ptr<uint8_t> m_Data;
 		EnumFilterMode	m_Filter;
 		uint8_t		m_MipMapLevel;
 		uint8_t		m_AnisoLevel;
@@ -74,6 +76,10 @@ namespace Soon
 		Texture( uint32_t width, uint32_t height, EnumTextureFormat format, EnumTextureType type );
 		Texture( void );
 		~Texture( void );
+		Texture(const Texture& other);
+		Texture(Texture&& other);
+		Texture& operator=(const Texture& other);
+		Texture& operator=(Texture&& other);
 
 		void SetPixel( uint32_t x, uint32_t y);
 

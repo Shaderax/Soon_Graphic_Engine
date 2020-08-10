@@ -13,6 +13,9 @@ namespace Soon
 	{
 		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
 
+		if (m_CpuBuffer != nullptr)
+			delete[] m_CpuBuffer;
+
 		for (VkDescriptorSetLayout &dsl : _descriptorSetLayout)
 			vkDestroyDescriptorSetLayout(device, dsl, nullptr);
 	}
@@ -315,17 +318,19 @@ namespace Soon
 	UniformVar& FindUniform(std::vector<UniformVar>& var, std::string name, uint32_t* offset)
 	{
 		size_t pos = name.find('.');
+		uint32_t varOffset = 0;
 
 		for (uint32_t index = 0; index < var.size() ; index++)
 		{
+			varOffset = var[index].offset;
 			if (var[index].name == name.substr(0, pos))
 			{
+				*offset += varOffset;
 				if (pos == std::string::npos)
 					return var[index];
 				else
 					return FindUniform(var[index].mMembers, name.substr(pos + 1), offset);
 			}
-			*offset += var[index].size;
 		}
 		throw std::runtime_error("Uniform Not found");
 	}
@@ -370,10 +375,11 @@ namespace Soon
 					{
 						uint32_t offsetVar = 0;
 						UniformVar& var = FindUniform(m_Sets[setId].uniforms[index]._members, name.substr(pos + 1), &offsetVar);
-						std::cout << "UniqueSize: " << m_UniqueSize << std::endl;
-						std::cout << "NonUniqueSize: " << m_NonUniqueSize << std::endl;
-						std::cout << "Offset: " << offset << std::endl;
-						std::cout << "OffsetVar: " << offsetVar << std::endl;
+						//std::cout << "UniqueSize: " << m_UniqueSize << std::endl;
+						//std::cout << "NonUniqueSize: " << m_NonUniqueSize << std::endl;
+						//std::cout << "Offset: " << offset << std::endl;
+						//std::cout << "OffsetVar: " << offsetVar << std::endl;
+						//std::cout << matId << std::endl;
 
 						memcpy(m_CpuBuffer + m_UniqueSize + offset + offsetVar + (m_NonUniqueSize * matId), value, var.size);
 					}
@@ -387,7 +393,6 @@ namespace Soon
 	void UniformsBufferManager::SetUnique(std::string name, void* value )
 	{
 		// TODO: If we exced _uniformDataSize
-		// TODO: Set UNIQUE
 		// TODO: >1 .
 		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
 
@@ -399,6 +404,7 @@ namespace Soon
 		{
 			for (uint32_t index = 0; index < m_UniqueSets[setId].uniforms.size() ; index++)
 			{
+				std::cout << m_UniqueSets[setId].uniforms[index]._name << std::endl;
 				if (m_UniqueSets[setId].uniforms[index]._name == name.substr(0, pos))
 				{
 					if (pos == std::string::npos)
@@ -420,20 +426,7 @@ namespace Soon
 
 	void UniformsBufferManager::SetTexture(std::string name, uint32_t idMat, uint32_t textureId)
 	{
-		for (uint32_t setId = 0 ; setId < m_UniqueSets.size() ; setId++)
-		{
-			for (uint32_t index = 0 ; index < m_UniqueSets[setId].uniformsTexture.size() ; index++)
-			{
-				if (name == m_UniqueSets[setId].uniformsTexture[index]._name)
-				{
-					if (m_UniqueSets[setId].uniformsTexture[index]._textureId[0] != Soon::IdError)
-						GraphicsRenderer::GetInstance()->RemoveTexture(m_UniqueSets[setId].uniformsTexture[index]._textureId[0]);
-					//GraphicsRenderer::GetInstance()->AddTexture(textureId);
-					m_UniqueSets[setId].uniformsTexture[index]._textureId[0] = textureId;
-				}
-			}
-		}
-
+		// TODO: UNIQUE
 		for (uint32_t setId = 0 ; setId < m_Sets.size() ; setId++)
 		{
 			for (uint32_t index = 0 ; index < m_Sets[setId].uniformsTexture.size() ; index++)

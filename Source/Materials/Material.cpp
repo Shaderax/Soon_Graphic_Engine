@@ -17,6 +17,12 @@ namespace Soon
 	{
 	}
 
+	void Material::CreateId(void)
+	{
+		if (m_Pipeline && _id == Soon::IdError)
+			_id = m_Pipeline->CreateNewId();
+	}
+
 	/*
 		void SetFloat( std::string name, float value, uint32_t arrayId = 0 )
 		{
@@ -62,9 +68,14 @@ namespace Soon
 		if (m_Pipeline && _id != IdError)
 		{
 			GraphicsRenderer::GetInstance()->AddTexture(texture);
-			std::cout << "Set Texture : " << texture.GetId() << std::endl;
 			m_Pipeline->SetTexture(name, _id, texture.GetId());
 			// TODO: REMOVE TEXTURE ?
+		}
+		else if (m_Pipeline && _id == IdError)
+		{
+			GraphicsRenderer::GetInstance()->AddTexture(texture);
+			_id = m_Pipeline->CreateNewId();
+			m_Pipeline->SetTexture(name, _id, texture.GetId());
 		}
 	}
 
@@ -77,6 +88,19 @@ namespace Soon
 	{
 		if (m_Pipeline && _id != Soon::IdError)
 			m_Pipeline->RemoveId(_id);
+		_id = Soon::IdError;
 		m_Pipeline = GraphicsRenderer::GetInstance()->AddPipeline(name);
 	}
+
+	void Material::Set(std::string name, void* value)
+	{
+		if (m_Pipeline && _id != Soon::IdError)
+			m_Pipeline->Set(name, value, _id);
+	}
+
+	uint32_t Material::GetId(void)
+	{
+		return _id;
+	}
+	
 } // namespace Soon

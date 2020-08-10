@@ -2,7 +2,7 @@
 
 #include <math.h>
 
-template< typename T = float >
+template< typename T >
 class vec4
 {
 	public :
@@ -14,7 +14,7 @@ class vec4
 		T z;
 		T w;
 		
-		vec3(T mx, T my, T mz, T mw) : x(mx), y(my), z(mz), w(mw)
+		vec4(T mx, T my, T mz, T mw) : x(mx), y(my), z(mz), w(mw)
 		{
 			
 		}

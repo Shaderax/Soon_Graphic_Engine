@@ -29,6 +29,7 @@ include_directories(Source)
 include_directories(SYSTEM ThirdParty)
 include_directories(SYSTEM ThirdParty/VkMemoryAllocator)
 include_directories(SYSTEM ThirdParty/glfw/include)
+include_directories(SYSTEM ThirdParty/glm)
 include_directories(SYSTEM Modules)
 
 #include_directories(/usr/include/)

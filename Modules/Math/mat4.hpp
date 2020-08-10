@@ -2,27 +2,35 @@
 
 #include <math.h>
 
+
 template< typename T = float >
 class mat4
 {
 	public :
 		mat4( void )
 		{
-			int x;
-			int y;
+			elem[0] = elem[5] = elem[10] = elem[15] = 1.0f;
+			elem[1] = elem[2] = elem[3] = elem[4] = elem[6] = elem[7] = elem[8] = elem[9] = elem[11] = elem[12] = elem[13] = elem[14] = 0.0f;
+		}
 
-			y = -1;
-			while (++y < 4)
-			{
-				x = -1;
-				while (++x < 4)
-					this->elem[y][x] = (((y * 4) + x) % 5 == 0 ? 1.0f : 0.0f);
-			}
-		};
+		mat4( T xx, T xy, T xz, T yx, T yy, T yz, T zx, T zy, T zz)
+		{
+			elem[0] = xx;
+			elem[4] = xy;
+			elem[8] = xz;
+
+			elem[1] = yx;
+			elem[5] = yy;
+			elem[9] = yz;
+
+			elem[2] = zx;
+			elem[6] = zy;
+			elem[10] = zz;
+		} 
 
 		~mat4( void ) {};
 
-		T elem[4][4];
+		T elem[16];
 
 		mat4( const mat4<T>& other)
 		{
@@ -31,135 +39,39 @@ class mat4
 
 		T& operator()(int y, int x)
 		{
-			return (elem[y][x]);
+			return (elem[x * 4 + y]);
 		}
 
 		mat4<T>& operator=(const mat4<T> & b)
 		{
-			int x;
-			int y;
-
-			y = -1;
-			while (++y < 4)
-			{
-				x = -1;
-				while (++x < 4)
-					this->elem[y][x] = b.elem[y][x];
-			}
+			for (uint32_t index = 0 ;index < 16 ; index++)
+				elem[index] = b.elem[index];
 			return (*this);
 		}
 
+/*
+0  4  8  12
+1  5  9  13
+2  6  10 14
+3  7  11 15
+*/
 		mat4<T> operator*(mat4<T> const& b)
 		{
-			mat4<T> Result;
-			int x;
-			int y;
+   			mat4<T> tmp( elem[0]*b.elem[0] + elem[1]*b.elem[3] + elem[2]*b.elem[6],
+                             elem[0]*b.elem[1] + elem[1]*b.elem[4] + elem[2]*b.elem[7],
+                             elem[0]*b.elem[2] + elem[1]*b.elem[5] + elem[2]*b.elem[8],
+                             elem[3]*b.elem[0] + elem[4]*b.elem[3] + elem[5]*b.elem[6],
+                             elem[3]*b.elem[1] + elem[4]*b.elem[4] + elem[5]*b.elem[7],
+                             elem[3]*b.elem[2] + elem[4]*b.elem[5] + elem[5]*b.elem[8],
+                             elem[6]*b.elem[0] + elem[7]*b.elem[3] + elem[8]*b.elem[6],
+                             elem[6]*b.elem[1] + elem[7]*b.elem[4] + elem[8]*b.elem[7],
+                             elem[6]*b.elem[2] + elem[7]*b.elem[5] + elem[8]*b.elem[8] );
 
-			y = -1;
-			while (++y < 4)
-			{
-				x = -1;
-				while (++x < 4)
-					Result(y,x) = this->elem[y][0] * b.elem[0][x] + this->elem[y][1] * b.elem[1][x] +
-						this->elem[y][2] * b.elem[2][x] + this->elem[y][3] * b.elem[3][x];
-			}
-			return (Result);
+			return this->operator=(tmp);
 		}
 
 		mat4<T>& operator*=(mat4<T> const& b)
 		{
 			return (*this) = (*this) * b;
-		}
-
-		mat4<T> operator-(mat4<T> const& b)
-		{
-			mat4<T> Result;
-			int x;
-			int y;
-
-			y = -1;
-			while (++y < 4)
-			{
-				x = -1;
-				while (++x < 4)
-					Result(y,x) = this(y,x) - b(y,x);
-			}
-			return (Result);
-		}
-
-		mat4<T>& operator-=(mat4<T> const& b)
-		{
-			return (*this) = (*this) - b;
-		}
-
-		mat4<T> operator+(mat4<T> const& b)
-		{
-			mat4<T> Result;
-			int x;
-			int y;
-
-			y = -1;
-			while (++y < 4)
-			{
-				x = -1;
-				while (++x < 4)
-					Result(y,x) = this(y,x) + b(y,x);
-			}
-			return Result;
-		}
-
-		mat4<T>& operator+=(mat4<T> const& b)
-		{
-			return (*this) = (*this) + b;
-		}
-
-
-		mat4	NewMat4RotateX(float angle)
-		{
-			mat4 mat2;
-
-			mat2(1,1) = cos(angle);
-			mat2(1,2) = -sin(angle);
-			mat2(2,1) = sin(angle);
-			mat2(2,2) = cos(angle);
-
-			return (mat2);
-		}
-
-		mat4	NewMat4RotateY(float angle)
-		{
-			mat4 mat2;
-
-			mat2(0,0) = cos(angle);
-			mat2(0,2) = sin(angle);
-			mat2(2,0) = -sin(angle);
-			mat2(2,2) = cos(angle);
-
-			return (mat2);
-		}
-
-		mat4	NewMat4RotateZ(float angle)
-		{
-			mat4 mat2;
-
-			mat2(0,0) = cos(angle);
-			mat2(0,1) = -sin(angle);
-			mat2(1,0) = sin(angle);
-			mat2(1,1) = cos(angle);
-
-			return (mat2);
-		}
-
-		void	Rotate(float angle, int axis)
-		{
-			float	to_degres;
-
-			to_degres = angle * (180.0f / M_PI);
-			if (axis == 1)
-				this = this * NewMat4RotateX(to_degres);
-			else if (axis == 2)
-				this = this * NewMat4RotateY(to_degres);
-			else if (axis == 3)
-				this = this * NewMat4RotateZ(to_degres);
 		}
 };

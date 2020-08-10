@@ -13,8 +13,10 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall")
 
 add_subdirectory(ThirdParty/tinyobjloader)
 
-add_executable(skybox skybox.cpp)
-add_executable(particles particles.cpp)
+#add_executable(skybox skybox.cpp)
+#add_executable(particles particles.cpp)
+add_executable(postProcessing postProcessing.cpp)
 
-target_link_libraries(skybox Source tinyobjloader)
-target_link_libraries(particles Source tinyobjloader)
+#target_link_libraries(skybox Source tinyobjloader)
+#target_link_libraries(particles Source tinyobjloader)
+target_link_libraries(postProcessing Source tinyobjloader)

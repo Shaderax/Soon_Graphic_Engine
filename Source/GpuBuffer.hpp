@@ -20,7 +20,7 @@ namespace Soon
 		~GpuBuffer( void );
 		GpuBuffer(const GpuBuffer& other);
 		GpuBuffer(GpuBuffer&& other);
-		GpuBuffer& operator=(GpuBuffer& other);
+		GpuBuffer& operator=(const GpuBuffer& other);
 		void SetData( void* data, uint32_t size );
 		void Resize( uint32_t size );
 		VkBufferUsageFlags GetBufferUsage( void ) const;

@@ -14,11 +14,10 @@ namespace Soon
 	class Mesh : public RendererRessource
 	{
 		private:
-			GraphicMaterial		m_Material;
+			std::shared_ptr<GraphicMaterial>		m_Material;
 			MeshVertexDescription	m_VertexDescription;
 
 		public:
-			//uint8_t*	mVertexData = nullptr;
 			std::shared_ptr<uint8_t> mVertexData;
 			std::shared_ptr<uint32_t>	mIndices;
 			uint32_t	mNumIndices;
@@ -27,7 +26,9 @@ namespace Soon
 
 			Mesh( MeshVertexDescription v );
 			Mesh( const Mesh &other );
-			Mesh( const Mesh &&other );
+			Mesh( Mesh &&other );
+			Mesh& operator=(const Mesh& other);
+			Mesh& operator=(Mesh&& other);
 			~Mesh( void );
 			// Loader Free ?
 

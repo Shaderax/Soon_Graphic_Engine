@@ -14,7 +14,6 @@ namespace Soon
 	class Material
 	{
 	protected:
-		std::string		m_PipelineName;
 		uint32_t 		_id = Soon::IdError;
 		BasePipeline*	m_Pipeline = nullptr;
 	public:
@@ -46,6 +45,10 @@ namespace Soon
 		void SetTexture(std::string name, Texture &texture);
 		BasePipeline* GetPipeline(void) const;
 		void SetPipeline(std::string name);
+		void CreateId(void);
+		void Set(std::string name, void* value);
+		uint32_t GetId(void);
+
 		// TODO: Put All Desconstruct as virtual
 	};
 } // namespace Soon

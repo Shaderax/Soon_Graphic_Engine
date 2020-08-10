@@ -43,9 +43,7 @@ namespace Soon
 			{
 				for (json::iterator shaderP = it->begin(); shaderP != it->end(); ++shaderP)
 				{
-					// TODO: HERE
 					conf->SetBindingInputRate(shaderP.value(), VK_VERTEX_INPUT_RATE_INSTANCE);
-					//HAVE TO SAVE IN VEC_OF_INSTZNCE or by input binding
 				}
 			}
 		}

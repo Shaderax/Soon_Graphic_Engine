@@ -11,11 +11,12 @@ namespace Soon
 {
 	class GraphicMaterial : public Material
 	{
-	private:
-		//using _shaderPipeline = (GraphicPipeline*)m_Pipeline;
-		//constexpr GraphicPipeline* _shaderPipeline = reinterpret_cast<GraphicPipeline*>(m_Pipeline);
 	public:
 		GraphicMaterial(void);
+		GraphicMaterial(const GraphicMaterial& other);
+		GraphicMaterial(GraphicMaterial&& other);
+		GraphicMaterial& operator=(const GraphicMaterial& other);
+		GraphicMaterial& operator=( GraphicMaterial&& other);
 		~GraphicMaterial(void);
 
 		void SetMesh(std::uint32_t meshId);

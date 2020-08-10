@@ -39,7 +39,7 @@ namespace Soon
 		other.m_Offset = 0;
 	}
 
-	GpuBuffer& GpuBuffer::operator=(GpuBuffer& other)
+	GpuBuffer& GpuBuffer::operator=(const GpuBuffer& other)
 	{
 		m_BufferFlags = other.m_BufferFlags;
 		m_MemUsg = other.m_MemUsg;

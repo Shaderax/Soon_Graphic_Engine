@@ -50,7 +50,7 @@ namespace Soon
 		
 		void Render(uint32_t id);
 		void UnRender(uint32_t id);
-		uint32_t CreateNewId( void );
+		virtual uint32_t CreateNewId( void );
 		void RemoveId(uint32_t id);
 		void SetMeshId(uint32_t matId, uint32_t meshId);
 		bool IsValidToRender(uint32_t id) const;

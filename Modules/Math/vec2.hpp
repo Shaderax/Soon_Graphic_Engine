@@ -77,4 +77,10 @@ class vec2
 			this->x /= mag;
 			this->y /= mag;
 		}
+
+		bool operator==(const vec2<T>& other) const
+		{
+			return x == other.x && y == other.y;
+		}
+
 };

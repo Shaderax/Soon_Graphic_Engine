@@ -259,7 +259,6 @@ namespace Soon
 			delete m_UniqueComputePipelines[pipeline];
 			m_UniqueComputePipelines.erase(pipeline);
 		}
-		// TODO: HERE
 	}
 
 	void GraphicsRenderer::AddPipelineToRecreate( std::string name )
@@ -482,20 +481,21 @@ namespace Soon
 
 		texture.m_UniqueId = textureId;
 
-		std::cout << "TextureId: " << textureId << ", Count: " << m_Textures[textureId].count << std::endl;
+		std::cout << "Add TextureId: " << textureId << ", Count: " << m_Textures[textureId].count << std::endl;
 		return (textureId);
 	}
 	
 	uint32_t GraphicsRenderer::AddTexture(uint32_t textureId)
 	{
-		std::cout << "TextureId: " << textureId << ", Count: " << m_Textures[textureId].count << std::endl;
-
 		if (IsValidTextureId(textureId))
 		{
 			m_Textures[textureId].count += 1;
+			std::cout << "Add TextureId: " << textureId << ", Count: " << m_Textures[textureId].count << std::endl;
 			return (textureId);
 		}
 		// TODO: ERROR
+
+		std::cout << "Add TextureId: " << textureId << ", Count: " << m_Textures[textureId].count << std::endl;
 
 		return (textureId);
 	}
@@ -508,7 +508,7 @@ namespace Soon
 		m_Textures[textureId].count -= 1;
 		if (m_Textures[textureId].count == 0)
 			m_TextureToSupress.push_back(textureId);
-		std::cout << "TextureId: " << textureId << ", Count: " << m_Textures[textureId].count << std::endl;
+		std::cout << "Remove TextureId: " << textureId << ", Count: " << m_Textures[textureId].count << std::endl;
 	}
 
 	ImageProperties& GraphicsRenderer::GetImageProperties(uint32_t id)

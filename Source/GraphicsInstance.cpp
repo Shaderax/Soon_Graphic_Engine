@@ -131,7 +131,7 @@ namespace Soon
 				else
 					return FindUniformRuntimeVar(var[index].mMembers, name.substr(pos + 1), offset);
 			}
-			*offset += var[index]._size; //TODO: DIM // * numIn ?
+			*offset += var[index]._size; //TODO: DIM // * numIn ? // Offset ? See FindUniform
 		}
 		throw std::runtime_error("Uniform Not found");
 	}
@@ -503,8 +503,8 @@ namespace Soon
 		{
 			if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
 			{
-				std::cout << "VK_PRESENT_MODE_MAILBOX_KHR" << std::endl;
-				return availablePresentMode;
+				//std::cout << "VK_PRESENT_MODE_MAILBOX_KHR" << std::endl;
+				//return availablePresentMode;
 			}
 			else if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR)
 			{
@@ -1538,11 +1538,11 @@ namespace Soon
 	{
 		VkDescriptorPoolSize poolSize[3] = {};
 		poolSize[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		poolSize[0].descriptorCount = 50 * static_cast<uint32_t>(_swapChainImages.size());
+		poolSize[0].descriptorCount = 300 * static_cast<uint32_t>(_swapChainImages.size());
 		poolSize[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		poolSize[1].descriptorCount = 50 * static_cast<uint32_t>(_swapChainImages.size());
+		poolSize[1].descriptorCount = 300 * static_cast<uint32_t>(_swapChainImages.size());
 		poolSize[2].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-		poolSize[2].descriptorCount = 10 * static_cast<uint32_t>(_swapChainImages.size());
+		poolSize[2].descriptorCount = 100 * static_cast<uint32_t>(_swapChainImages.size());
 
 		VkDescriptorPoolCreateInfo poolInfo = {};
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;

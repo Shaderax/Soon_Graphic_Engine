@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vec3.hpp"
+#include "vec4.hpp"
 #include "mat4.hpp"
 #include <math.h>
 
@@ -8,8 +9,15 @@ struct Quaternion
 {
 	Quaternion( void )
 	{
-		v = vec3<float>(0.0f, 0.0f, 0.0f);
-		f = 1.0f;
+		v = vec4<float>(0.0f, 0.0f, 0.0f, 1.0f);
+	}
+
+	Quaternion(float x, float y, float z, float w)
+	{
+		v.x = x;
+		v.y = y;
+		v.z = z;
+		v.w = w;
 	}
 
 	Quaternion( vec3<float> axis, float angle)
@@ -20,7 +28,7 @@ struct Quaternion
 		v.x = axis.x * sin( angle / 2 );
 		v.y = axis.y * sin( angle / 2 );
 		v.z = axis.z * sin( angle / 2 );
-		f = cos( angle / 2 );
+		v.w = cos( angle / 2 );
 	}
 
 	~Quaternion( void ) {};
@@ -29,19 +37,58 @@ struct Quaternion
 	{
 		mat4<float> mat;
 
-		mat(0, 0) = 1 - 2 * (v.y * v.y) - 2 * (v.z * v.z);
-		mat(0, 1) = 2 * v.x * v.y - 2 * f * v.z;
-		mat(0, 2) = 2 * v.x * v.z + 2 * f * v.y;
+		mat(0, 0) = 1 - 2 * v.y * v.y - 2 * v.z * v.z;
+		mat(0, 1) = 2 * v.x * v.y - v.w * v.z;
+		mat(0, 2) = 2 * v.x * v.z + v.w * v.y;
 
-		mat(1, 0) = 2 * v.x * v.y + 2 * f * v.z;
-		mat(1, 1) = 1 - 2 * (v.x * v.x) - 2 * (v.z * v.z);
-		mat(1, 2) = 2 * v.y * v.z + 2 * f * v.x;
+		mat(1, 0) = 2 * v.x * v.y + v.w * v.z;
+		mat(1, 1) = 1 - 2 * v.x * v.x - 2 * v.z * v.z;
+		mat(1, 2) = 2 * v.y * v.z - v.w * v.x;
 
-		mat(2, 0) = 2 * v.x * v.z - 2 * f * v.y;
-		mat(2, 1) = 2 * v.y * v.z - 2 * f * v.x;
-		mat(2, 2) = 1 - 2 * (v.x * v.x) - 2 * (v.y * v.y);
+		mat(2, 0) = 2 * v.x * v.z - v.w * v.y;
+		mat(2, 1) = 2 * v.y * v.z + v.w * v.x;
+		mat(2, 2) = 1 - 2 * v.x * v.x - 2 * v.y * v.y;
 
 		return (mat);
+	}
+
+	void RotateX(float angle)
+	{
+		float sina( std::sin( angle * 0.5f ));
+   		float cosa( std::cos( angle * 0.5f ));
+
+   		const Quaternion q( cosa * v.w - sina*v.x,
+                       cosa*v.x + sina*v.w,
+                       cosa*v.y - sina*v.z,
+                       cosa*v.z + sina*v.y );
+
+   		this->operator=( q );
+	}
+
+	void RotateY(float angle)
+	{
+		float sina( std::sin( angle * 0.5f ));
+   		float cosa( std::cos( angle * 0.5f ));
+
+ 		  const Quaternion q( cosa * v.w - sina*v.y,
+                       cosa*v.x + sina*v.z,
+                       cosa*v.y + sina*v.w,
+                       cosa*v.z - sina*v.x );
+
+   		this->operator=( q );
+	}
+
+	void RotateZ(float angle)
+	{
+		float sina( std::sin( angle * 0.5f ));
+   		float cosa( std::cos( angle * 0.5f ));
+
+  		const Quaternion q( cosa*v.w - sina*v.z,
+                       cosa*v.x - sina*v.y,
+                       cosa*v.y + sina*v.x,
+                       cosa*v.z + sina*v.w );
+
+   		this->operator=( q );
 	}
 
 	vec3<float> ToEulerAngle( void )
@@ -51,19 +98,19 @@ struct Quaternion
 		double yaw;
 
 		// roll (x-axis rotation)
-		double sinr_cosp = 2.0f * (f * v.x + v.y * v.z);
+		double sinr_cosp = 2.0f * (v.w * v.x + v.y * v.z);
 		double cosr_cosp = 1.0f - 2.0f * (v.x * v.x + v.y * v.y);
 		roll = atan2(sinr_cosp, cosr_cosp);
 
 		// pitch (y-axis rotation)
-		double sinp = 2.0f * (f * v.y - v.z * v.x);
+		double sinp = 2.0f * (v.w * v.y - v.z * v.x);
 		if (fabs(sinp) >= 1)
 			pitch = copysign(M_PI / 2, sinp); // use 90 degrees if out of range
 		else
 		pitch = asin(sinp);
 
 		// yaw (z-axis rotation)
-		double siny_cosp = 2.0f * (f * v.z + v.x * v.y);
+		double siny_cosp = 2.0f * (v.w * v.z + v.x * v.y);
 		double cosy_cosp = 1.0f - 2.0f * (v.y * v.y + v.z * v.z);  
 		yaw = atan2(siny_cosp, cosy_cosp);
 
@@ -73,8 +120,7 @@ struct Quaternion
 
 	Quaternion(const Quaternion& quat)
 	{
-		this->v = quat.v;
-		this->f = quat.f;
+		v = quat.v;
 	}
 
 	Quaternion operator*(Quaternion const& b)
@@ -86,10 +132,10 @@ struct Quaternion
 
 	Quaternion& operator*=(Quaternion const& b)
 	{
-		this->v.x = f * b.v.x	+ this->v.x * b.f	+ this->v.y * b.v.z	- this->v.z * b.v.y;
-		this->v.y = f * b.v.y	- this->v.x * b.v.z	+ this->v.y * b.f	+ this->v.z * b.v.x;
-		this->v.z = f * b.v.z	+ this->v.x * b.v.y	- this->v.y * b.v.x	+ this->v.z * b.f;
-		this->f   = f * b.f	- this->v.x * b.v.x	- this->v.y * b.v.y	- this->v.z * b.v.z;
+		this->v.x = v.w * b.v.x	+ this->v.x * b.v.w	+ this->v.y * b.v.z	- this->v.z * b.v.y;
+		this->v.y = v.w * b.v.y	- this->v.x * b.v.z	+ this->v.y * b.v.w	+ this->v.z * b.v.x;
+		this->v.z = v.w * b.v.z	+ this->v.x * b.v.y	- this->v.y * b.v.x	+ this->v.z * b.v.w;
+		this->v.w   = v.w * b.v.w	- this->v.x * b.v.x	- this->v.y * b.v.y	- this->v.z * b.v.z;
 		
 		return (*this);// = (*this) * b;
 	}
@@ -97,14 +143,13 @@ struct Quaternion
 	Quaternion& operator=(Quaternion const& b)
 	{
 		this->v = b.v;
-		this->f = b.f;
 
 		return *this;
 	}
 
 	float Magnitude( void )
 	{
-		return (sqrt((this->v.x * this->v.x) + (this->v.y * this->v.y) + (this->v.z * this->v.z) + (this->f * this->f)));
+		return (sqrt((this->v.x * this->v.x) + (this->v.y * this->v.y) + (this->v.z * this->v.z) + (this->v.w * this->v.w)));
 	}
 
 	Quaternion Normalize( void )
@@ -118,11 +163,10 @@ struct Quaternion
 		Result.v.x /= mag;
 		Result.v.y /= mag;
 		Result.v.z /= mag;
-		Result.f /= mag;
+		Result.v.w /= mag;
 
 		return (Result);
 	}
 
-	vec3<float> v;
-	float		f;
+	vec4<float> v;
 };

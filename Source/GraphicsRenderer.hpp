@@ -31,7 +31,7 @@ namespace Soon
 	{
 		ImageRenderer imageRenderer;
 		ImageProperties image;
-		uint32_t count;
+		uint32_t count = 0;
 	};
 
 	class Mesh;

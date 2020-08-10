@@ -3,6 +3,7 @@ vert.spv
 frag.spv
 comp.spv
 .gdb*
+Ressources/3DModel
 
 # Prerequisites
 *.d

@@ -96,16 +96,7 @@ namespace Soon
 		std::string GetJsonPath( void ) const;
 
 		virtual ~PipelineConf( void ) {}
-/*
-		template<typename T>
-		void SetProperty(std::string name, T value)
-		{
-			if (m_Properties.find(name) == m_Properties.end())
-				return ; // TODO: Not FOUND
-			
-			memcpy(m_Properties[name].data, &value, m_Properties[name].size);
-		}
-		*/
+
 		void SetProperty(std::string name, std::string value);
 
 		void AddUniqueSet(uint32_t set);
