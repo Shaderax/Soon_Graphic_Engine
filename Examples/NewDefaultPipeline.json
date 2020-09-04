@@ -3,8 +3,8 @@
 		"Name": "Classic",
 		"Type": "Graphic",
 		"ShaderPaths": {
-			"Vertex": "Ressources/Shaders/DefaultShader/TestShader.vert.spv",
-			"Fragment": "Ressources/Shaders/DefaultShader/TestShader.frag.spv"
+			"Vertex": "../../Ressources/Shaders/DefaultShader/TestShader.vert.spv",
+			"Fragment": "../../Ressources/Shaders/DefaultShader/TestShader.frag.spv"
 		},
 		"InputBindings": {
 			"Pos": 1

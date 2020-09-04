@@ -7,6 +7,8 @@
 
 #include "Texture.hpp"
 
+#include <glm/vec3.hpp>
+
 namespace Soon
 {
 	class BasePipeline;
@@ -38,8 +40,8 @@ namespace Soon
 			//_pipeline.Set<uint8_t*>(name, info, data);
 		}
 */
-		void SetVec3(std::string name, vec3<float> vec);
-		vec3<float> GetVec3(std::string name);
+		void SetVec3(std::string name, glm::vec3 vec);
+		glm::vec3 GetVec3(std::string name);
 		void SetUniform(std::string name, void *data);
 		void* GetUniform(std::string name);
 		void SetTexture(std::string name, Texture &texture);

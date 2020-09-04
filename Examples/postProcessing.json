@@ -3,8 +3,8 @@
 		"Name": "Classic",
 		"Type": "Graphic",
 		"ShaderPaths": {
-			"Vertex": "Ressources/Shaders/PostProcessing/PostProcessing.vert.spv",
-			"Fragment": "Ressources/Shaders/PostProcessing/PostProcessing.frag.spv"
+			"Vertex": "../../Ressources/Shaders/PostProcessing/PostProcessing.vert.spv",
+			"Fragment": "../../Ressources/Shaders/PostProcessing/PostProcessing.frag.spv"
 		},
 		"UniqueSets": [
 			0

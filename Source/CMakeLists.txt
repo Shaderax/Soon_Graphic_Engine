@@ -7,8 +7,10 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wextra -Wshadow -Wnon-virtual-dtor")
 	#add_compile_options(-Wextra -Wshadow -Wnon-virtual-dtor) 
 endif(CMAKE_COMPILER_IS_GNUCXX)
-#add_compile_options(-Wall -g3 -pedantic)
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -g3 -pedantic")
+
+if(NOT MSVC)
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -g3 -pedantic")
+endif()
 
 set(SRC 
 	Materials/GraphicMaterial.cpp

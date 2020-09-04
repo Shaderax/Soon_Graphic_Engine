@@ -8,7 +8,7 @@ namespace Soon
 	{
 		_id = Soon::IdError;
 		m_Pipeline = nullptr;
-		SetPipeline("./Examples/NewDefaultPipeline.json");
+		SetPipeline("../../Examples/NewDefaultPipeline.json");
 	}
 
 	GraphicMaterial::~GraphicMaterial(void)

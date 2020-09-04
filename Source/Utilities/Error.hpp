@@ -5,6 +5,12 @@
 #include <cstdint>
 #include <limits>
 
+#ifdef _WIN32
+	#define LOG_MACRO __FUNCSIG__
+#else
+	#define LOG_MACRO __PRETTY_FUNCTION__
+#endif
+
 template<typename... Args>
 inline void Debug(Args... args)
 {
@@ -12,7 +18,7 @@ inline void Debug(Args... args)
 	(stream << ... << std::forward<Args>(args));
 
 	std::string path = __FILE__;
-	std::cerr << "[" << path.substr(path.find_last_of("/\\") + 1) << "] " << __PRETTY_FUNCTION__ << ":" << __LINE__ << ": " << stream.str() << std::endl;
+	std::cerr << "[" << path.substr(path.find_last_of("/\\") + 1) << "] " << LOG_MACRO << ":" << __LINE__ << ": " << stream.str() << std::endl;
 }
 
 #ifdef NDEBUG 

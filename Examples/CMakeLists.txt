@@ -8,8 +8,10 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 	#add_compile_options(-Wextra) 
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wextra")
 endif(CMAKE_COMPILER_IS_GNUCXX)
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall")
-#add_compile_options(-Wall)
+
+if (NOT MSVC)
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall")
+endif()
 
 add_subdirectory(ThirdParty/tinyobjloader)
 

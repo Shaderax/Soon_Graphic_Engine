@@ -76,7 +76,7 @@ namespace Soon
 
 		UniformRuntime& GetUniformRuntime(std::string name);
 		UniformRuntime& GetUniqueUniformRuntime(std::string name);
-		GpuBuffer& GetRuntimeBuffer(std::string name);
+		GpuBuffer& GetRuntimeBuffer(std::string name, uint32_t id);
 		void SetUniqueRuntimeAmount(std::string name, uint32_t amount);
 		void SetUniqueRuntimeBuffer(std::string name, GpuBuffer& buffer);
 

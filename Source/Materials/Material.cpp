@@ -40,15 +40,19 @@ namespace Soon
 			//_pipeline.Set<uint8_t*>(name, info, data);
 		}
 */
-	void Material::SetVec3(std::string name, vec3<float> vec)
+	void Material::SetVec3(std::string name, glm::vec3 vec)
 	{
 		SetUniform(name, &vec);
 	}
 
-	vec3<float> Material::GetVec3(std::string name)
+	glm::vec3 Material::GetVec3(std::string name)
 	{
 		void *data = GetUniform(name);
-		return vec3<float>(); //_vec3s[name];
+
+		glm::vec3 outVector;
+		memcpy(&outVector, data, sizeof(glm::vec3));
+
+		return outVector;
 	}
 
 	void Material::SetUniform(std::string name, void *data)
@@ -57,7 +61,7 @@ namespace Soon
 			m_Pipeline->Set(name, data, _id);
 	}
 
-	void *Material::GetUniform(std::string name)
+	void* Material::GetUniform(std::string name)
 	{
 		if (m_Pipeline && _id != IdError)
 			return m_Pipeline->Get(name, _id);
@@ -92,6 +96,7 @@ namespace Soon
 		m_Pipeline = GraphicsRenderer::GetInstance()->AddPipeline(name);
 	}
 
+	// TODO Should be private ?
 	void Material::Set(std::string name, void* value)
 	{
 		if (m_Pipeline && _id != Soon::IdError)

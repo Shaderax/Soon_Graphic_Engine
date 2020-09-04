@@ -311,10 +311,6 @@ namespace Soon
 		m_ActualResize += 1;
 	}
 
-	void* UniformsBufferManager::Get( std::string name, uint32_t matId )
-	{
-	}
-
 	UniformVar& FindUniform(std::vector<UniformVar>& var, std::string name, uint32_t* offset)
 	{
 		size_t pos = name.find('.');
@@ -350,6 +346,38 @@ namespace Soon
 		{
 			UniformRuntimeVar& var = FindUniformRuntimeVar(runtime.mMembers, name.substr(pos+1), &offset);
 		}
+	}
+
+	void* UniformsBufferManager::Get( std::string name, uint32_t matId )
+	{
+		// TODO: If we exced _uniformDataSize
+		// TODO: >1 .
+		VkDevice device = GraphicsInstance::GetInstance()->GetDevice();
+
+		uint32_t offset = 0;
+		void *data = nullptr;
+		size_t pos = name.find(".");
+
+		for (uint32_t setId = 0 ; setId < m_Sets.size() ; setId++)
+		{
+			for (uint32_t index = 0; index < m_Sets[setId].uniforms.size() ; index++)
+			{
+				if (m_Sets[setId].uniforms[index]._name == name.substr(0, pos))
+				{
+					if (pos == std::string::npos)
+						return m_CpuBuffer + m_UniqueSize + offset + (m_NonUniqueSize * matId);
+					else
+					{
+						uint32_t offsetVar = 0;
+						UniformVar& var = FindUniform(m_Sets[setId].uniforms[index]._members, name.substr(pos + 1), &offsetVar);
+
+						return m_CpuBuffer + m_UniqueSize + offset + offsetVar + (m_NonUniqueSize * matId);
+					}
+				}
+				offset += m_Sets[setId].uniforms[index]._size;
+			}
+		}
+		return nullptr;
 	}
 
 	void UniformsBufferManager::Set(std::string name, void *value, uint32_t matId )
@@ -599,6 +627,10 @@ namespace Soon
 		return m_DescriptorSets[image];
 	}
 
+	/**
+	 * RUNTIME
+	 **/
+
 	// PRIVATE
 	UniformRuntime& SearchUniformRuntime(std::vector<Soon::DescriptorSetDescription>& sets, std::string name )
 	{
@@ -765,8 +797,18 @@ namespace Soon
 																	descriptorSets.data());
 	}
 
-	GpuBuffer& UniformsBufferManager::GetRuntimeBuffer(std::string name)
+	GpuBuffer& UniformsBufferManager::GetRuntimeBuffer(std::string name, uint32_t id)
 	{
+		size_t pos = name.find(".");
+
+		if (pos == std::string::npos)
+			throw std::runtime_error("GetRuntimeBuffer: pos == std::string::npos");
+		UniformRuntime& runtime = GetUniformRuntime(name);
+
+		// TODO: Check Id
+		return runtime.mBuffers[id];
+		//UniformRuntimeVar& var = GetRuntimeVar(runtime, name.substr(pos+1));
+
 		// "Particles"
 	}
 
