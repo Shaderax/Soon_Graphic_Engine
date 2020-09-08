@@ -26,6 +26,8 @@
 #include <glm/ext/matrix_clip_space.hpp> // glm::perspective
 #include <glm/ext/scalar_constants.hpp> // glm::pi
 
+#include "Configure.h"
+
 using namespace Soon;
 
 int main()
@@ -34,8 +36,8 @@ int main()
 	GraphicsInstance::GetInstance()->Initialize();
 	GraphicsRenderer::GetInstance()->Initialize();
 
-	std::vector<Mesh>* meshArray = ObjLoader("../../Ressources/Cobra/Shelby.obj", "../../Ressources/Cobra/", "../../Examples/postProcessing.json");
-	std::vector<Mesh>* cube = ObjLoader("../../Examples/Cube.obj");
+	std::vector<Mesh>* meshArray = ObjLoader(GRAPHIC_SOURCE_DIR"/Ressources/3DModel/Cobra/Shelby.obj", GRAPHIC_SOURCE_DIR"/Ressources/3DModel/Cobra/", GRAPHIC_SOURCE_DIR"/Examples/postProcessing.json");
+	std::vector<Mesh>* cube = ObjLoader(GRAPHIC_SOURCE_DIR"/Examples/Cube.obj");
 	Mesh* mesh = &meshArray->back();
 
 	glm::mat4 model;
@@ -43,8 +45,8 @@ int main()
 	model = glm::translate(model, glm::vec3(0.0f, -1.5f, 0.0f));
 	//model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
-	BasePipeline* defaultPipeline = GraphicsRenderer::GetInstance()->AddPipeline("../../Examples/NewDefaultPipeline.json");
-	BasePipeline* postProcessPipeline = GraphicsRenderer::GetInstance()->AddPipeline("../../Examples/postProcessing.json");
+	BasePipeline* defaultPipeline = GraphicsRenderer::GetInstance()->AddPipeline(GRAPHIC_SOURCE_DIR"/Examples/NewDefaultPipeline.json");
+	BasePipeline* postProcessPipeline = GraphicsRenderer::GetInstance()->AddPipeline(GRAPHIC_SOURCE_DIR"/Examples/postProcessing.json");
 	glm::vec3 lightPos(10.0f, 0.0f, 0.0f);
 	postProcessPipeline->SetUnique("l.lightPos", &lightPos);
 

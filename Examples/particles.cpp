@@ -20,6 +20,8 @@
 
 #include "MeshVertex.hpp"
 
+#include "Configure.h"
+
 using namespace Soon;
 
 /**
@@ -106,7 +108,7 @@ int main()
 	uint32_t numParticles = 40;
 
 	/*INIT*/
-	ComputePipeline* initPip = (ComputePipeline*)GraphicsRenderer::GetInstance()->AddPipeline("../../Examples/InitParticles.json");
+	ComputePipeline* initPip = (ComputePipeline*)GraphicsRenderer::GetInstance()->AddPipeline(GRAPHIC_SOURCE_DIR"/Examples/InitParticles.json");
 	initPip->SetProcessFrequency(EProcessFrequency::ONCE);
 	idInit = initPip->CreateNewId();
 	//initPip->Set("Particles.num", &numParticles, idInit); // TODO:
@@ -120,7 +122,7 @@ int main()
 	buffer.m_Offset = 16;
 //
 	/*ParticleLoop*/
-	ComputePipeline* pip = (ComputePipeline*)GraphicsRenderer::GetInstance()->AddPipeline("../../Examples/TestParticle.json");
+	ComputePipeline* pip = (ComputePipeline*)GraphicsRenderer::GetInstance()->AddPipeline(GRAPHIC_SOURCE_DIR"/Examples/TestParticle.json");
 	idComp = pip->CreateNewId();
 			//GpuBuffer& buffer = initPip->GetRuntimeBuffer();
 	pip->SetRuntimeBuffer("Particles", buffer, idComp);
@@ -133,7 +135,7 @@ int main()
 	VertexDescription description = uniformPa.GetVertexDescription({"particles.position"}, idInit);
 	//std::cout << description.strideSize << std::endl;
 	//std::cout << description.mBaseOffset << std::endl;
-	GraphicPipeline* grPip = (GraphicPipeline*)GraphicsRenderer::GetInstance()->AddPipeline("../../Examples/NewDefaultPipeline.json");
+	GraphicPipeline* grPip = (GraphicPipeline*)GraphicsRenderer::GetInstance()->AddPipeline(GRAPHIC_SOURCE_DIR"/Examples/NewDefaultPipeline.json");
 	idGr = grPip->CreateNewId();
 	grPip->SetMeshId(idGr, mesh->GetId());
 	grPip->SetAttributeDescriptionOffset(1, description);

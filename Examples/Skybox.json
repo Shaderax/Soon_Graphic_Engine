@@ -3,8 +3,8 @@
 		"Name":"Skybox",
 		"Type":"Graphic",
 		"ShaderPaths": {
-			"Vertex":"../../Ressources/Shaders/TestShaders/SkyboxShader.vert.spv",
-			"Fragment":"../../Ressources/Shaders/TestShaders/SkyboxShader.frag.spv"
+			"Vertex":"../Ressources/Shaders/TestShaders/SkyboxShader.vert.spv",
+			"Fragment":"../Ressources/Shaders/TestShaders/SkyboxShader.frag.spv"
 		},
 		"UniqueSets": [
 			0

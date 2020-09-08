@@ -1,0 +1,3 @@
+#pragma once
+
+#cmakedefine GRAPHIC_SOURCE_DIR "@GRAPHIC_SOURCE_DIR@"

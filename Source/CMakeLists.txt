@@ -12,6 +12,9 @@ if(NOT MSVC)
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -g3 -pedantic")
 endif()
 
+set(GRAPHIC_SOURCE_DIR ${CMAKE_SOURCE_DIR})
+configure_file(Configure.h.in Configure.h @ONLY)
+
 set(SRC 
 	Materials/GraphicMaterial.cpp
 

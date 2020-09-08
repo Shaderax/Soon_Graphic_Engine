@@ -3,7 +3,7 @@
 		"Name": "Classic",
 		"Type": "Compute",
 		"ShaderPaths": {
-			"Compute": "../../Ressources/Shaders/TestShaders/InitParticles.comp.spv"
+			"Compute": "../Ressources/Shaders/TestShaders/InitParticles.comp.spv"
 		}
 	}
 ]

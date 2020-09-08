@@ -63,7 +63,14 @@ namespace Soon
 				for (json::iterator shaderP = it->begin(); shaderP != it->end(); ++shaderP)
 				{
 					if (IsValidShader(shaderP.key()))
-						conf.AddStageInfo({ValidShaderPath[shaderP.key()], shaderP.value()});
+					{
+						std::string shaderPath = conf.GetJsonPath();
+						std::size_t pos = shaderPath.rfind("/");
+
+						shaderPath = shaderPath.substr(0, pos);
+						shaderPath += std::string("/") + static_cast<std::string>(shaderP.value());
+						conf.AddStageInfo({ValidShaderPath[shaderP.key()], shaderPath});
+					}
 				}
 			}
 			else if (it.key() == "UniqueSets")
@@ -108,9 +115,9 @@ namespace Soon
 			ParseComputeJson(j[0], static_cast<ComputePipelineConf*>(conf));
 		}
 
-		ParseJson(j[0], *conf);
-
 		conf->SetJsonPath(path);
+
+		ParseJson(j[0], *conf);
 
 		if (conf->GetStages().size() == 0)
 			throw std::runtime_error("No Valid Stage Found in Json");

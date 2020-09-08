@@ -6,3 +6,4 @@
 - Namespace Soon::Graphics
 - Set[0] Array UniformCamera[2]
 - Set Fixed Path Env
+- Load vertexPath don't work with '\'

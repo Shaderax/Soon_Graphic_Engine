@@ -1,6 +1,7 @@
 #include "Materials/GraphicMaterial.hpp"
 
 #include "Utilities/Error.hpp"
+#include "Configure.h"
 
 namespace Soon
 {
@@ -8,7 +9,7 @@ namespace Soon
 	{
 		_id = Soon::IdError;
 		m_Pipeline = nullptr;
-		SetPipeline("../../Examples/NewDefaultPipeline.json");
+		SetPipeline(GRAPHIC_SOURCE_DIR"/Examples/NewDefaultPipeline.json");
 	}
 
 	GraphicMaterial::~GraphicMaterial(void)

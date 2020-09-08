@@ -33,6 +33,7 @@ include_directories(SYSTEM ThirdParty/VkMemoryAllocator)
 include_directories(SYSTEM ThirdParty/glfw/include)
 include_directories(SYSTEM ThirdParty/glm)
 include_directories(SYSTEM Modules)
+include_directories(${PROJECT_BINARY_DIR}/Source)
 
 #include_directories(/usr/include/)
 #include_directories(ThirdParty/)
