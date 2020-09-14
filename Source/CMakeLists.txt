@@ -58,3 +58,9 @@ add_library(Source ${SRC})
 
 #target_link_libraries(Core ECS GraphicsGLFW ${VULKAN_LIB} assimp)#Parsers)
 target_link_libraries(Source ${Vulkan_LIBRARY} glfw)
+
+if (WIN32)
+	add_custom_command(TARGET Source COMMAND START "" ${CMAKE_BINARY_DIR}/Programs/ShaderCompiler/Source/ShaderCompilerSource ${CMAKE_SOURCE_DIR}/Ressources/Shaders/)
+elseif (UNIX)
+	add_custom_command(TARGET Source COMMAND ${CMAKE_BINARY_DIR}/Programs/ShaderCompiler/Source/ShaderCompilerSource ${CMAKE_SOURCE_DIR}/Ressources/Shaders/ &)
+endif()
