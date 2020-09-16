@@ -351,6 +351,7 @@ namespace Soon
 	{
 		for( auto const& [key, val] : _graphicPipelines )
 		{
+			// Need to impl RenderPass and subpasses
 			val->BindCaller(commandBuffer, index);
 		}
 	}

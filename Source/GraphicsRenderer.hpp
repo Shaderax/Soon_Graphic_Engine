@@ -21,6 +21,11 @@
 
 namespace Soon
 {
+	struct GpuRessource
+	{
+		uint32_t mCount;
+	};
+
 	struct MeshRenderer
 	{
 		MeshBufferRenderer bufferRenderer;
@@ -42,6 +47,11 @@ namespace Soon
 	private:
 		static GraphicsRenderer* _instance;
 		bool _changes;
+
+		// GPURessource
+		std::uint32_t m_RessourceCounter = 0;
+		std::vector<uint32_t> m_RessourceFreeId;
+		std::vector<GpuRessource*> m_GpuRessources;
 
 		// MESH
 		std::uint32_t _meshCounter = 0;
