@@ -39,10 +39,10 @@ include_directories(${PROJECT_BINARY_DIR}/Source)
 #include_directories(ThirdParty/)
 
 add_subdirectory(ThirdParty)
+add_subdirectory(Programs)
 add_subdirectory(Modules)
 add_subdirectory(Source)
 add_subdirectory(Examples)
-add_subdirectory(Programs)
 
 message("CMAKE_CURRENT_SOURCE_DIR : ${CMAKE_CURRENT_SOURCE_DIR}")
 message("CMAKE_BINARY_DIR : ${CMAKE_BINARY_DIR}")
