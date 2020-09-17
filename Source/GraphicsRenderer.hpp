@@ -141,5 +141,15 @@ namespace Soon
 		void DestroyAllUniforms(void);
 		void DestroyAllPipelines(void);
 
+		void AddRessource(uint32_t id);
+		void RemoveRessource(uint32_t id);
+
+		template<typename T>
+		const T& GetRessource(uint32_t inId)
+		{
+			// TODO: Is Valid Id
+			return *(dynamic_cast<T*>(m_GpuRessources[inId]));
+		}
+
 	};
 } // namespace Soon

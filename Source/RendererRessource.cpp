@@ -26,6 +26,7 @@ namespace Soon
 				break ;
 			}
 		}
+		GraphicsRenderer::GetInstance()->AddRessource(m_Unique_Id);
 	}
 
 	RendererRessource::~RendererRessource(void)

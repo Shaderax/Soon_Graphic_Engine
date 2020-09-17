@@ -7,5 +7,8 @@ namespace Soon
 	{
 	public:
 		std::vector<BasePipeline> pip;
+		std::vector<VkAttachmentDescription> i;
+		std::vector<VkAttachmentReference> j;
+		std::vector<VkSubpassDependency> dep;
 	};
 } // namespace Soon
