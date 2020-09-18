@@ -1,19 +1,17 @@
 #include <vector>
 #include "Subpass.hpp"
 
+#include <vulkan/vulkan.h>
+
 namespace Soon
 {
 	class RenderPass
 	{
 	public:
 		std::vector<SubPass> subp;
-		VkSubpassDescription subpass = {};
-		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subpass.colorAttachmentCount = 1;
-		subpass.pColorAttachments = &colorAttachmentRef;
-		subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
-		// VkRenderPass 
-		// FrameBuffer
+		VkRenderPass m_RenderPass;
+
+		VkFramebuffer m_FrameBuffer;
 	};
 } // namespace Soon

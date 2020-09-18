@@ -10,5 +10,6 @@ namespace Soon
 		std::vector<VkAttachmentDescription> i;
 		std::vector<VkAttachmentReference> j;
 		std::vector<VkSubpassDependency> dep;
+		VkSubpassDescription subpassDesc;
 	};
 } // namespace Soon

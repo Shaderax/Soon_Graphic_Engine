@@ -26,6 +26,11 @@ namespace Soon
 		uint32_t mCount;
 	};
 
+	struct GpuMesh : GpuRessource
+	{
+		MeshBufferRenderer bufferRenderer;
+	};
+
 	struct MeshRenderer
 	{
 		MeshBufferRenderer bufferRenderer;
