@@ -35,6 +35,8 @@ int main()
 	// Init
 	GraphicsInstance::GetInstance()->Initialize();
 	GraphicsRenderer::GetInstance()->Initialize();
+	BasePipeline* damn = GraphicsRenderer::GetInstance()->AddPipeline(GRAPHIC_SOURCE_DIR"/Examples/InputAttch.json");
+	exit(-1);
 
 	std::vector<Mesh>* meshArray = ObjLoader(GRAPHIC_SOURCE_DIR"/Ressources/3DModel/Cobra/Shelby.obj", GRAPHIC_SOURCE_DIR"/Ressources/3DModel/Cobra/", GRAPHIC_SOURCE_DIR"/Examples/postProcessing.json");
 	std::vector<Mesh>* cube = ObjLoader(GRAPHIC_SOURCE_DIR"/Examples/Cube.obj");

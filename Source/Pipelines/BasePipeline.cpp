@@ -354,6 +354,9 @@ namespace Soon
 			ubo.binding = bindings[index]->binding;
 			ubo.descriptorCount = (bindings[index]->array.dims_count != 0) ? bindings[index]->array.dims[0] : 1;
 			ubo.descriptorType = DescriptorTypeSpvToVk(bindings[index]->descriptor_type); //VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			if (SPV_REFLECT_DESCRIPTOR_TYPE_INPUT_ATTACHMENT == bindings[index]->descriptor_type)
+				std::cout << "Is Input Attachment" << std::endl;
+
 			ubo.pImmutableSamplers = nullptr;
 			ubo.stageFlags = reflection.GetShaderModule().shader_stage;
 
