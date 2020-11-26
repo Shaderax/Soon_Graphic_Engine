@@ -35,22 +35,6 @@ namespace Soon
 
 	class BasePipeline
 	{
-	protected:
-		VkPipelineLayout _pipelineLayout;
-		std::vector<std::vector<VkDescriptorSetLayoutBinding>> uboLayoutBinding;
-		UniformsBufferManager _mUbm;
-		VkPipeline _pipeline;
-		PipelineConf* _conf;
-		std::unordered_map<uint32_t, uint32_t> m_ToDraw;
-		std::vector<uint32_t> _freeId;
-
-		void ParseUniform(SpvReflectDescriptorBinding* binding);
-		void ParseTextureUniform(SpvReflectDescriptorBinding* binding);
-		void ParseRuntimeUniform(SpvReflectDescriptorBinding* binding);
-
-		UniformVar ParseUniformMembers(SpvReflectBlockVariable& block) const;
-		UniformRuntimeVar ParseRuntimeUniformMembers(SpvReflectBlockVariable& block) const;
-
 	public:
 		std::vector<DefaultUniformStruct> _defaultUniform
 		{
@@ -99,6 +83,22 @@ namespace Soon
 		void SetRuntimeBuffer(std::string name, GpuBuffer& buffer, uint32_t idMat);
 
 		UniformRuntime& GetUniformRuntime(std::string name);
+
+	protected:
+		VkPipelineLayout _pipelineLayout;
+		std::vector<std::vector<VkDescriptorSetLayoutBinding>> uboLayoutBinding;
+		UniformsBufferManager _mUbm;
+		VkPipeline _pipeline;
+		PipelineConf* _conf;
+		std::unordered_map<uint32_t, uint32_t> m_ToDraw;
+		std::vector<uint32_t> _freeId;
+
+		void ParseUniform(SpvReflectDescriptorBinding* binding);
+		void ParseTextureUniform(SpvReflectDescriptorBinding* binding);
+		void ParseRuntimeUniform(SpvReflectDescriptorBinding* binding);
+
+		UniformVar ParseUniformMembers(SpvReflectBlockVariable& block) const;
+		UniformRuntimeVar ParseRuntimeUniformMembers(SpvReflectBlockVariable& block) const;
 	};
 
 	VkFormat VertexTypeToVkFormat(VertexElementType vt);

@@ -31,7 +31,7 @@ namespace Soon
 	class RenderPass
 	{
 	public:
-		std::vector<SubPass> mSubpass;
+		std::vector<Subpass> mSubpass;
 		VkRenderPass mRenderPass;
 		VkFramebuffer mFrameBuffer = VK_NULL_HANDLE;
 		VkAttachmentDescription mDepthAttachement;
@@ -50,6 +50,8 @@ namespace Soon
 				Genre dans le cas d'une shadow map je peux pas utilisé la meme car les depency et tout sont pas les memes.
 				Mais du coup une framebuffer envoyé, Shadow Map -> Normal render. Donc framebuffer ne sont pas propre a une renderpass.
 		*/
+	private:
+		ObjectsManager<Subpass> m_Subpass;
 	};
 } // namespace Soon
 

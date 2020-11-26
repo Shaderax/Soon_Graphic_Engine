@@ -880,6 +880,7 @@ namespace Soon
 
 	void GraphicsInstance::FillCommandBuffer(void)
 	{
+		// Should i tej the loop and only do one command ?
 		for (size_t i = 0; i < _commandBuffers.size(); i++)
 			vkResetCommandBuffer(_commandBuffers[i], VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
